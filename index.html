@@ -890,11 +890,13 @@ function openMenu(){
     ${code ? `<div class="code">${codeHtml(code)}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
            : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
     <button class="btn sub" data-guide>あそびかた</button>
+    <button class="btn sub" data-pin>暗証番号を変える</button>
     <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
     ${pet && !pet.frozen ? `<button class="btn ice-btn" data-freeze>冷凍保存する（長く来られないとき）</button>` : ''}
     <button class="btn" data-close>とじる</button>`, sheet => {
     sheet.querySelector('[data-close]').onclick = closeSheet;
     sheet.querySelector('[data-guide]').onclick = () => { closeSheet(); openGuide(); };
+    sheet.querySelector('[data-pin]').onclick = () => { closeSheet(); openSetPin(true); };
     const fz = sheet.querySelector('[data-freeze]');
     if (fz) fz.onclick = () => { closeSheet(); confirmFreeze(); };
     sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
@@ -926,7 +928,7 @@ const GUIDE = [
   { art: () => drawPet('punimaru', 'shiro'), title: 'ハートを見てお世話',
     text: '「おなか」が減ったらごはん、「ごきげん」が減ったらあそぶ。うんちが出たらそうじ、具合が悪そうならくすり。赤い丸がついたボタンが、今してほしいことです。' },
   { art: () => drawPet('besomochi', 'shiro', { sick:true }), title: '3日ほど来ないと危ない',
-    text: '何日も来ないと危篤になり、やがて天に還ります（たまごが残って次の世代へ）。休みや出張で来られない時は、メニュー「…」から冷凍保存しておけば安心です。' },
+    text: '何日も来ないと危篤になり、やがて天に還ります（たまごが残って次の世代へ）。休みや出張で来られない時は、メニュー「…」から冷凍保存しておけば安心です。スマホを変えても、ニックネームと暗証番号で戻れます。' },
   { art: () => drawPet('nikoniko', 'hana'), title: '育ち方で姿が変わる',
     text: 'お世話のしかたで25通りの姿に進化します。ひろばでは同僚のペットと出会えて、仲良くなるとお見合いも。図鑑とランキングもチェックしてね。' }
 ];
@@ -969,16 +971,21 @@ function renderWelcome(){
     <input id="nick" maxlength="12" placeholder="例：ひなた" autocomplete="off">
     <label for="pname">ペットの名前（あとで変えられません）</label>
     <input id="pname" maxlength="10" placeholder="空欄でもOK" autocomplete="off">
+    <label for="pin">暗証番号（数字4けた）</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="自分で決めた数字4けた" autocomplete="off">
+    <p class="lead" style="margin:6px 4px 0">スマホを変えた時などに、ニックネームとこの番号で戻れます。</p>
     <button class="btn" id="go">たまごを受け取る</button>
-    <button class="btn sub" id="toRestore">じゅもんで続きから遊ぶ</button>
+    <button class="btn sub" id="toLogin">前に遊んでいた人はこちら</button>
   `;
-  document.getElementById('toRestore').onclick = () => renderRestore(false);
+  document.getElementById('toLogin').onclick = renderLogin;
   document.getElementById('go').onclick = async ev => {
     const nick = document.getElementById('nick').value.trim();
+    const pin = document.getElementById('pin').value.trim();
     if (!nick){ toast('ニックネームを入力してください'); return; }
+    if (!/^\d{4}$/.test(pin)){ toast('暗証番号は数字4けたで入力してください'); return; }
     ev.target.disabled = true;
     try{
-      const r = await api('register', { nickname:nick, petName:document.getElementById('pname').value.trim() });
+      const r = await api('register', { nickname:nick, petName:document.getElementById('pname').value.trim(), pin });
       auth = { userId:r.userId, token:r.token };
       store.set(LS_AUTH, auth);
       store.set(LS_CODE, r.code);
@@ -991,11 +998,61 @@ function renderWelcome(){
 function renderCode(code){
   $app.innerHTML = `
     <h2 style="margin-top:24px">ふっかつのじゅもん</h2>
-    <p class="lead">スマホを変えたり、データが消えたりしたときに必要です。スクリーンショットかメモで残してください。</p>
+    <p class="lead">暗証番号を忘れてしまった時のための、予備の合言葉です。スクリーンショットで残しておくと安心です。</p>
     <div class="card code">${codeHtml(code)}</div>
     <button class="btn" id="ok">メモしました</button>
   `;
   document.getElementById('ok').onclick = () => { tab = 'home'; render(); if (!store.get(LS_GUIDED)) openGuide(); loadPlaza().then(render); };
+}
+
+function renderLogin(){
+  $nav.classList.add('hidden');
+  $app.innerHTML = `
+    <h2 style="margin-top:24px">おかえりなさい</h2>
+    <p class="lead">登録したニックネームと暗証番号を入れてください。</p>
+    <label for="lnick">ニックネーム</label>
+    <input id="lnick" maxlength="12" autocomplete="off">
+    <label for="lpin">暗証番号（数字4けた）</label>
+    <input id="lpin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+    <button class="btn" id="go">続きから遊ぶ</button>
+    <button class="btn sub" id="back">もどる</button>
+    <p class="lead" style="margin-top:16px;text-align:center"><a href="#" id="toCode" style="color:inherit">暗証番号を忘れた時は、じゅもんで戻る</a></p>
+  `;
+  document.getElementById('back').onclick = () => pet ? (tab = 'home', render()) : renderWelcome();
+  document.getElementById('toCode').onclick = e => { e.preventDefault(); renderRestore(false); };
+  document.getElementById('go').onclick = async ev => {
+    const nickname = document.getElementById('lnick').value.trim();
+    const pin = document.getElementById('lpin').value.trim();
+    if (!nickname || !/^\d{4}$/.test(pin)){ toast('ニックネームと数字4けたを入力してください'); return; }
+    ev.target.disabled = true;
+    try{
+      const saved = auth; auth = null;
+      const r = await api('login', { nickname, pin }).catch(e => { auth = saved; throw e; });
+      auth = { userId:r.userId, token:r.token };
+      store.set(LS_AUTH, auth);
+      if (r.code) store.set(LS_CODE, r.code); else store.del(LS_CODE);
+      await boot();
+    }catch(e){ toast(e.message); ev.target.disabled = false; }
+  };
+}
+
+/* ===== 暗証番号を決める・変える ===== */
+function openSetPin(isChange){
+  showSheet(`
+    <h3>${isChange ? '暗証番号を変える' : '暗証番号を決めよう'}</h3>
+    <p>スマホを変えたりデータが消えた時に、ニックネーム「${esc(nickname)}」とこの番号で戻れます。</p>
+    <input id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="数字4けた" autocomplete="off" style="text-align:center;letter-spacing:.4em">
+    <button class="btn" data-ok>決める</button>
+    <button class="btn sub" data-close>${isChange ? 'やめる' : 'あとで'}</button>`, sheet => {
+    sheet.querySelector('[data-close]').onclick = () => { closeSheet(); flushEvents(); };
+    sheet.querySelector('[data-ok]').onclick = async ev => {
+      const pin = sheet.querySelector('#newpin').value.trim();
+      if (!/^\d{4}$/.test(pin)){ toast('数字4けたで入力してください'); return; }
+      ev.target.disabled = true;
+      try{ await api('setPin', { pin }); closeSheet(); toast('暗証番号を設定しました'); flushEvents(); }
+      catch(e){ toast(e.message); ev.target.disabled = false; }
+    };
+  });
 }
 
 function renderRestore(fromMenu){
@@ -1038,6 +1095,8 @@ function renderError(msg){
 }
 
 async function boot(){
+  // ブラウザに「このサイトのデータは消さないで」と要求（効くかはブラウザ次第）
+  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   document.getElementById('bootArt') && (document.getElementById('bootArt').innerHTML = drawEgg('shiro'));
   if (!GAS_URL || GAS_URL.indexOf('http') !== 0){ renderError('GAS_URL が設定されていません'); return; }
   if (!auth){ renderWelcome(); return; }
@@ -1048,7 +1107,9 @@ async function boot(){
     bubbleText = '';
     tab = 'home';
     render();
-    if (!store.get(LS_GUIDED)) openGuide(); else flushEvents();
+    if (!store.get(LS_GUIDED)) openGuide();
+    else if (r.hasPin === false) openSetPin(false);
+    else flushEvents();
     // ひろばにも立ち寄る（出会いの記録）
     await loadPlaza();
     if (tab === 'home') render();
