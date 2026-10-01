@@ -160,6 +160,21 @@ label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
 .loading{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--sub);font-weight:700}
 .loading svg{width:120px;height:120px}
 
+/* ===== ホーム下部：せいちょう・なかま ===== */
+.section-title{font-size:14px;font-weight:900;margin:20px 4px 8px}
+.track{display:flex;align-items:center;gap:0;margin:4px 0 10px}
+.track .st{flex:none;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);display:grid;place-items:center;font-size:11px;font-weight:900}
+.track .st.done{background:var(--mint)}
+.track .st.now{background:var(--pink);transform:scale(1.18)}
+.track .ln{flex:1;height:3px;background:var(--dim)}
+.track .ln.done{background:var(--ink)}
+.track-labels{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--sub);margin:0 -4px}
+.track-labels span{width:38px;text-align:center}
+.mates{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.mate{flex:none;width:76px;text-align:center;font-size:11px;font-weight:700;border:0;background:none;padding:0}
+.mate svg{width:64px;height:64px}
+.mate .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 /* ===== 冷凍保存 ===== */
 .ice{position:absolute;inset:0;pointer-events:none}
 .ice svg{width:100%;height:100%}
@@ -486,6 +501,7 @@ function defaultBubble(){
 
 function renderHome(){
   const p = pet;
+  if (p.stage !== 'egg' && p.stage !== 'adult') noteStage(p, false);
   const egg = p.stage === 'egg';
   const plazaCount = plazaData && plazaData.met ? plazaData.met.length : 0;
   $app.innerHTML = `
@@ -522,7 +538,75 @@ function renderHome(){
       <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる<small>${p.wagamama ? 'わがまま中' : 'わがままの時'}</small></button>
     </div>
     ${p.married ? `<p class="lead" style="margin-top:14px">${esc(p.partnerName)}となかよしの印を結んでいます。</p>` : ''}`}
+    ${growthHtml(p)}
+    ${matesHtml()}
   `;
+}
+
+/* ===== 進化までの日数（画面側だけで計算） =====
+   進化した日をこのブラウザに記録しておき、そこから数える。
+   記録がない時は年齢から目安を出す（孵化した日によって1日ずれることがある） */
+const LS_STAGE = 'nfcpet.stageSeen';
+const STAGE_LEN = { baby: 1, child: 3, young: 4 };
+function todayKey(){ return new Date().toLocaleDateString('sv-SE'); }
+function daysBetween(a, b){ return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
+function noteStage(p, exact){
+  const rec = store.get(LS_STAGE);
+  if (exact || !rec || rec.petId !== p.petId || rec.stage !== p.stage){
+    store.set(LS_STAGE, { petId: p.petId, stage: p.stage, day: todayKey(), exact: !!exact });
+  }
+}
+function daysToNextStage(p){
+  const rec = store.get(LS_STAGE);
+  if (rec && rec.exact && rec.petId === p.petId && rec.stage === p.stage){
+    return { days: STAGE_LEN[p.stage] - daysBetween(rec.day, todayKey()), exact: true };
+  }
+  const limit = { baby: 2, child: 5, young: 9 }[p.stage];
+  return { days: limit - p.ageDays + 1, exact: false };
+}
+
+/* ===== せいちょうのすごろく ===== */
+const STAGES = [['egg','たまご'],['baby','ベビー'],['child','こども'],['young','ヤング'],['adult','おとな']];
+function growthHtml(p){
+  const idx = STAGES.findIndex(x => x[0] === p.stage);
+  let msg = '';
+  if (p.frozen) msg = '冷凍中は成長もお休みです';
+  else if (p.stage === 'egg') msg = 'もうすぐかえりそう';
+  else if (p.stage === 'adult') msg = `りっぱなおとなになりました（${p.generation}代目）`;
+  else {
+    const left = daysToNextStage(p);
+    msg = left.exact && left.days <= 0 ? '次に来た時に進化するかも！' : `つぎの進化まで あと${Math.max(1, left.days)}日くらい`;
+  }
+  const track = STAGES.map((x, i) => {
+    const cls = i < idx ? 'done' : i === idx ? 'now' : '';
+    return (i ? `<div class="ln ${i <= idx ? 'done' : ''}"></div>` : '') + `<div class="st ${cls}">${i < idx ? '✓' : ''}</div>`;
+  }).join('');
+  return `
+    <div class="section-title">せいちょう</div>
+    <div class="card">
+      <div class="track">${track}</div>
+      <div class="track-labels">${STAGES.map(x => `<span>${x[1]}</span>`).join('')}</div>
+      <p style="margin:10px 0 0;font-weight:700">${esc(msg)}</p>
+    </div>`;
+}
+
+/* ===== ひろばのなかま（ホームから一目で） ===== */
+function matesHtml(){
+  const d = plazaData;
+  let body;
+  if (pet.frozen) body = '<p class="lead" style="margin:0">冷凍中はひろばに出かけられません</p>';
+  else if (!d) body = '<p class="lead" style="margin:0">ひろばをのぞいています…</p>';
+  else if (d.met && d.met.length){
+    body = `<div class="mates">${d.met.map(m => `
+      <button class="mate" data-goplaza>${drawPet(m.form, m.eggType)}<div class="nm">${esc(m.petName || m.formName)}</div><div class="nm" style="color:var(--sub)">${esc(m.nickname)}さん</div></button>`).join('')}</div>`;
+  } else if (d.footprint){
+    body = `<p style="margin:0">${esc(d.footprint.timeLabel)}、${esc(d.footprint.nickname)}さんの${esc(d.footprint.petName || 'ペット')}が来ていたみたい${d.footprint.stamp ? `。「${esc(d.footprint.stamp)}」` : ''}</p>`;
+  } else body = '<p style="margin:0">まだ誰も来ていません。ひとことを残して、次の人を待とう</p>';
+  return `
+    <div class="section-title">いまのひろば</div>
+    <div class="card">${body}
+      ${pet.frozen ? '' : '<button class="small-btn" data-goplaza style="margin-top:12px">ひろばへ行く</button>'}
+    </div>`;
 }
 
 const CARE_TEXT = {
@@ -787,6 +871,7 @@ $app.addEventListener('click', async e => {
     return;
   }
   if (e.target.closest('[data-act="menu"]')){ openMenu(); return; }
+  if (e.target.closest('[data-goplaza]')){ setTab('plaza'); return; }
   const th = e.target.closest('[data-act="thaw"]');
   if (th){
     th.disabled = true;
@@ -820,7 +905,12 @@ $app.addEventListener('click', async e => {
 /* ============================================================
    演出（進化・孵化・天に還るなど）
    ============================================================ */
-function queueEvents(list){ (list || []).forEach(ev => eventQueue.push(ev)); }
+function queueEvents(list){
+  (list || []).forEach(ev => {
+    eventQueue.push(ev);
+    if ((ev.type === 'hatched' || ev.type === 'evolved') && pet) noteStage({ petId: pet.petId, stage: stageOf(ev.to) }, true);
+  });
+}
 
 function flushEvents(){
   if (document.querySelector('.overlay') || !eventQueue.length) return;
