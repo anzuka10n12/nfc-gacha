@@ -515,8 +515,8 @@ function renderHome(){
     </div>
     <div class="care">
       <button data-c="feed" ${p.hunger >= 4 ? 'disabled' : ''} class="${p.hunger <= 1 ? 'alert' : ''}">ごはん<small>${p.hunger >= 4 ? 'まんぷく' : 'おなか＋1'}</small></button>
-      <button data-c="snack">おやつ<small>きょう${p.snackLeft}回</small></button>
-      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>${p.playLeft > 0 ? 'きょう' + p.playLeft + '回' : 'またあした'}</small></button>
+      <button data-c="snack">おやつ<small>${p.snackLeft > 0 ? 'ごきげん＋1' : 'たべすぎ注意'}</small></button>
+      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>${p.playLeft > 0 ? 'ごきげん＋1' : 'またあした'}</small></button>
       <button data-c="clean" ${p.poop ? '' : 'disabled'} class="${p.poop >= 2 ? 'alert' : ''}">そうじ<small>${p.poop ? 'うんち' + p.poop + 'こ' : 'きれい'}</small></button>
       <button data-c="medicine" ${p.sick ? '' : 'disabled'} class="${p.sick ? 'alert' : ''}">くすり<small>${p.sick ? 'ぐあいが悪い' : 'げんき'}</small></button>
       <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる<small>${p.wagamama ? 'わがまま中' : 'わがままの時'}</small></button>
@@ -537,11 +537,11 @@ async function doCare(type, extra = {}){
   if (busy) return;
   busy = true;
   setCareDisabled(true);
-  // 残り回数は通信を待たずに先に減らして見せる（確定値は応答後に上書き）
+  // 上限に達したら、通信を待たずに表示を切り替える（確定値は応答後に上書き）
   const left = { snack:'snackLeft', play:'playLeft' }[type];
   if (left && pet[left] > 0){
     const sm = document.querySelector(`.care [data-c="${type}"] small`);
-    if (sm) sm.textContent = (pet[left] - 1) > 0 || type === 'snack' ? 'きょう' + (pet[left] - 1) + '回' : 'またあした';
+    if (sm && pet[left] - 1 <= 0) sm.textContent = type === 'snack' ? 'たべすぎ注意' : 'またあした';
   }
   const fx = playFx(type, extra);
   try{
