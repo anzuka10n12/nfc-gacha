@@ -641,6 +641,19 @@ function openPlay(){
   });
 }
 
+/* ===== おやつの上限超え（仕様：あげられるが病気になる） ===== */
+function confirmSnack(){
+  showSheet(`
+    <div class="art">${drawPet(pet.form, pet.eggType, { sick:true })}</div>
+    <h3>今日はもうおやつをたくさん食べたよ</h3>
+    <p>これ以上あげると、食べすぎで具合が悪くなります。</p>
+    <button class="btn sub" data-close>やめておく</button>
+    <button class="btn" data-force>それでもあげる</button>`, sheet => {
+    sheet.querySelector('[data-close]').onclick = closeSheet;
+    sheet.querySelector('[data-force]').onclick = () => { closeSheet(); doCare('snack'); };
+  });
+}
+
 /* ===== ひろば ===== */
 async function loadPlaza(){
   try{
@@ -749,7 +762,12 @@ function renderRank(){
 /* ===== 操作の受付（まとめて） ===== */
 $app.addEventListener('click', async e => {
   const c = e.target.closest('[data-c]');
-  if (c){ if (c.dataset.c === 'play') openPlay(); else doCare(c.dataset.c); return; }
+  if (c){
+    if (c.dataset.c === 'play') openPlay();
+    else if (c.dataset.c === 'snack' && pet.snackLeft <= 0) confirmSnack();
+    else doCare(c.dataset.c);
+    return;
+  }
   if (e.target.closest('[data-act="menu"]')){ openMenu(); return; }
   const st = e.target.closest('[data-stamp]');
   if (st){
