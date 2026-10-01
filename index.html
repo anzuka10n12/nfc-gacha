@@ -160,6 +160,13 @@ label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
 .loading{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--sub);font-weight:700}
 .loading svg{width:120px;height:120px}
 
+/* ===== 冷凍保存 ===== */
+.ice{position:absolute;inset:0;pointer-events:none}
+.ice svg{width:100%;height:100%}
+.frozen-card{text-align:center}
+.frozen-card b{font-size:18px}
+.btn.ice-btn{background:#D9ECFA}
+
 /* ===== どっち向くかなゲーム ===== */
 .sheet .art.wiggle{animation:wiggle .18s ease-in-out infinite}
 @keyframes wiggle{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
@@ -427,6 +434,10 @@ function drawEgg(eggType, opt = {}){
   return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="たまご"><g filter="url(#wob)"><path d="M60 40 C80 40 88 70 86 82 C84 96 74 102 60 102 C46 102 36 96 34 82 C32 70 40 40 60 40Z" fill="${col}" ${st}/>${marks}</g></svg>`;
 }
 
+function drawIce(){
+  return `<svg viewBox="0 0 120 120"><g filter="url(#wob)"><rect x="14" y="26" width="92" height="80" rx="16" fill="#DDF0FB" fill-opacity=".62" stroke="#8DB8E3" stroke-width="3"/><path d="M26 40 l10 -6 M24 52 l18 -11 M92 84 l-10 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g></svg>`;
+}
+
 function drawPoop(){
   return `<svg viewBox="0 0 40 40"><g filter="url(#wob)"><path d="M8 32 q-4 -8 6 -9 q-3 -8 6 -9 q2 -6 6 -4 q-2 4 2 6 q8 2 4 8 q8 2 4 8z" fill="#D2B48C" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/></g></svg>`;
 }
@@ -461,6 +472,7 @@ function render(){
 
 function defaultBubble(){
   const p = pet;
+  if (p.frozen) return '（こちこち…）';
   if (p.stage === 'egg') return '…（ころん）';
   if (p.critical) return 'たすけて…';
   if (p.sick) return 'なんだかぐったり…';
@@ -485,11 +497,16 @@ function renderHome(){
     </div>
     <div class="room ${p.critical ? 'dark' : ''}">
       <div class="bubble" id="bubble">${esc(bubbleText || defaultBubble())}</div>
-      <div class="pet-wrap ${egg ? '' : 'wander'}"><div class="bounce" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div></div>
+      <div class="pet-wrap ${egg || p.frozen ? '' : 'wander'}"><div class="${p.frozen ? '' : 'bounce'}" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div>${p.frozen ? `<div class="ice">${drawIce()}</div>` : ''}</div>
       <div class="poops">${Array.from({length:p.poop}, drawPoop).join('')}</div>
       ${plazaCount ? `<div class="plaza-badge">ひろばに${plazaCount}匹いるよ</div>` : ''}
     </div>
-    ${egg ? `<p class="lead" style="margin-top:14px">たまごはもうすぐかえりそう。次に来たときに会えるかも。</p>` : `
+    ${p.frozen ? `
+    <div class="card frozen-card" style="margin-top:14px">
+      <b>冷凍保存中（${p.frozenDays}日目）</b>
+      <p class="lead" style="margin:6px 0 0">年をとらず、おなかも減りません。もどってきたら解凍してあげてね。</p>
+      <button class="btn ice-btn" data-act="thaw">解凍する</button>
+    </div>` : egg ? `<p class="lead" style="margin-top:14px">たまごはもうすぐかえりそう。次に来たときに会えるかも。</p>` : `
     <div class="stats">
       <div class="stat">おなか <span class="hearts">${hearts(p.hunger)}</span></div>
       <div class="stat">ごきげん <span class="hearts">${hearts(p.mood)}</span></div>
@@ -513,7 +530,7 @@ const CARE_TEXT = {
 };
 const REASON_TEXT = {
   full:'おなかいっぱいみたい', tired:'今日はもう遊びつかれたみたい', clean:'おへやはきれいだよ',
-  healthy:'元気だから、くすりはいらないよ', nowagamama:'しかる理由がないよ', egg:'まだたまごだよ'
+  healthy:'元気だから、くすりはいらないよ', nowagamama:'しかる理由がないよ', egg:'まだたまごだよ', frozen:'こおっているよ'
 };
 
 async function doCare(type, extra = {}){
@@ -666,6 +683,7 @@ async function loadPlaza(){
 function renderPlaza(){
   const d = plazaData;
   if (!d){ $app.innerHTML = `<h2>ひろば</h2><p class="lead">読み込み中…</p>`; loadPlaza().then(render); return; }
+  if (pet.frozen){ $app.innerHTML = `<h2>ひろば</h2><div class="card">冷凍保存中は、ひろばに出かけられません。</div>`; return; }
   const meAdult = pet.stage === 'adult';
   const met = d.met.map(m => {
     const canPropose = meAdult && !pet.married && stageOf(m.form) === 'adult' && m.friendship >= 5;
@@ -769,6 +787,13 @@ $app.addEventListener('click', async e => {
     return;
   }
   if (e.target.closest('[data-act="menu"]')){ openMenu(); return; }
+  const th = e.target.closest('[data-act="thaw"]');
+  if (th){
+    th.disabled = true;
+    try{ const r = await api('thaw'); pet = r.pet; queueEvents(r.events); render(); flushEvents(); }
+    catch(err){ toast(err.message); th.disabled = false; }
+    return;
+  }
   const st = e.target.closest('[data-stamp]');
   if (st){
     try{ const r = await api('stamp', { index:Number(st.dataset.stamp) }); toast(`「${r.stamp}」を残しました`); }
@@ -816,6 +841,12 @@ function flushEvents(){
       text = `${ev.reason === '老衰' ? '長生きして' : ''}光に包まれて空へ。あとに${{hana:'はなたまご',hoshi:'ほしたまご',shiro:'しろたまご'}[ev.eggType]}が残っています（${ev.generation}代目）`; break;
     case 'rescued':
       art = drawPet(pet.form, pet.eggType); title = '危ないところだった…'; text = '元気を取り戻しました'; break;
+    case 'frozen':
+      art = drawPet(pet.form, pet.eggType) .replace('</svg>', '') + drawIce().replace(/<svg[^>]*>/, '');
+      title = '冷凍保存しました'; text = 'もどってきたら「解凍する」を押してね。それまで時間は止まっています'; break;
+    case 'thawed':
+      art = drawPet(pet.form, pet.eggType); cls = 'flash';
+      title = 'おかえり！'; text = `${ev.days}日ぶりに解凍しました`; break;
     case 'married':
       art = drawPet(pet.form, pet.eggType, { pattern:true }); cls = 'glow';
       title = 'なかよしの印を結んだ'; text = `${ev.partner}と特別ななかよしになりました`; break;
@@ -859,9 +890,29 @@ function openMenu(){
     ${code ? `<div class="code">${codeHtml(code)}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
            : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
     <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
+    ${pet && !pet.frozen ? `<button class="btn ice-btn" data-freeze>冷凍保存する（長く来られないとき）</button>` : ''}
     <button class="btn" data-close>とじる</button>`, sheet => {
     sheet.querySelector('[data-close]').onclick = closeSheet;
+    const fz = sheet.querySelector('[data-freeze]');
+    if (fz) fz.onclick = () => { closeSheet(); confirmFreeze(); };
     sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
+  });
+}
+
+function confirmFreeze(){
+  if (pet.critical){ toast('危篤のときは冷凍できません。先に助けてあげてください'); return; }
+  showSheet(`
+    <div class="art" style="position:relative">${drawPet(pet.form, pet.eggType)}<div class="ice">${drawIce()}</div></div>
+    <h3>冷凍保存しますか？</h3>
+    <p>休みや出張で来られないときに。冷凍中は年をとらず、おなかも減りません。お世話とひろばはお休みになります。</p>
+    <button class="btn sub" data-close>やめておく</button>
+    <button class="btn ice-btn" data-ok>冷凍する</button>`, sheet => {
+    sheet.querySelector('[data-close]').onclick = closeSheet;
+    sheet.querySelector('[data-ok]').onclick = async ev => {
+      ev.target.disabled = true;
+      try{ const r = await api('freeze'); closeSheet(); pet = r.pet; queueEvents(r.events); tab = 'home'; render(); flushEvents(); }
+      catch(e){ toast(e.message); ev.target.disabled = false; }
+    };
   });
 }
 
