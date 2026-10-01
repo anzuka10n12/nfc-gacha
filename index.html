@@ -514,12 +514,12 @@ function renderHome(){
       <div class="stat">しつけ <b>${p.discipline}%</b></div>
     </div>
     <div class="care">
-      <button data-c="feed" ${p.hunger >= 4 ? 'disabled' : ''} class="${p.hunger <= 1 ? 'alert' : ''}">ごはん</button>
-      <button data-c="snack">おやつ<small>のこり${p.snackLeft}</small></button>
-      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>のこり${p.playLeft}</small></button>
-      <button data-c="clean" ${p.poop ? '' : 'disabled'} class="${p.poop >= 2 ? 'alert' : ''}">そうじ</button>
-      <button data-c="medicine" ${p.sick ? '' : 'disabled'} class="${p.sick ? 'alert' : ''}">くすり</button>
-      <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる</button>
+      <button data-c="feed" ${p.hunger >= 4 ? 'disabled' : ''} class="${p.hunger <= 1 ? 'alert' : ''}">ごはん<small>${p.hunger >= 4 ? 'まんぷく' : 'おなか＋1'}</small></button>
+      <button data-c="snack">おやつ<small>きょう${p.snackLeft}回</small></button>
+      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>${p.playLeft > 0 ? 'きょう' + p.playLeft + '回' : 'またあした'}</small></button>
+      <button data-c="clean" ${p.poop ? '' : 'disabled'} class="${p.poop >= 2 ? 'alert' : ''}">そうじ<small>${p.poop ? 'うんち' + p.poop + 'こ' : 'きれい'}</small></button>
+      <button data-c="medicine" ${p.sick ? '' : 'disabled'} class="${p.sick ? 'alert' : ''}">くすり<small>${p.sick ? 'ぐあいが悪い' : 'げんき'}</small></button>
+      <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる<small>${p.wagamama ? 'わがまま中' : 'わがままの時'}</small></button>
     </div>
     ${p.married ? `<p class="lead" style="margin-top:14px">${esc(p.partnerName)}となかよしの印を結んでいます。</p>` : ''}`}
   `;
@@ -541,7 +541,7 @@ async function doCare(type, extra = {}){
   const left = { snack:'snackLeft', play:'playLeft' }[type];
   if (left && pet[left] > 0){
     const sm = document.querySelector(`.care [data-c="${type}"] small`);
-    if (sm) sm.textContent = 'のこり' + (pet[left] - 1);
+    if (sm) sm.textContent = (pet[left] - 1) > 0 || type === 'snack' ? 'きょう' + (pet[left] - 1) + '回' : 'またあした';
   }
   const fx = playFx(type, extra);
   try{
@@ -889,10 +889,12 @@ function openMenu(){
     <h3>ふっかつのじゅもん</h3>
     ${code ? `<div class="code">${codeHtml(code)}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
            : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
+    <button class="btn sub" data-guide>あそびかた</button>
     <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
     ${pet && !pet.frozen ? `<button class="btn ice-btn" data-freeze>冷凍保存する（長く来られないとき）</button>` : ''}
     <button class="btn" data-close>とじる</button>`, sheet => {
     sheet.querySelector('[data-close]').onclick = closeSheet;
+    sheet.querySelector('[data-guide]').onclick = () => { closeSheet(); openGuide(); };
     const fz = sheet.querySelector('[data-freeze]');
     if (fz) fz.onclick = () => { closeSheet(); confirmFreeze(); };
     sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
@@ -914,6 +916,42 @@ function confirmFreeze(){
       catch(e){ toast(e.message); ev.target.disabled = false; }
     };
   });
+}
+
+/* ===== あそびかた ===== */
+const LS_GUIDED = 'nfcpet.guided';
+const GUIDE = [
+  { art: () => drawEgg('shiro'), title: 'タグにふれて、お世話しよう',
+    text: 'このペットは、職場のタグにスマホをかざした時だけお世話できます。1日1回来れば十分です。夜と休みの日は、ゆっくり過ごしています。' },
+  { art: () => drawPet('punimaru', 'shiro'), title: 'ハートを見てお世話',
+    text: '「おなか」が減ったらごはん、「ごきげん」が減ったらあそぶ。うんちが出たらそうじ、具合が悪そうならくすり。赤い丸がついたボタンが、今してほしいことです。' },
+  { art: () => drawPet('besomochi', 'shiro', { sick:true }), title: '3日ほど来ないと危ない',
+    text: '何日も来ないと危篤になり、やがて天に還ります（たまごが残って次の世代へ）。休みや出張で来られない時は、メニュー「…」から冷凍保存しておけば安心です。' },
+  { art: () => drawPet('nikoniko', 'hana'), title: '育ち方で姿が変わる',
+    text: 'お世話のしかたで25通りの姿に進化します。ひろばでは同僚のペットと出会えて、仲良くなるとお見合いも。図鑑とランキングもチェックしてね。' }
+];
+
+function openGuide(){
+  let i = 0;
+  const draw = sheet => {
+    const g = GUIDE[i];
+    sheet.innerHTML = `
+      <div class="art">${g.art()}</div>
+      <p style="font-weight:700">${i + 1} / ${GUIDE.length}</p>
+      <h3>${esc(g.title)}</h3>
+      <p style="text-align:left">${esc(g.text)}</p>
+      <div style="display:flex;gap:10px">
+        ${i > 0 ? '<button class="btn sub" data-prev>もどる</button>' : ''}
+        <button class="btn" data-next>${i < GUIDE.length - 1 ? 'つぎへ' : 'はじめる'}</button>
+      </div>`;
+    sheet.querySelector('[data-next]').onclick = () => {
+      if (i < GUIDE.length - 1){ i++; draw(sheet); }
+      else { store.set(LS_GUIDED, true); closeSheet(); flushEvents(); }
+    };
+    const pv = sheet.querySelector('[data-prev]');
+    if (pv) pv.onclick = () => { i--; draw(sheet); };
+  };
+  showSheet('', draw);
 }
 
 /* ============================================================
@@ -957,7 +995,7 @@ function renderCode(code){
     <div class="card code">${codeHtml(code)}</div>
     <button class="btn" id="ok">メモしました</button>
   `;
-  document.getElementById('ok').onclick = () => { tab = 'home'; render(); loadPlaza().then(render); };
+  document.getElementById('ok').onclick = () => { tab = 'home'; render(); if (!store.get(LS_GUIDED)) openGuide(); loadPlaza().then(render); };
 }
 
 function renderRestore(fromMenu){
@@ -1010,7 +1048,7 @@ async function boot(){
     bubbleText = '';
     tab = 'home';
     render();
-    flushEvents();
+    if (!store.get(LS_GUIDED)) openGuide(); else flushEvents();
     // ひろばにも立ち寄る（出会いの記録）
     await loadPlaza();
     if (tab === 'home') render();
