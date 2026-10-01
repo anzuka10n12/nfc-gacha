@@ -394,6 +394,10 @@ function drawPoop(){
    ============================================================ */
 function setTab(t){
   tab = t;
+  // タブを開くたびに最新を取り直す
+  if (t === 'rank') rankData = null;
+  if (t === 'dex') dexData = null;
+  if (t === 'plaza') plazaData = null;
   [...$nav.querySelectorAll('button')].forEach(b => b.setAttribute('aria-current', b.dataset.tab === t ? 'true' : 'false'));
   render();
   window.scrollTo(0, 0);
