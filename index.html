@@ -2,247 +2,793 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NFC Mystery Gacha</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09060f">
+
+<title>NFC 運命解析</title>
 
 <style>
-*{
-  box-sizing:border-box;
+:root{
+  --bg:#07050b;
+  --panel:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.11);
+  --text:#ffffff;
+  --sub:rgba(255,255,255,.58);
+  --gold:#f5d889;
 }
-
+*{box-sizing:border-box}
+html{background:var(--bg)}
 body{
   margin:0;
   min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  min-height:100dvh;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
   background:
-    radial-gradient(circle at center,#27223d 0%,#101018 45%,#000 100%);
-  color:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    radial-gradient(circle at 50% -10%,rgba(104,74,200,.35),transparent 38%),
+    radial-gradient(circle at 90% 40%,rgba(180,35,90,.16),transparent 32%),
+    linear-gradient(180deg,#0c0914,#050408 72%);
+  overflow-x:hidden;
 }
-
-.wrap{
-  width:92%;
-  max-width:420px;
-  text-align:center;
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:28px 28px;
+  mask-image:linear-gradient(to bottom,black,transparent);
 }
-
-h1{
-  margin-bottom:8px;
-  letter-spacing:2px;
-  font-size:25px;
+#app{
+  width:min(92%,460px);
+  margin:0 auto;
+  padding:max(28px,env(safe-area-inset-top)) 0 max(40px,env(safe-area-inset-bottom));
 }
-
-.sub{
-  color:#999;
-  margin-bottom:30px;
-  font-size:13px;
-  letter-spacing:2px;
-}
-
-.card{
-  min-height:300px;
-  border-radius:24px;
-  border:1px solid #444;
-  padding:30px 20px;
+#scanner{
+  min-height:88vh;
+  min-height:88dvh;
   display:flex;
   flex-direction:column;
   justify-content:center;
-  background:linear-gradient(145deg,#191919,#292929);
-  box-shadow:0 10px 50px rgba(0,0,0,.6);
-  transition:.7s;
+  align-items:center;
+  text-align:center;
 }
-
-.card.opening{
-  transform:rotateY(720deg) scale(1.07);
+.logo{
+  position:relative;
+  width:142px;
+  height:142px;
+  display:grid;
+  place-items:center;
+  margin-bottom:35px;
 }
-
-.rarity{
+.ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);
+}
+.ring.one{animation:spin 3.2s linear infinite;border-top-color:#eee1ff}
+.ring.two{inset:15px;animation:spinBack 2.2s linear infinite;border-right-color:#cfadff}
+.ring.three{
+  inset:31px;
+  border-color:rgba(255,255,255,.10);
+  box-shadow:0 0 35px rgba(145,90,255,.24),inset 0 0 25px rgba(145,90,255,.12);
+}
+.core{
+  font-family:serif;
+  font-size:36px;
+  color:#f9edff;
+  text-shadow:0 0 18px rgba(200,150,255,.8);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinBack{to{transform:rotate(-360deg)}}
+.scanner-title{font-size:23px;font-weight:700;letter-spacing:.08em}
+.scanner-sub{margin-top:12px;color:var(--sub);font-size:13px;letter-spacing:.08em}
+.progress-wrap{
+  width:82%;
+  height:5px;
+  background:rgba(255,255,255,.08);
+  border-radius:99px;
+  overflow:hidden;
+  margin:32px auto 12px;
+}
+#progress{
+  width:0;
+  height:100%;
+  border-radius:99px;
+  background:linear-gradient(90deg,#8f68ff,#f2d6ff,#d998ff);
+  box-shadow:0 0 16px rgba(190,130,255,.9);
+  transition:width .22s ease;
+}
+#progressText{min-height:20px;color:rgba(255,255,255,.48);font-size:12px}
+#resultScreen{
+  display:none;
+  opacity:0;
+  transform:translateY(15px);
+  transition:.7s ease;
+}
+#resultScreen.show{opacity:1;transform:translateY(0)}
+.header{text-align:center;margin:10px 0 22px}
+.date{color:var(--sub);font-size:12px;letter-spacing:.1em}
+.header h1{margin:6px 0 0;font-size:19px;letter-spacing:.13em;font-weight:650}
+.main-card{
+  position:relative;
+  overflow:hidden;
+  padding:30px 20px 24px;
+  border:1px solid var(--line);
+  border-radius:30px;
+  background:linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035));
+  box-shadow:0 25px 80px rgba(0,0,0,.4),inset 0 1px rgba(255,255,255,.12);
+  backdrop-filter:blur(18px);
+  text-align:center;
+}
+.main-card::before{
+  content:"";
+  position:absolute;
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  top:-120px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(170,105,255,.16);
+  filter:blur(15px);
+}
+.small-label{position:relative;color:var(--sub);font-size:11px;letter-spacing:.18em}
+#fortune{
+  position:relative;
+  margin:10px 0 4px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:70px;
   font-weight:800;
-  font-size:30px;
-  margin-bottom:25px;
+  letter-spacing:.12em;
+  text-indent:.12em;
 }
-
-.result{
-  font-size:21px;
+#fortuneMessage{
+  position:relative;
+  max-width:330px;
+  margin:12px auto 0;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:15px;
+  line-height:1.9;
+  color:rgba(255,255,255,.83);
+}
+.dai{color:#ffe891;text-shadow:0 0 12px rgba(255,219,102,.6),0 0 38px rgba(255,160,45,.45)}
+.chu{color:#ffe3b0;text-shadow:0 0 18px rgba(255,210,150,.35)}
+.kichi{color:#ffd4cb}
+.sho{color:#d8e5ff}
+.sue{color:#c9cad8}
+.kyo{color:#b8b6c8}
+.daikyo{color:#ccb0e0;text-shadow:0 0 15px rgba(145,80,200,.3)}
+.section{
+  margin-top:20px;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:var(--panel);
+}
+.section-title{margin-bottom:18px;font-size:13px;font-weight:700;letter-spacing:.1em}
+.score-row{margin:14px 0}
+.score-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:13px}
+.score-number{font-size:14px;font-weight:750}
+.bar{width:100%;height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar span{
+  display:block;
+  width:0;
+  height:100%;
+  border-radius:99px;
+  background:linear-gradient(90deg,#7c67ff,#e5b7ff);
+  box-shadow:0 0 10px rgba(180,120,255,.5);
+  transition:width 1.2s cubic-bezier(.2,.8,.2,1);
+}
+.special{background:radial-gradient(circle at 100% 0,rgba(178,110,255,.18),transparent 40%),var(--panel)}
+#specialTitle{margin:3px 0 8px;font-family:serif;font-size:24px;font-weight:700;color:#f0d8ff}
+#specialText{color:rgba(255,255,255,.76);font-size:14px;line-height:1.75}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail{
+  min-height:108px;
+  padding:15px;
+  border-radius:18px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.07);
+}
+.detail-label{color:var(--sub);font-size:11px}
+.detail-value{margin-top:8px;font-size:16px;font-weight:700;line-height:1.5}
+.advice{text-align:left}
+.advice-item{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.advice-item:last-child{border-bottom:0}
+.advice-label{font-size:11px;color:#d9c0ff;margin-bottom:6px}
+.advice-text{font-size:14px;line-height:1.7;color:rgba(255,255,255,.82)}
+.history{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
+.history::-webkit-scrollbar{display:none}
+.history-card{
+  min-width:82px;
+  padding:12px 8px;
+  text-align:center;
+  border-radius:16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+}
+.history-date{font-size:10px;color:var(--sub)}
+.history-fortune{margin-top:6px;font-family:serif;font-size:18px;font-weight:bold}
+.share{
+  width:100%;
+  margin-top:20px;
+  padding:17px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;
+  color:white;
+  font-size:15px;
+  font-weight:700;
+  background:rgba(255,255,255,.07);
+}
+.footer{
+  margin:20px 8px 0;
+  text-align:center;
+  font-size:10px;
+  color:rgba(255,255,255,.29);
   line-height:1.7;
 }
-
-button{
-  width:100%;
-  border:0;
-  border-radius:16px;
-  padding:18px;
-  margin-top:25px;
-  font-size:20px;
-  font-weight:800;
-  background:#fff;
-  color:#000;
-}
-
-button:active{
-  transform:scale(.97);
-}
-
-.NORMAL{
-  color:#ddd;
-}
-
-.RARE{
-  color:#5cc8ff;
-  text-shadow:0 0 10px #168bd1;
-}
-
-.SR{
-  color:#d778ff;
-  text-shadow:0 0 12px #9233c5;
-}
-
-.LEGENDARY{
-  color:#ffd84a;
-  text-shadow:
-    0 0 10px gold,
-    0 0 25px orange;
-}
-
-.star{
+.particle{
   position:fixed;
+  top:-40px;
+  z-index:999;
   pointer-events:none;
-  animation:fall 1.8s linear forwards;
+  animation:fall linear forwards;
 }
-
 @keyframes fall{
-  from{
-    transform:translateY(-20px) rotate(0deg);
-    opacity:1;
-  }
-  to{
-    transform:translateY(110vh) rotate(500deg);
-    opacity:0;
-  }
+  0%{opacity:0;transform:translateY(-30px) rotate(0)}
+  15%{opacity:1}
+  100%{opacity:0;transform:translateY(115vh) rotate(540deg)}
 }
+.flash{
+  position:fixed;
+  inset:0;
+  z-index:998;
+  pointer-events:none;
+  background:white;
+  animation:flash .6s ease forwards;
+}
+@keyframes flash{from{opacity:.75}to{opacity:0}}
 </style>
 </head>
 
 <body>
+<div id="app">
 
-<div class="wrap">
-
-<h1>MYSTERY GACHA</h1>
-<div class="sub">NFC ITEM DETECTED</div>
-
-<div id="card" class="card">
-  <div id="rarity" class="rarity">READY</div>
-  <div id="result" class="result">
-    OPENを押してください
+<section id="scanner">
+  <div class="logo">
+    <div class="ring one"></div>
+    <div class="ring two"></div>
+    <div class="ring three"></div>
+    <div class="core">運</div>
   </div>
-</div>
+  <div class="scanner-title">本日の運勢を解析しています</div>
+  <div class="scanner-sub">NFC 接続を確認しました</div>
+  <div class="progress-wrap"><div id="progress"></div></div>
+  <div id="progressText">運勢情報を読み込んでいます</div>
+</section>
 
-<button onclick="gacha()">OPEN</button>
+<section id="resultScreen">
+  <header class="header">
+    <div id="today" class="date"></div>
+    <h1>本日の運勢</h1>
+  </header>
+
+  <div class="main-card">
+    <div class="small-label">総 合 判 定</div>
+    <div id="fortune"></div>
+    <div id="fortuneMessage"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">運勢解析</div>
+    <div id="scores"></div>
+  </div>
+
+  <div class="section special">
+    <div class="small-label">本日の特殊運</div>
+    <div id="specialTitle"></div>
+    <div id="specialText"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">本日の幸運情報</div>
+    <div class="detail-grid">
+      <div class="detail">
+        <div class="detail-label">幸運時刻</div>
+        <div id="luckyTime" class="detail-value"></div>
+      </div>
+      <div class="detail">
+        <div class="detail-label">幸運数字</div>
+        <div id="luckyNumber" class="detail-value"></div>
+      </div>
+      <div class="detail">
+        <div class="detail-label">幸運色</div>
+        <div id="luckyColor" class="detail-value"></div>
+      </div>
+      <div class="detail">
+        <div class="detail-label">幸運方角</div>
+        <div id="luckyDirection" class="detail-value"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section advice">
+    <div class="section-title">今日のお告げ</div>
+
+    <div class="advice-item">
+      <div class="advice-label">今日すると良いこと</div>
+      <div id="goodAction" class="advice-text"></div>
+    </div>
+
+    <div class="advice-item">
+      <div class="advice-label">今日避けたいこと</div>
+      <div id="badAction" class="advice-text"></div>
+    </div>
+
+    <div class="advice-item">
+      <div class="advice-label">今日の一言</div>
+      <div id="oneWord" class="advice-text"></div>
+    </div>
+  </div>
+
+  <div id="historySection" class="section">
+    <div class="section-title">最近の運勢</div>
+    <div id="history" class="history"></div>
+  </div>
+
+  <button class="share" onclick="shareResult()">本日の結果を共有</button>
+
+  <div class="footer">
+    この運勢は娯楽としてお楽しみください。<br>
+    結果は端末内に保存され、翌日に更新されます。
+  </div>
+</section>
 
 </div>
 
 <script>
-
-const items = [
+const fortuneData = [
   {
-    rarity:"NORMAL",
-    weight:45,
-    text:"今日はコーヒーを飲もう ☕"
+    name:"大吉", className:"dai", weight:10, min:82, max:100,
+    messages:[
+      "運気は非常に強く、物事を前へ進める力に恵まれる一日です。",
+      "良い流れが重なりやすい日。迷っていたことに一歩踏み出して。",
+      "積み重ねてきたものが形になりやすい運勢です。"
+    ]
   },
   {
-    rarity:"NORMAL",
-    weight:25,
-    text:"今日は少し早めに寝よう 😴"
+    name:"中吉", className:"chu", weight:18, min:70, max:94,
+    messages:[
+      "穏やかな追い風があります。丁寧な行動が良い結果につながります。",
+      "周囲との協力によって運が開ける一日です。",
+      "焦らず進めば、期待以上の成果につながりそうです。"
+    ]
   },
   {
-    rarity:"RARE",
-    weight:15,
-    text:"好きなお菓子を1つ買ってよい 🍫"
+    name:"吉", className:"kichi", weight:24, min:61, max:86,
+    messages:[
+      "安定した運気です。小さな幸運を見逃さないことが鍵。",
+      "普段どおりを大切にすると良い一日になります。",
+      "身近なところに良い出来事が隠れています。"
+    ]
   },
   {
-    rarity:"RARE",
-    weight:8,
-    text:"今日はデザート追加 🍰"
+    name:"小吉", className:"sho", weight:20, min:52, max:76,
+    messages:[
+      "小さな幸運が積み重なる日。自分のペースを大切に。",
+      "無理をせず、一つずつ進めることで運が整います。",
+      "何気ない出来事の中に良い兆しがあります。"
+    ]
   },
   {
-    rarity:"SR",
-    weight:5,
-    text:"今日の夕食を決める権利獲得 🍣"
+    name:"末吉", className:"sue", weight:16, min:42, max:67,
+    messages:[
+      "今は整える時。焦らず準備することで運気が上向きます。",
+      "結果を急がず、足元を固めることが吉。",
+      "目立たない努力が後から効いてきます。"
+    ]
   },
   {
-    rarity:"LEGENDARY",
-    weight:2,
-    text:"🌈 好きなものを食べてよい 🌈"
+    name:"凶", className:"kyo", weight:10, min:29, max:58,
+    messages:[
+      "慎重さが幸運を呼ぶ日。確認を増やせば問題を避けられます。",
+      "無理に進めず、一度立ち止まることで流れが変わります。",
+      "今日は守りを意識すると良い一日になります。"
+    ]
+  },
+  {
+    name:"大凶", className:"daikyo", weight:2, min:18, max:49,
+    messages:[
+      "今日は慎重第一。ただし、ここから運は上向いていきます。",
+      "無理をせず整える日に。明日への準備が運を変えます。",
+      "思うようにいかない時ほど、基本に戻ることが大切です。"
+    ]
   }
 ];
 
-function gacha(){
+const specialFortunes = [
+  ["決断運","迷っていたことを一つ決めることで流れが大きく変わりそうです。"],
+  ["出会い運","何気ない会話や偶然の接点が良いきっかけになりそうです。"],
+  ["再挑戦運","以前うまくいかなかったことに、もう一度取り組む好機です。"],
+  ["集中運","一つのことに時間を使うほど成果が出やすい日です。"],
+  ["発見運","普段見過ごしている場所や情報の中にヒントがあります。"],
+  ["整理運","身の回りを整えると、思考まで軽くなりそうです。"],
+  ["直感運","最初に感じた違和感やひらめきを大切に。"],
+  ["交渉運","丁寧に伝えることで相手との話が進みやすい日です。"],
+  ["休息運","あえて休むことが、次の好機につながる一日です。"],
+  ["挑戦運","少しだけ勇気が必要な選択に良い流れがあります。"]
+];
 
-  const card = document.getElementById("card");
-  const rarity = document.getElementById("rarity");
-  const result = document.getElementById("result");
+const goodActions = [
+  "午前中に一つだけ重要なことを終わらせる",
+  "気になっていた連絡を一件返す",
+  "机や身の回りを5分だけ整理する",
+  "いつもより少し早く行動を始める",
+  "誰かに感謝を一言伝える",
+  "後回しにしていることを一つ片づける",
+  "新しい情報を一つ調べてみる",
+  "少し遠回りしていつもと違う景色を見る",
+  "温かい飲み物をゆっくり飲む",
+  "思いついたことをメモに残す",
+  "一度立ち止まり予定を整理する",
+  "普段話さない人と短い会話をしてみる"
+];
 
-  rarity.className="rarity";
-  rarity.textContent="SCANNING...";
-  result.textContent="解析しています…";
+const badActions = [
+  "勢いだけで大きな判断をすること",
+  "確認せずに物事を進めること",
+  "他人と自分を必要以上に比べること",
+  "疲れているのに無理を続けること",
+  "小さな違和感をそのままにすること",
+  "急いで結論を出すこと",
+  "感情的なままメッセージを送ること",
+  "必要のない衝動買い",
+  "予定を詰め込みすぎること",
+  "一度に多くのことを片づけようとすること"
+];
 
-  card.classList.add("opening");
+const oneWords = [
+  "急ぐより、整える。",
+  "迷ったら、小さな方から動く。",
+  "今日の一歩が明日の流れを変える。",
+  "良い流れは静かに始まる。",
+  "余白のある人に幸運は入りやすい。",
+  "動くべき時と待つべき時を見極める。",
+  "小さな違和感ほど大切に。",
+  "できたことに目を向ける。",
+  "思っているより、状況は悪くない。",
+  "一つ終わらせれば、次が見える。",
+  "偶然を少しだけ信じてみる。",
+  "今日は今日の速度で進めばいい。"
+];
 
-  setTimeout(()=>{
+const colors = [
+  "藍色","深緑","金色","銀色","白色","朱色","桜色","空色",
+  "藤色","若草色","琥珀色","紺色","橙色","灰青色"
+];
 
-    const total =
-      items.reduce((sum,item)=>sum+item.weight,0);
+const directions = ["北","北東","東","南東","南","南西","西","北西"];
 
-    let r=Math.random()*total;
-    let selected=items[0];
-
-    for(const item of items){
-      r-=item.weight;
-
-      if(r<=0){
-        selected=item;
-        break;
-      }
-    }
-
-    rarity.textContent=selected.rarity;
-    rarity.className="rarity "+selected.rarity;
-    result.textContent=selected.text;
-
-    card.classList.remove("opening");
-
-    if(selected.rarity==="LEGENDARY"){
-      effect();
-    }
-
-  },1200);
+function randomFrom(array){
+  return array[Math.floor(Math.random()*array.length)];
 }
 
-function effect(){
+function randomInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
 
-  for(let i=0;i<45;i++){
+function weightedFortune(){
+  const total = fortuneData.reduce((sum,f)=>sum+f.weight,0);
+  let r=Math.random()*total;
 
-    const s=document.createElement("div");
+  for(const fortune of fortuneData){
+    r-=fortune.weight;
+    if(r<=0) return fortune;
+  }
 
-    s.className="star";
-    s.textContent=["✨","⭐","🌟"][Math.floor(Math.random()*3)];
+  return fortuneData[0];
+}
 
-    s.style.left=Math.random()*100+"vw";
-    s.style.top="-30px";
-    s.style.fontSize=(18+Math.random()*25)+"px";
-    s.style.animationDelay=Math.random()*.5+"s";
+function getDateKey(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 
-    document.body.appendChild(s);
+function formatToday(){
+  return new Intl.DateTimeFormat("ja-JP",{
+    year:"numeric",
+    month:"long",
+    day:"numeric",
+    weekday:"short"
+  }).format(new Date());
+}
+
+function createTodayResult(){
+  const fortune=weightedFortune();
+  const base=randomInt(fortune.min,fortune.max);
+
+  const createScore=()=>{
+    let n=base+randomInt(-13,13);
+    return Math.max(5,Math.min(100,n));
+  };
+
+  const hour=randomInt(8,21);
+  const minute=randomFrom(["05","12","18","24","31","37","42","48","53"]);
+  const special=randomFrom(specialFortunes);
+
+  return {
+    date:getDateKey(),
+    fortune:fortune.name,
+    className:fortune.className,
+    message:randomFrom(fortune.messages),
+    scores:{
+      "総合運":base,
+      "仕事運":createScore(),
+      "金運":createScore(),
+      "対人運":createScore(),
+      "健康運":createScore(),
+      "直感運":createScore()
+    },
+    specialTitle:special[0],
+    specialText:special[1],
+    luckyTime:`${hour}:${minute} 前後`,
+    luckyNumber:randomInt(1,99),
+    luckyColor:randomFrom(colors),
+    luckyDirection:randomFrom(directions),
+    goodAction:randomFrom(goodActions),
+    badAction:randomFrom(badActions),
+    oneWord:randomFrom(oneWords)
+  };
+}
+
+function loadTodayResult(){
+  const today=getDateKey();
+  const saved=localStorage.getItem("nfcOmikujiToday");
+
+  if(saved){
+    try{
+      const obj=JSON.parse(saved);
+      if(obj.date===today) return obj;
+    }catch(e){}
+  }
+
+  const result=createTodayResult();
+
+  localStorage.setItem(
+    "nfcOmikujiToday",
+    JSON.stringify(result)
+  );
+
+  saveHistory(result);
+
+  return result;
+}
+
+function saveHistory(result){
+  let history=[];
+
+  try{
+    history=JSON.parse(
+      localStorage.getItem("nfcOmikujiHistory")
+    ) || [];
+  }catch(e){}
+
+  if(!history.some(item=>item.date===result.date)){
+    history.unshift({
+      date:result.date,
+      fortune:result.fortune,
+      className:result.className
+    });
+  }
+
+  history=history.slice(0,7);
+
+  localStorage.setItem(
+    "nfcOmikujiHistory",
+    JSON.stringify(history)
+  );
+}
+
+const messages=[
+  "NFC接続を確認しました",
+  "本日の運勢情報を取得しています",
+  "運気の傾向を解析しています",
+  "幸運情報を算出しています",
+  "解析が完了しました"
+];
+
+function startAnalysis(){
+  let value=0;
+  const progress=document.getElementById("progress");
+  const text=document.getElementById("progressText");
+
+  const timer=setInterval(()=>{
+    value+=randomInt(4,10);
+
+    if(value>100) value=100;
+
+    progress.style.width=value+"%";
+
+    let index=Math.floor(value/22);
+    index=Math.min(index,messages.length-1);
+
+    text.textContent=messages[index];
+
+    if(value>=100){
+      clearInterval(timer);
+
+      if(navigator.vibrate){
+        navigator.vibrate([80,50,110]);
+      }
+
+      setTimeout(showResult,550);
+    }
+  },180);
+}
+
+function showResult(){
+  const result=loadTodayResult();
+  const scanner=document.getElementById("scanner");
+  const resultScreen=document.getElementById("resultScreen");
+
+  scanner.style.display="none";
+  resultScreen.style.display="block";
+
+  requestAnimationFrame(()=>{
+    resultScreen.classList.add("show");
+  });
+
+  document.getElementById("today").textContent=formatToday();
+
+  const fortuneEl=document.getElementById("fortune");
+  fortuneEl.textContent=result.fortune;
+  fortuneEl.className=result.className;
+
+  document.getElementById("fortuneMessage").textContent=result.message;
+
+  const scoresEl=document.getElementById("scores");
+  scoresEl.innerHTML="";
+
+  Object.entries(result.scores).forEach(([label,value])=>{
+    const div=document.createElement("div");
+    div.className="score-row";
+
+    div.innerHTML=`
+      <div class="score-top">
+        <span>${label}</span>
+        <span class="score-number">${value}</span>
+      </div>
+      <div class="bar"><span></span></div>
+    `;
+
+    scoresEl.appendChild(div);
 
     setTimeout(()=>{
-      s.remove();
-    },2500);
+      div.querySelector(".bar span").style.width=value+"%";
+    },250);
+  });
+
+  document.getElementById("specialTitle").textContent=result.specialTitle;
+  document.getElementById("specialText").textContent=result.specialText;
+  document.getElementById("luckyTime").textContent=result.luckyTime;
+  document.getElementById("luckyNumber").textContent=result.luckyNumber;
+  document.getElementById("luckyColor").textContent=result.luckyColor;
+  document.getElementById("luckyDirection").textContent=result.luckyDirection;
+  document.getElementById("goodAction").textContent=result.goodAction;
+  document.getElementById("badAction").textContent=result.badAction;
+  document.getElementById("oneWord").textContent=result.oneWord;
+
+  renderHistory();
+
+  if(result.fortune==="大吉"){
+    flash();
+    particles(60);
+  }else if(result.fortune==="中吉"){
+    particles(30);
   }
 }
 
-</script>
+function renderHistory(){
+  let history=[];
 
+  try{
+    history=JSON.parse(
+      localStorage.getItem("nfcOmikujiHistory")
+    ) || [];
+  }catch(e){}
+
+  const container=document.getElementById("history");
+  container.innerHTML="";
+
+  if(history.length===0){
+    document.getElementById("historySection").style.display="none";
+    return;
+  }
+
+  history.forEach(item=>{
+    const d=item.date.split("-");
+    const div=document.createElement("div");
+
+    div.className="history-card";
+
+    div.innerHTML=`
+      <div class="history-date">${Number(d[1])}/${Number(d[2])}</div>
+      <div class="history-fortune ${item.className}">${item.fortune}</div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function particles(count){
+  const symbols=["✦","✧","◆","❀","✨"];
+
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");
+
+    p.className="particle";
+    p.textContent=randomFrom(symbols);
+    p.style.left=Math.random()*100+"vw";
+    p.style.fontSize=randomInt(12,28)+"px";
+    p.style.color=Math.random()>.45 ? "#ffe59b" : "#d8baff";
+    p.style.animationDuration=(2.5+Math.random()*2.8)+"s";
+    p.style.animationDelay=(Math.random()*.8)+"s";
+
+    document.body.appendChild(p);
+
+    setTimeout(()=>p.remove(),6500);
+  }
+}
+
+function flash(){
+  const f=document.createElement("div");
+  f.className="flash";
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),700);
+}
+
+async function shareResult(){
+  const result=loadTodayResult();
+
+  const text=
+`今日の運勢は「${result.fortune}」
+
+総合運 ${result.scores["総合運"]}
+仕事運 ${result.scores["仕事運"]}
+金運 ${result.scores["金運"]}
+
+本日の特殊運：
+${result.specialTitle}
+
+幸運時刻：
+${result.luckyTime}
+
+今日の一言：
+${result.oneWord}`;
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"本日の運勢",
+        text:text
+      });
+    }catch(e){}
+  }else{
+    await navigator.clipboard.writeText(text);
+    alert("結果をコピーしました");
+  }
+}
+
+window.addEventListener("load",()=>{
+  setTimeout(startAnalysis,500);
+});
+</script>
 </body>
 </html>
