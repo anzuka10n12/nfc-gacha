@@ -3,792 +3,820 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#09060f">
-
-<title>NFC 運命解析</title>
-
+<meta name="theme-color" content="#FBEFF1">
+<title>ぽてぽてひろば</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
+/* ===== 色と基本 ===== */
 :root{
-  --bg:#07050b;
-  --panel:rgba(255,255,255,.075);
-  --line:rgba(255,255,255,.11);
-  --text:#ffffff;
-  --sub:rgba(255,255,255,.58);
-  --gold:#f5d889;
+  --paper:#FBEFF1;   /* 桜もちの白 */
+  --card:#FFFDFB;
+  --ink:#5A4548;     /* ココア色の線 */
+  --sub:#9A8487;
+  --pink:#F2A7B8;
+  --mint:#B9E3CF;
+  --butter:#FFE59A;
+  --sky:#C9DDF5;
+  --dim:#EADCDF;
 }
-*{box-sizing:border-box}
-html{background:var(--bg)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
-  margin:0;
-  min-height:100vh;
-  min-height:100dvh;
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
-  background:
-    radial-gradient(circle at 50% -10%,rgba(104,74,200,.35),transparent 38%),
-    radial-gradient(circle at 90% 40%,rgba(180,35,90,.16),transparent 32%),
-    linear-gradient(180deg,#0c0914,#050408 72%);
-  overflow-x:hidden;
+  margin:0;color:var(--ink);background:var(--paper);
+  font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  font-weight:500;line-height:1.6;
+  padding-top:env(safe-area-inset-top,0px);
 }
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background:
-    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
-  background-size:28px 28px;
-  mask-image:linear-gradient(to bottom,black,transparent);
+button{font:inherit;color:inherit}
+#app{max-width:440px;margin:0 auto;min-height:100%;padding:12px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.hidden{display:none!important}
+
+/* ===== 上部 ===== */
+.top{display:flex;align-items:center;gap:8px;margin:4px 0 12px}
+.petname{font-weight:900;font-size:22px;letter-spacing:.02em}
+.chip{font-size:12px;font-weight:700;padding:2px 10px;border:2px solid var(--ink);border-radius:99px;background:var(--card)}
+.menu-btn{margin-left:auto;width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);font-weight:900;font-size:18px;line-height:1}
+
+/* ===== へや ===== */
+.room{
+  position:relative;height:260px;border:3px solid var(--ink);border-radius:28px 28px 22px 22px;
+  background:linear-gradient(#FFFDFB 0 68%, #F6E3E7 68% 100%);overflow:hidden;
 }
-#app{
-  width:min(92%,460px);
-  margin:0 auto;
-  padding:max(28px,env(safe-area-inset-top)) 0 max(40px,env(safe-area-inset-bottom));
+.room::after{content:"";position:absolute;left:0;right:0;top:68%;border-top:2.5px dashed rgba(90,69,72,.25)}
+.room.dark{background:linear-gradient(#5d5160 0 68%, #4b4250 68% 100%)}
+.room.dark .bubble{background:#efe6ea}
+.pet-wrap{position:absolute;left:50%;bottom:22px;width:170px;height:170px;transform:translateX(-50%)}
+.pet-wrap svg{width:100%;height:100%;overflow:visible}
+.bounce{animation:bounce 1.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes bounce{0%,100%{transform:scale(1,1)}50%{transform:scale(1.04,.95)}}
+.wander{animation:wander 9s ease-in-out infinite}
+@keyframes wander{0%,100%{transform:translateX(-50%)}30%{transform:translateX(-80%)}70%{transform:translateX(-20%)}}
+.poops{position:absolute;right:16px;bottom:18px;display:flex;gap:2px}
+.poops svg{width:34px;height:34px}
+.bubble{
+  position:absolute;left:50%;top:14px;transform:translateX(-50%);max-width:80%;
+  background:var(--card);border:2.5px solid var(--ink);border-radius:18px;padding:6px 14px;
+  font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-#scanner{
-  min-height:88vh;
-  min-height:88dvh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
+.bubble::after{content:"";position:absolute;left:50%;bottom:-9px;width:12px;height:12px;background:inherit;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+.plaza-badge{position:absolute;left:12px;bottom:12px;font-size:12px;font-weight:700;background:var(--mint);border:2px solid var(--ink);border-radius:99px;padding:2px 10px}
+
+/* ===== ステータス ===== */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin:14px 4px 10px;font-size:14px}
+.stat{display:flex;align-items:center;justify-content:space-between}
+.hearts{letter-spacing:2px;font-size:17px;color:var(--pink);-webkit-text-stroke:.6px var(--ink)}
+.hearts .off{color:var(--dim)}
+.stat b{font-weight:900}
+
+/* ===== お世話ボタン（シール風） ===== */
+.care{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+.care button{
+  position:relative;height:64px;border:2.5px solid var(--ink);border-radius:20px;background:var(--card);
+  box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:16px;transition:transform .08s, box-shadow .08s
 }
-.logo{
-  position:relative;
-  width:142px;
-  height:142px;
-  display:grid;
-  place-items:center;
-  margin-bottom:35px;
+.care button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.care button small{display:block;font-size:11px;font-weight:700;color:var(--sub);line-height:1.1}
+.care button[data-c="feed"]{background:#FFF1D6}
+.care button[data-c="snack"]{background:#FFE3EA}
+.care button[data-c="play"]{background:#E3F4EB}
+.care button[data-c="clean"]{background:#E6EFFB}
+.care button[data-c="medicine"]{background:#F1E8FA}
+.care button[data-c="scold"]{background:#FFF6C9}
+.care button:disabled{opacity:.38;box-shadow:0 4px 0 rgba(90,69,72,.35)}
+.care button.alert::before{content:"";position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#F27E95;border:2.5px solid var(--ink)}
+
+/* ===== 下のタブ ===== */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:3px solid var(--ink);
+  display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))
 }
-.ring{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.12);
+nav .inner{display:flex;width:100%;max-width:440px}
+nav button{flex:1;border:0;background:none;padding:8px 0;font-weight:700;font-size:13px;border-radius:14px}
+nav button[aria-current="true"]{background:var(--pink);font-weight:900}
+
+/* ===== カードと文字 ===== */
+h2{font-size:20px;font-weight:900;margin:8px 4px 12px}
+h3{font-size:15px;font-weight:900;margin:20px 4px 8px}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;padding:14px 16px;margin-bottom:12px}
+.lead{color:var(--sub);font-size:14px;margin:0 4px 12px}
+.btn{
+  display:block;width:100%;height:54px;border:2.5px solid var(--ink);border-radius:18px;background:var(--pink);
+  box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:17px;margin-top:12px
 }
-.ring.one{animation:spin 3.2s linear infinite;border-top-color:#eee1ff}
-.ring.two{inset:15px;animation:spinBack 2.2s linear infinite;border-right-color:#cfadff}
-.ring.three{
-  inset:31px;
-  border-color:rgba(255,255,255,.10);
-  box-shadow:0 0 35px rgba(145,90,255,.24),inset 0 0 25px rgba(145,90,255,.12);
+.btn.sub{background:var(--card)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.5}
+input{
+  width:100%;height:50px;border:2.5px solid var(--ink);border-radius:16px;padding:0 14px;font:inherit;font-size:17px;
+  background:#fff;color:var(--ink)
 }
-.core{
-  font-family:serif;
-  font-size:36px;
-  color:#f9edff;
-  text-shadow:0 0 18px rgba(200,150,255,.8);
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes spinBack{to{transform:rotate(-360deg)}}
-.scanner-title{font-size:23px;font-weight:700;letter-spacing:.08em}
-.scanner-sub{margin-top:12px;color:var(--sub);font-size:13px;letter-spacing:.08em}
-.progress-wrap{
-  width:82%;
-  height:5px;
-  background:rgba(255,255,255,.08);
-  border-radius:99px;
-  overflow:hidden;
-  margin:32px auto 12px;
-}
-#progress{
-  width:0;
-  height:100%;
-  border-radius:99px;
-  background:linear-gradient(90deg,#8f68ff,#f2d6ff,#d998ff);
-  box-shadow:0 0 16px rgba(190,130,255,.9);
-  transition:width .22s ease;
-}
-#progressText{min-height:20px;color:rgba(255,255,255,.48);font-size:12px}
-#resultScreen{
-  display:none;
-  opacity:0;
-  transform:translateY(15px);
-  transition:.7s ease;
-}
-#resultScreen.show{opacity:1;transform:translateY(0)}
-.header{text-align:center;margin:10px 0 22px}
-.date{color:var(--sub);font-size:12px;letter-spacing:.1em}
-.header h1{margin:6px 0 0;font-size:19px;letter-spacing:.13em;font-weight:650}
-.main-card{
-  position:relative;
-  overflow:hidden;
-  padding:30px 20px 24px;
-  border:1px solid var(--line);
-  border-radius:30px;
-  background:linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035));
-  box-shadow:0 25px 80px rgba(0,0,0,.4),inset 0 1px rgba(255,255,255,.12);
-  backdrop-filter:blur(18px);
-  text-align:center;
-}
-.main-card::before{
-  content:"";
-  position:absolute;
-  width:220px;
-  height:220px;
-  border-radius:50%;
-  top:-120px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(170,105,255,.16);
-  filter:blur(15px);
-}
-.small-label{position:relative;color:var(--sub);font-size:11px;letter-spacing:.18em}
-#fortune{
-  position:relative;
-  margin:10px 0 4px;
-  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
-  font-size:70px;
-  font-weight:800;
-  letter-spacing:.12em;
-  text-indent:.12em;
-}
-#fortuneMessage{
-  position:relative;
-  max-width:330px;
-  margin:12px auto 0;
-  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
-  font-size:15px;
-  line-height:1.9;
-  color:rgba(255,255,255,.83);
-}
-.dai{color:#ffe891;text-shadow:0 0 12px rgba(255,219,102,.6),0 0 38px rgba(255,160,45,.45)}
-.chu{color:#ffe3b0;text-shadow:0 0 18px rgba(255,210,150,.35)}
-.kichi{color:#ffd4cb}
-.sho{color:#d8e5ff}
-.sue{color:#c9cad8}
-.kyo{color:#b8b6c8}
-.daikyo{color:#ccb0e0;text-shadow:0 0 15px rgba(145,80,200,.3)}
-.section{
-  margin-top:20px;
-  padding:20px;
-  border:1px solid var(--line);
-  border-radius:24px;
-  background:var(--panel);
-}
-.section-title{margin-bottom:18px;font-size:13px;font-weight:700;letter-spacing:.1em}
-.score-row{margin:14px 0}
-.score-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:13px}
-.score-number{font-size:14px;font-weight:750}
-.bar{width:100%;height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
-.bar span{
-  display:block;
-  width:0;
-  height:100%;
-  border-radius:99px;
-  background:linear-gradient(90deg,#7c67ff,#e5b7ff);
-  box-shadow:0 0 10px rgba(180,120,255,.5);
-  transition:width 1.2s cubic-bezier(.2,.8,.2,1);
-}
-.special{background:radial-gradient(circle at 100% 0,rgba(178,110,255,.18),transparent 40%),var(--panel)}
-#specialTitle{margin:3px 0 8px;font-family:serif;font-size:24px;font-weight:700;color:#f0d8ff}
-#specialText{color:rgba(255,255,255,.76);font-size:14px;line-height:1.75}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.detail{
-  min-height:108px;
-  padding:15px;
-  border-radius:18px;
-  background:rgba(255,255,255,.045);
-  border:1px solid rgba(255,255,255,.07);
-}
-.detail-label{color:var(--sub);font-size:11px}
-.detail-value{margin-top:8px;font-size:16px;font-weight:700;line-height:1.5}
-.advice{text-align:left}
-.advice-item{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07)}
-.advice-item:last-child{border-bottom:0}
-.advice-label{font-size:11px;color:#d9c0ff;margin-bottom:6px}
-.advice-text{font-size:14px;line-height:1.7;color:rgba(255,255,255,.82)}
-.history{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
-.history::-webkit-scrollbar{display:none}
-.history-card{
-  min-width:82px;
-  padding:12px 8px;
-  text-align:center;
-  border-radius:16px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.07);
-}
-.history-date{font-size:10px;color:var(--sub)}
-.history-fortune{margin-top:6px;font-family:serif;font-size:18px;font-weight:bold}
-.share{
-  width:100%;
-  margin-top:20px;
-  padding:17px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:18px;
-  color:white;
-  font-size:15px;
-  font-weight:700;
-  background:rgba(255,255,255,.07);
-}
-.footer{
-  margin:20px 8px 0;
-  text-align:center;
-  font-size:10px;
-  color:rgba(255,255,255,.29);
-  line-height:1.7;
-}
-.particle{
-  position:fixed;
-  top:-40px;
-  z-index:999;
-  pointer-events:none;
-  animation:fall linear forwards;
-}
-@keyframes fall{
-  0%{opacity:0;transform:translateY(-30px) rotate(0)}
-  15%{opacity:1}
-  100%{opacity:0;transform:translateY(115vh) rotate(540deg)}
-}
-.flash{
-  position:fixed;
-  inset:0;
-  z-index:998;
-  pointer-events:none;
-  background:white;
-  animation:flash .6s ease forwards;
-}
-@keyframes flash{from{opacity:.75}to{opacity:0}}
+label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
+.code{font-size:28px;font-weight:900;letter-spacing:.12em;text-align:center;padding:14px 0;word-break:keep-all}
+
+/* ===== ひろば ===== */
+.friend{display:flex;gap:12px;align-items:center}
+.friend svg{width:84px;height:84px;flex:none}
+.friend .who{font-weight:900}
+.friend .meta{font-size:12px;color:var(--sub)}
+.stampbub{display:inline-block;margin-top:4px;font-size:13px;font-weight:700;background:var(--butter);border:2px solid var(--ink);border-radius:12px;padding:1px 10px}
+.stamps{display:flex;flex-wrap:wrap;gap:8px}
+.stamps button{border:2px solid var(--ink);border-radius:99px;background:var(--card);padding:6px 14px;font-weight:700}
+.small-btn{margin-top:8px;border:2px solid var(--ink);border-radius:12px;background:var(--mint);padding:4px 12px;font-weight:900;font-size:13px}
+
+/* ===== ずかん ===== */
+.dexgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dexcell{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:4px 2px 6px;text-align:center;font-size:11px;font-weight:700}
+.dexcell svg{width:100%;height:64px}
+.dexcell.none{color:var(--sub);border-style:dashed}
+.q{height:64px;display:grid;place-items:center;font-size:28px;font-weight:900;color:var(--dim)}
+.count{font-weight:900;font-size:15px;margin:0 4px}
+
+/* ===== ランキング ===== */
+.rank{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:2px dotted var(--dim)}
+.rank:last-child{border-bottom:0}
+.rank .no{font-weight:900;width:1.5em}
+.rank .v{margin-left:auto;font-weight:900}
+
+/* ===== 演出の窓 ===== */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(90,69,72,.45);display:grid;place-items:center;padding:20px}
+.sheet{width:100%;max-width:380px;background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:20px;text-align:center;animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+.sheet .art{width:160px;height:160px;margin:0 auto}
+.sheet .art svg{width:100%;height:100%;overflow:visible}
+.sheet h3{font-size:19px;margin:8px 0 4px}
+.sheet p{margin:4px 0;color:var(--sub);font-size:14px}
+.glow .art{filter:drop-shadow(0 0 18px #ffe07a) drop-shadow(0 0 30px #d6b8ff)}
+.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{filter:brightness(4) saturate(0)}100%{filter:none}}
+.ascend .art{animation:rise 2.4s ease-in-out}
+@keyframes rise{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:.6}}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--ink);color:#fff;border-radius:99px;padding:8px 18px;font-weight:700;font-size:14px;max-width:90%}
+.loading{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--sub);font-weight:700}
+.loading svg{width:120px;height:120px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:3px solid #7aa7e0;outline-offset:2px}
 </style>
 </head>
-
 <body>
-<div id="app">
+<!-- 手描き風のゆれ線フィルター（全体で共有） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="wob" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+    </filter>
+  </defs>
+</svg>
 
-<section id="scanner">
-  <div class="logo">
-    <div class="ring one"></div>
-    <div class="ring two"></div>
-    <div class="ring three"></div>
-    <div class="core">運</div>
+<div id="app"><div class="loading" id="boot"><div><div id="bootArt"></div>とことこ…</div></div></div>
+
+<nav id="nav" class="hidden" aria-label="メニュー">
+  <div class="inner">
+    <button data-tab="home" aria-current="true">そだてる</button>
+    <button data-tab="plaza">ひろば</button>
+    <button data-tab="dex">ずかん</button>
+    <button data-tab="rank">ランキング</button>
   </div>
-  <div class="scanner-title">本日の運勢を解析しています</div>
-  <div class="scanner-sub">NFC 接続を確認しました</div>
-  <div class="progress-wrap"><div id="progress"></div></div>
-  <div id="progressText">運勢情報を読み込んでいます</div>
-</section>
-
-<section id="resultScreen">
-  <header class="header">
-    <div id="today" class="date"></div>
-    <h1>本日の運勢</h1>
-  </header>
-
-  <div class="main-card">
-    <div class="small-label">総 合 判 定</div>
-    <div id="fortune"></div>
-    <div id="fortuneMessage"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">運勢解析</div>
-    <div id="scores"></div>
-  </div>
-
-  <div class="section special">
-    <div class="small-label">本日の特殊運</div>
-    <div id="specialTitle"></div>
-    <div id="specialText"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">本日の幸運情報</div>
-    <div class="detail-grid">
-      <div class="detail">
-        <div class="detail-label">幸運時刻</div>
-        <div id="luckyTime" class="detail-value"></div>
-      </div>
-      <div class="detail">
-        <div class="detail-label">幸運数字</div>
-        <div id="luckyNumber" class="detail-value"></div>
-      </div>
-      <div class="detail">
-        <div class="detail-label">幸運色</div>
-        <div id="luckyColor" class="detail-value"></div>
-      </div>
-      <div class="detail">
-        <div class="detail-label">幸運方角</div>
-        <div id="luckyDirection" class="detail-value"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section advice">
-    <div class="section-title">今日のお告げ</div>
-
-    <div class="advice-item">
-      <div class="advice-label">今日すると良いこと</div>
-      <div id="goodAction" class="advice-text"></div>
-    </div>
-
-    <div class="advice-item">
-      <div class="advice-label">今日避けたいこと</div>
-      <div id="badAction" class="advice-text"></div>
-    </div>
-
-    <div class="advice-item">
-      <div class="advice-label">今日の一言</div>
-      <div id="oneWord" class="advice-text"></div>
-    </div>
-  </div>
-
-  <div id="historySection" class="section">
-    <div class="section-title">最近の運勢</div>
-    <div id="history" class="history"></div>
-  </div>
-
-  <button class="share" onclick="shareResult()">本日の結果を共有</button>
-
-  <div class="footer">
-    この運勢は娯楽としてお楽しみください。<br>
-    結果は端末内に保存され、翌日に更新されます。
-  </div>
-</section>
-
-</div>
+</nav>
 
 <script>
-const fortuneData = [
-  {
-    name:"大吉", className:"dai", weight:10, min:82, max:100,
-    messages:[
-      "運気は非常に強く、物事を前へ進める力に恵まれる一日です。",
-      "良い流れが重なりやすい日。迷っていたことに一歩踏み出して。",
-      "積み重ねてきたものが形になりやすい運勢です。"
-    ]
-  },
-  {
-    name:"中吉", className:"chu", weight:18, min:70, max:94,
-    messages:[
-      "穏やかな追い風があります。丁寧な行動が良い結果につながります。",
-      "周囲との協力によって運が開ける一日です。",
-      "焦らず進めば、期待以上の成果につながりそうです。"
-    ]
-  },
-  {
-    name:"吉", className:"kichi", weight:24, min:61, max:86,
-    messages:[
-      "安定した運気です。小さな幸運を見逃さないことが鍵。",
-      "普段どおりを大切にすると良い一日になります。",
-      "身近なところに良い出来事が隠れています。"
-    ]
-  },
-  {
-    name:"小吉", className:"sho", weight:20, min:52, max:76,
-    messages:[
-      "小さな幸運が積み重なる日。自分のペースを大切に。",
-      "無理をせず、一つずつ進めることで運が整います。",
-      "何気ない出来事の中に良い兆しがあります。"
-    ]
-  },
-  {
-    name:"末吉", className:"sue", weight:16, min:42, max:67,
-    messages:[
-      "今は整える時。焦らず準備することで運気が上向きます。",
-      "結果を急がず、足元を固めることが吉。",
-      "目立たない努力が後から効いてきます。"
-    ]
-  },
-  {
-    name:"凶", className:"kyo", weight:10, min:29, max:58,
-    messages:[
-      "慎重さが幸運を呼ぶ日。確認を増やせば問題を避けられます。",
-      "無理に進めず、一度立ち止まることで流れが変わります。",
-      "今日は守りを意識すると良い一日になります。"
-    ]
-  },
-  {
-    name:"大凶", className:"daikyo", weight:2, min:18, max:49,
-    messages:[
-      "今日は慎重第一。ただし、ここから運は上向いていきます。",
-      "無理をせず整える日に。明日への準備が運を変えます。",
-      "思うようにいかない時ほど、基本に戻ることが大切です。"
-    ]
+/* ============================================================
+   設定：GASのウェブアプリURLをここに貼る
+   ============================================================ */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxvsdIWFpX63dTDsAwr2EdYsusIqrXz6VwSLfYkISkB_oaTqknvZD_T5OjDUwZdL8p6/exec';
+
+/* ===== 保存（ブラウザ） ===== */
+const LS_AUTH = 'nfcpet.auth';
+const LS_CODE = 'nfcpet.code';
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+/* ===== 状態 ===== */
+let auth = store.get(LS_AUTH);
+let pet = null;
+let nickname = '';
+let plazaData = null;
+let tab = 'home';
+let busy = false;
+let bubbleText = '';
+const eventQueue = [];
+
+const $app = document.getElementById('app');
+const $nav = document.getElementById('nav');
+
+/* ===== 通信 ===== */
+async function api(action, extra = {}){
+  const body = Object.assign({ action }, extra);
+  if (auth){ body.userId = auth.userId; body.token = auth.token; }
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 事前確認を避ける
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || '処理できませんでした');
+  return data;
+}
+
+/* ============================================================
+   キャラの絵（SVGで描く・すべてオリジナル）
+   ============================================================ */
+const STAGE_OF = {
+  punimaru:'baby', koromochi:'child', besomochi:'child', kirikko:'young', amaenbo:'young', zunguri:'young', hinekure:'young'
+};
+const FORM_NAME = {
+  punimaru:'ぷにまる', koromochi:'ころもち', besomochi:'べそもち', kirikko:'きりっこ', amaenbo:'あまえんぼ',
+  zunguri:'ずんぐり', hinekure:'ひねくれ', hoshimaru:'ほしまる', asatsuyu:'あさつゆ', nikoniko:'にこにこ団長',
+  hitonatsu:'ひとなつ', manpuku:'まんぷく', nemunemu:'ねむねむ', pyonpyon:'ぴょんぴょん', omochiyama:'おもち山',
+  nonbiri:'のんびり', tsuntsun:'つんつん', yorunoko:'よるのこ', shonbori:'しょんぼり', houkiboshi:'ほうき星',
+  kiniro:'きんいろ', fukkatsu:'ふっかつ', minnanoko:'みんなのこ', sakura:'さくら', yukinko:'ゆきんこ'
+};
+function stageOf(form){ return form === 'egg' ? 'egg' : (STAGE_OF[form] || 'adult'); }
+
+// 形態ごとの描き分け設定
+const FORM_DEF = {
+  punimaru:{s:.62,ear:'none',eye:'dot',mouth:'w'},
+  koromochi:{s:.74,ear:'nub',eye:'dot',mouth:'w'},
+  besomochi:{s:.74,ear:'nub',eye:'teary',mouth:'flat',sweat:1},
+  kirikko:{s:.84,h:1.1,ear:'tuft',eye:'sharp',mouth:'smile',brow:1},
+  amaenbo:{s:.84,ear:'ribbon',eye:'happy',mouth:'w',blush:2},
+  zunguri:{s:.86,w:1.2,ear:'nub',eye:'dot',mouth:'o'},
+  hinekure:{s:.84,ear:'cowlick',eye:'side',mouth:'flat'},
+  hoshimaru:{s:1,ear:'star',eye:'happy',mouth:'smile'},
+  asatsuyu:{s:1,ear:'sprout',eye:'dot',mouth:'smile'},
+  nikoniko:{s:1,ear:'crown',eye:'happy',mouth:'open'},
+  hitonatsu:{s:1,ear:'heart',eye:'dot',mouth:'w',blush:2},
+  manpuku:{s:1,w:1.3,ear:'nub',eye:'happy',mouth:'w',belly:1},
+  nemunemu:{s:1,ear:'nightcap',eye:'sleep',mouth:'o'},
+  pyonpyon:{s:.95,h:1.1,ear:'wing',eye:'dot',mouth:'open'},
+  omochiyama:{s:1.05,w:1.25,h:1.15,ear:'none',eye:'dot',mouth:'w',peak:1},
+  nonbiri:{s:1,w:1.25,h:.85,ear:'nub',eye:'sleep',mouth:'smile'},
+  tsuntsun:{s:1,ear:'spike',eye:'sharp',mouth:'flat',brow:1},
+  yorunoko:{s:1,ear:'moon',eye:'dot',mouth:'flat',col:'#C3CBEE'},
+  shonbori:{s:1,ear:'cloud',eye:'teary',mouth:'flat',sweat:1},
+  houkiboshi:{s:1,ear:'comet',eye:'happy',mouth:'open',col:'#DCD0F7',sparkle:1},
+  kiniro:{s:1,ear:'crown',eye:'happy',mouth:'smile',col:'#F8DC7A',sparkle:1},
+  fukkatsu:{s:1,ear:'halo',eye:'happy',mouth:'smile',wingBack:1},
+  minnanoko:{s:1,ear:'heart',eye:'happy',mouth:'open',friends:1},
+  sakura:{s:1,ear:'petal',eye:'dot',mouth:'w',col:'#FFD3DE'},
+  yukinko:{s:1,ear:'snowcap',eye:'dot',mouth:'o',col:'#E1F0FB'}
+};
+const EGG_COL = { shiro:'#FFF6EC', hoshi:'#FFF1BF', hana:'#FFDCE5' };
+const INK = '#5A4548';
+
+function starPath(cx, cy, r){
+  let d = '';
+  for (let i = 0; i < 10; i++){
+    const a = -Math.PI/2 + i*Math.PI/5, rr = i%2 ? r*.45 : r;
+    d += (i ? 'L' : 'M') + (cx + rr*Math.cos(a)).toFixed(1) + ' ' + (cy + rr*Math.sin(a)).toFixed(1);
   }
-];
-
-const specialFortunes = [
-  ["決断運","迷っていたことを一つ決めることで流れが大きく変わりそうです。"],
-  ["出会い運","何気ない会話や偶然の接点が良いきっかけになりそうです。"],
-  ["再挑戦運","以前うまくいかなかったことに、もう一度取り組む好機です。"],
-  ["集中運","一つのことに時間を使うほど成果が出やすい日です。"],
-  ["発見運","普段見過ごしている場所や情報の中にヒントがあります。"],
-  ["整理運","身の回りを整えると、思考まで軽くなりそうです。"],
-  ["直感運","最初に感じた違和感やひらめきを大切に。"],
-  ["交渉運","丁寧に伝えることで相手との話が進みやすい日です。"],
-  ["休息運","あえて休むことが、次の好機につながる一日です。"],
-  ["挑戦運","少しだけ勇気が必要な選択に良い流れがあります。"]
-];
-
-const goodActions = [
-  "午前中に一つだけ重要なことを終わらせる",
-  "気になっていた連絡を一件返す",
-  "机や身の回りを5分だけ整理する",
-  "いつもより少し早く行動を始める",
-  "誰かに感謝を一言伝える",
-  "後回しにしていることを一つ片づける",
-  "新しい情報を一つ調べてみる",
-  "少し遠回りしていつもと違う景色を見る",
-  "温かい飲み物をゆっくり飲む",
-  "思いついたことをメモに残す",
-  "一度立ち止まり予定を整理する",
-  "普段話さない人と短い会話をしてみる"
-];
-
-const badActions = [
-  "勢いだけで大きな判断をすること",
-  "確認せずに物事を進めること",
-  "他人と自分を必要以上に比べること",
-  "疲れているのに無理を続けること",
-  "小さな違和感をそのままにすること",
-  "急いで結論を出すこと",
-  "感情的なままメッセージを送ること",
-  "必要のない衝動買い",
-  "予定を詰め込みすぎること",
-  "一度に多くのことを片づけようとすること"
-];
-
-const oneWords = [
-  "急ぐより、整える。",
-  "迷ったら、小さな方から動く。",
-  "今日の一歩が明日の流れを変える。",
-  "良い流れは静かに始まる。",
-  "余白のある人に幸運は入りやすい。",
-  "動くべき時と待つべき時を見極める。",
-  "小さな違和感ほど大切に。",
-  "できたことに目を向ける。",
-  "思っているより、状況は悪くない。",
-  "一つ終わらせれば、次が見える。",
-  "偶然を少しだけ信じてみる。",
-  "今日は今日の速度で進めばいい。"
-];
-
-const colors = [
-  "藍色","深緑","金色","銀色","白色","朱色","桜色","空色",
-  "藤色","若草色","琥珀色","紺色","橙色","灰青色"
-];
-
-const directions = ["北","北東","東","南東","南","南西","西","北西"];
-
-function randomFrom(array){
-  return array[Math.floor(Math.random()*array.length)];
+  return d + 'Z';
+}
+function heartPath(x, y, r){
+  return `M${x} ${y+r*.9} C${x-r*1.4} ${y-r*.1} ${x-r*.6} ${y-r*1.2} ${x} ${y-r*.35} C${x+r*.6} ${y-r*1.2} ${x+r*1.4} ${y-r*.1} ${x} ${y+r*.9}Z`;
 }
 
-function randomInt(min,max){
-  return Math.floor(Math.random()*(max-min+1))+min;
-}
+// 絵を作る（opt: silhouette / sick / flip / pattern）
+function drawPet(form, eggType = 'shiro', opt = {}){
+  const sw = 3;
+  const st = `stroke="${INK}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"`;
+  if (form === 'egg') return drawEgg(eggType, opt);
+  const d = FORM_DEF[form] || FORM_DEF.punimaru;
+  const sil = !!opt.silhouette;
+  const col = sil ? '#EADCDF' : (d.col || EGG_COL[eggType] || EGG_COL.shiro);
+  const s = d.s, rx = 34*s*(d.w||1), ry = 30*s*(d.h||1);
+  const cx = 60, cy = 98 - ry*.68, top = cy - ry*1.0;
+  const back = [], front = [], face = [];
 
-function weightedFortune(){
-  const total = fortuneData.reduce((sum,f)=>sum+f.weight,0);
-  let r=Math.random()*total;
-
-  for(const fortune of fortuneData){
-    r-=fortune.weight;
-    if(r<=0) return fortune;
+  // 体の後ろに描くもの
+  if (d.ear === 'nub'){
+    [-1,1].forEach(k => back.push(`<circle cx="${cx+k*rx*.55}" cy="${top+ry*.18}" r="${7*s}" fill="${col}" ${st}/>`));
+  }
+  if (d.ear === 'wing' || d.wingBack){
+    [-1,1].forEach(k => back.push(`<path d="M${cx+k*rx*.8} ${cy-ry*.2} q${k*18} -14 ${k*24} 2 q${k*-8} 2 ${k*-6} 10 q${k*-8} 0 ${k*-18} -4z" fill="#fff" ${st}/>`));
+  }
+  if (d.friends && !sil){
+    [-1,1].forEach(k => back.push(`<g><ellipse cx="${cx+k*(rx+14)}" cy="92" rx="10" ry="8" fill="${EGG_COL[k<0?'hana':'hoshi']}" ${st}/><circle cx="${cx+k*(rx+14)-3}" cy="91" r="1.4" fill="${INK}"/><circle cx="${cx+k*(rx+14)+3}" cy="91" r="1.4" fill="${INK}"/></g>`));
   }
 
-  return fortuneData[0];
-}
+  // 体（下が少し平たいおもち形）
+  const peak = d.peak ? .55 : 1;
+  const body = `M${cx-rx} ${cy} C${cx-rx*peak} ${cy-ry*1.35} ${cx+rx*peak} ${cy-ry*1.35} ${cx+rx} ${cy} C${cx+rx} ${cy+ry*.9} ${cx-rx} ${cy+ry*.9} ${cx-rx} ${cy}Z`;
+  const feet = [-1,1].map(k => `<ellipse cx="${cx+k*rx*.45}" cy="${cy+ry*.64}" rx="${7*s}" ry="${4*s}" fill="${col}" ${st}/>`).join('');
+  let belly = d.belly && !sil ? `<ellipse cx="${cx}" cy="${cy+ry*.25}" rx="${rx*.55}" ry="${ry*.38}" fill="#fff" opacity=".7"/>` : '';
 
-function getDateKey(){
-  const d=new Date();
-  const y=d.getFullYear();
-  const m=String(d.getMonth()+1).padStart(2,"0");
-  const day=String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-
-function formatToday(){
-  return new Intl.DateTimeFormat("ja-JP",{
-    year:"numeric",
-    month:"long",
-    day:"numeric",
-    weekday:"short"
-  }).format(new Date());
-}
-
-function createTodayResult(){
-  const fortune=weightedFortune();
-  const base=randomInt(fortune.min,fortune.max);
-
-  const createScore=()=>{
-    let n=base+randomInt(-13,13);
-    return Math.max(5,Math.min(100,n));
-  };
-
-  const hour=randomInt(8,21);
-  const minute=randomFrom(["05","12","18","24","31","37","42","48","53"]);
-  const special=randomFrom(specialFortunes);
-
-  return {
-    date:getDateKey(),
-    fortune:fortune.name,
-    className:fortune.className,
-    message:randomFrom(fortune.messages),
-    scores:{
-      "総合運":base,
-      "仕事運":createScore(),
-      "金運":createScore(),
-      "対人運":createScore(),
-      "健康運":createScore(),
-      "直感運":createScore()
-    },
-    specialTitle:special[0],
-    specialText:special[1],
-    luckyTime:`${hour}:${minute} 前後`,
-    luckyNumber:randomInt(1,99),
-    luckyColor:randomFrom(colors),
-    luckyDirection:randomFrom(directions),
-    goodAction:randomFrom(goodActions),
-    badAction:randomFrom(badActions),
-    oneWord:randomFrom(oneWords)
-  };
-}
-
-function loadTodayResult(){
-  const today=getDateKey();
-  const saved=localStorage.getItem("nfcOmikujiToday");
-
-  if(saved){
-    try{
-      const obj=JSON.parse(saved);
-      if(obj.date===today) return obj;
-    }catch(e){}
+  // 頭の飾り
+  const acc = [];
+  const A = (svg) => acc.push(svg);
+  switch (d.ear){
+    case 'tuft': A(`<path d="M${cx-6} ${top+3} q2 -12 8 -10 M${cx} ${top+2} q4 -14 10 -8 M${cx+6} ${top+4} q6 -8 9 -2" fill="none" ${st}/>`); break;
+    case 'ribbon': A(`<path d="M${cx+rx*.35} ${top+6} l-12 -8 v14 z M${cx+rx*.35} ${top+6} l12 -8 v14 z" fill="${sil?col:'#F7A9BE'}" ${st}/><circle cx="${cx+rx*.35}" cy="${top+6}" r="3" fill="${sil?col:'#F7A9BE'}" ${st}/>`); break;
+    case 'cowlick': A(`<path d="M${cx} ${top+2} q-2 -14 9 -14 q8 2 2 9" fill="none" ${st}/>`); break;
+    case 'star': A(`<path d="${starPath(cx, top-8, 11)}" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
+    case 'sprout': A(`<path d="M${cx} ${top+2} v-12" fill="none" ${st}/><path d="M${cx} ${top-8} q-12 -8 -16 2 q10 4 16 -2z M${cx} ${top-10} q12 -10 17 0 q-10 5 -17 0z" fill="${sil?col:'#9FD8B8'}" ${st}/>${sil?'':`<path d="M${cx+20} ${top-4} q4 6 0 8 q-4 -2 0 -8z" fill="#BFDBF7" ${st}/>`}`); break;
+    case 'crown': A(`<path d="M${cx-14} ${top+2} l2 -16 l7 8 l5 -12 l5 12 l7 -8 l2 16 z" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
+    case 'heart': A(`<path d="M${cx} ${top+2} q-4 -10 2 -16" fill="none" ${st}/><path d="${heartPath(cx+3, top-18, 7)}" fill="${sil?col:'#F7A9BE'}" ${st}/>`); break;
+    case 'nightcap': A(`<path d="M${cx-rx*.7} ${top+ry*.35} q${rx*.4} -${ry*.9} ${rx*1.3} -${ry*.2} q-8 2 -12 10 z" fill="${sil?col:'#C9DDF5'}" ${st}/><circle cx="${cx+rx*.6+4}" cy="${top-ry*.1}" r="5" fill="#fff" ${st}/>`); break;
+    case 'spike': A(`<path d="M${cx-16} ${top+6} l4 -14 l6 10 l6 -14 l6 14 l6 -10 l4 14" fill="${col}" ${st}/>`); break;
+    case 'moon': A(`<path d="M${cx+4} ${top-24} a12 12 0 1 0 10 18 a9 9 0 1 1 -10 -18z" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
+    case 'cloud': A(`<path d="M${cx-20} ${top-12} q-8 0 -6 -8 q2 -8 10 -5 q4 -9 14 -5 q10 -4 12 6 q8 2 4 10 z" fill="${sil?col:'#EEF1F6'}" ${st}/>${sil?'':`<path d="M${cx-6} ${top-6} v6 M${cx+6} ${top-6} v6" ${st} stroke="#9EC3EA"/>`}`); break;
+    case 'comet': A(`<path d="M${cx+10} ${top-14} q-30 -6 -48 -22" fill="none" stroke="${sil?col:'#D6C3FA'}" stroke-width="7" stroke-linecap="round"/><path d="${starPath(cx+10, top-12, 10)}" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
+    case 'halo': A(`<ellipse cx="${cx}" cy="${top-10}" rx="18" ry="5" fill="none" stroke="${sil?col:'#F5C94A'}" stroke-width="4"/>`); break;
+    case 'petal': A(`<path d="M${cx} ${top+2} q-12 -10 -4 -20 q4 6 4 6 q0 0 4 -6 q8 10 -4 20z" fill="${sil?col:'#F9B7C8'}" ${st}/>`); break;
+    case 'snowcap': A(`<path d="M${cx-rx*.75} ${top+ry*.38} q${rx*.75} -${ry*.85} ${rx*1.5} 0 q-${rx*.2} 8 -${rx*.4} 2 q-${rx*.35} 7 -${rx*.7} 0 q-${rx*.25} 6 -${rx*.4} -2z" fill="#fff" ${st}/>`); break;
   }
 
-  const result=createTodayResult();
-
-  localStorage.setItem(
-    "nfcOmikujiToday",
-    JSON.stringify(result)
-  );
-
-  saveHistory(result);
-
-  return result;
-}
-
-function saveHistory(result){
-  let history=[];
-
-  try{
-    history=JSON.parse(
-      localStorage.getItem("nfcOmikujiHistory")
-    ) || [];
-  }catch(e){}
-
-  if(!history.some(item=>item.date===result.date)){
-    history.unshift({
-      date:result.date,
-      fortune:result.fortune,
-      className:result.className
-    });
-  }
-
-  history=history.slice(0,7);
-
-  localStorage.setItem(
-    "nfcOmikujiHistory",
-    JSON.stringify(history)
-  );
-}
-
-const messages=[
-  "NFC接続を確認しました",
-  "本日の運勢情報を取得しています",
-  "運気の傾向を解析しています",
-  "幸運情報を算出しています",
-  "解析が完了しました"
-];
-
-function startAnalysis(){
-  let value=0;
-  const progress=document.getElementById("progress");
-  const text=document.getElementById("progressText");
-
-  const timer=setInterval(()=>{
-    value+=randomInt(4,10);
-
-    if(value>100) value=100;
-
-    progress.style.width=value+"%";
-
-    let index=Math.floor(value/22);
-    index=Math.min(index,messages.length-1);
-
-    text.textContent=messages[index];
-
-    if(value>=100){
-      clearInterval(timer);
-
-      if(navigator.vibrate){
-        navigator.vibrate([80,50,110]);
+  // 顔
+  if (!sil){
+    const ey = cy - ry*.05, ex = rx*.32, sx = d.eye === 'side' ? 2.5 : 0;
+    const er = 3.2*Math.max(s,.8);
+    [-1,1].forEach(k => {
+      const x = cx + k*ex + sx;
+      const eye = opt.sick ? 'teary' : d.eye;
+      if (eye === 'dot' || eye === 'side' || eye === 'teary'){
+        face.push(`<circle cx="${x}" cy="${ey}" r="${er}" fill="${INK}"/><circle cx="${x+1}" cy="${ey-1.2}" r="1" fill="#fff"/>`);
+        if (eye === 'teary' && k === 1) face.push(`<path d="M${x+2} ${ey+5} q3 5 0 7 q-3 -2 0 -7z" fill="#BFDBF7" stroke="${INK}" stroke-width="1.5"/>`);
+      } else if (eye === 'happy'){
+        face.push(`<path d="M${x-4} ${ey+1.5} q4 -6 8 0" fill="none" ${st}/>`);
+      } else if (eye === 'sleep'){
+        face.push(`<path d="M${x-4} ${ey} h8" fill="none" ${st}/>`);
+      } else if (eye === 'sharp'){
+        face.push(`<circle cx="${x}" cy="${ey+1}" r="${er*.85}" fill="${INK}"/>`);
       }
-
-      setTimeout(showResult,550);
-    }
-  },180);
-}
-
-function showResult(){
-  const result=loadTodayResult();
-  const scanner=document.getElementById("scanner");
-  const resultScreen=document.getElementById("resultScreen");
-
-  scanner.style.display="none";
-  resultScreen.style.display="block";
-
-  requestAnimationFrame(()=>{
-    resultScreen.classList.add("show");
-  });
-
-  document.getElementById("today").textContent=formatToday();
-
-  const fortuneEl=document.getElementById("fortune");
-  fortuneEl.textContent=result.fortune;
-  fortuneEl.className=result.className;
-
-  document.getElementById("fortuneMessage").textContent=result.message;
-
-  const scoresEl=document.getElementById("scores");
-  scoresEl.innerHTML="";
-
-  Object.entries(result.scores).forEach(([label,value])=>{
-    const div=document.createElement("div");
-    div.className="score-row";
-
-    div.innerHTML=`
-      <div class="score-top">
-        <span>${label}</span>
-        <span class="score-number">${value}</span>
-      </div>
-      <div class="bar"><span></span></div>
-    `;
-
-    scoresEl.appendChild(div);
-
-    setTimeout(()=>{
-      div.querySelector(".bar span").style.width=value+"%";
-    },250);
-  });
-
-  document.getElementById("specialTitle").textContent=result.specialTitle;
-  document.getElementById("specialText").textContent=result.specialText;
-  document.getElementById("luckyTime").textContent=result.luckyTime;
-  document.getElementById("luckyNumber").textContent=result.luckyNumber;
-  document.getElementById("luckyColor").textContent=result.luckyColor;
-  document.getElementById("luckyDirection").textContent=result.luckyDirection;
-  document.getElementById("goodAction").textContent=result.goodAction;
-  document.getElementById("badAction").textContent=result.badAction;
-  document.getElementById("oneWord").textContent=result.oneWord;
-
-  renderHistory();
-
-  if(result.fortune==="大吉"){
-    flash();
-    particles(60);
-  }else if(result.fortune==="中吉"){
-    particles(30);
+      if (d.brow) face.push(`<path d="M${x-5*k} ${ey-9} l${8*k} 3" fill="none" ${st}/>`);
+      const bl = d.blush === 2 ? 1.4 : 1;
+      face.push(`<ellipse cx="${cx+k*(ex+9)}" cy="${ey+7}" rx="${4.5*bl}" ry="${2.6*bl}" fill="#F5A3B4" opacity=".7"/>`);
+    });
+    const my = cy + ry*.22;
+    const mouth = opt.sick ? 'flat' : d.mouth;
+    if (mouth === 'w') face.push(`<path d="M${cx-5} ${my} q2.5 4 5 0 q2.5 4 5 0" fill="none" ${st} stroke-width="2.4"/>`);
+    if (mouth === 'smile') face.push(`<path d="M${cx-5} ${my} q5 5 10 0" fill="none" ${st} stroke-width="2.4"/>`);
+    if (mouth === 'o') face.push(`<ellipse cx="${cx}" cy="${my+1}" rx="2.4" ry="3" fill="${INK}"/>`);
+    if (mouth === 'flat') face.push(`<path d="M${cx-4} ${my+1.5} q2 -1.5 4 0 q2 1.5 4 0" fill="none" ${st} stroke-width="2.2"/>`);
+    if (mouth === 'open') face.push(`<path d="M${cx-5} ${my} q5 8 10 0 z" fill="#E37F92" ${st} stroke-width="2.2"/>`);
+    if (d.sweat || opt.sick) face.push(`<path d="M${cx+rx*.85} ${cy-ry*.6} q4 6 0 9 q-4 -3 0 -9z" fill="#BFDBF7" stroke="${INK}" stroke-width="1.8"/>`);
+    if (opt.sick) face.push(`<path d="M${cx-ex-4} ${cy-ry*.55} v6 M${cx-ex+1} ${cy-ry*.6} v7 M${cx-ex+6} ${cy-ry*.55} v6" stroke="#9EC3EA" stroke-width="2" stroke-linecap="round"/>`);
+    if (opt.pattern) face.push(`<path d="${heartPath(cx-rx*.62, cy+ry*.2, 4)}" fill="#F5A3B4" stroke="${INK}" stroke-width="1.5"/>`);
   }
+  let sparkle = '';
+  if (d.sparkle && !sil){
+    sparkle = [[18,30],[100,24],[104,70],[14,76]].map(([x,y]) => `<path d="M${x} ${y-6} q1 5 6 6 q-5 1 -6 6 q-1 -5 -6 -6 q5 -1 6 -6z" fill="#FFE07A" stroke="${INK}" stroke-width="1.5"/>`).join('');
+  }
+  const flip = opt.flip ? ` transform="translate(120 0) scale(-1 1)"` : '';
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sil?'まだ見つかっていない姿':(FORM_NAME[form]||'')}"><g filter="url(#wob)"${flip}>${sparkle}${back.join('')}${feet}<path d="${body}" fill="${col}" ${st}/>${belly}${acc.join('')}${face.join('')}</g></svg>`;
 }
 
-function renderHistory(){
-  let history=[];
+function drawEgg(eggType, opt = {}){
+  const col = EGG_COL[eggType] || EGG_COL.shiro;
+  const st = `stroke="${INK}" stroke-width="3"`;
+  let marks = '';
+  if (eggType === 'shiro') marks = [[52,66],[68,58],[62,80],[48,86]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#B9E3CF" stroke="${INK}" stroke-width="1.5"/>`).join('');
+  if (eggType === 'hoshi') marks = [[50,64],[70,74],[56,86]].map(([x,y]) => `<path d="${starPath(x,y,5)}" fill="#FFE07A" stroke="${INK}" stroke-width="1.5"/>`).join('');
+  if (eggType === 'hana') marks = [[52,66],[70,76],[56,88]].map(([x,y]) => `<g fill="#F7A9BE" stroke="${INK}" stroke-width="1.3"><circle cx="${x-3}" cy="${y}" r="2.6"/><circle cx="${x+3}" cy="${y}" r="2.6"/><circle cx="${x}" cy="${y-3}" r="2.6"/><circle cx="${x}" cy="${y+3}" r="2.6"/></g>`).join('');
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="たまご"><g filter="url(#wob)"><path d="M60 40 C80 40 88 70 86 82 C84 96 74 102 60 102 C46 102 36 96 34 82 C32 70 40 40 60 40Z" fill="${col}" ${st}/>${marks}</g></svg>`;
+}
 
+function drawPoop(){
+  return `<svg viewBox="0 0 40 40"><g filter="url(#wob)"><path d="M8 32 q-4 -8 6 -9 q-3 -8 6 -9 q2 -6 6 -4 q-2 4 2 6 q8 2 4 8 q8 2 4 8z" fill="#D2B48C" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/></g></svg>`;
+}
+
+/* ============================================================
+   画面の描画
+   ============================================================ */
+function setTab(t){
+  tab = t;
+  [...$nav.querySelectorAll('button')].forEach(b => b.setAttribute('aria-current', b.dataset.tab === t ? 'true' : 'false'));
+  render();
+  window.scrollTo(0, 0);
+}
+$nav.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function petLabel(p){ return p.name || p.formName; }
+function hearts(n){ return '♥'.repeat(n) + `<span class="off">${'♥'.repeat(Math.max(0, 4-n))}</span>`; }
+
+function render(){
+  if (!pet){ return; }
+  $nav.classList.remove('hidden');
+  if (tab === 'home') renderHome();
+  if (tab === 'plaza') renderPlaza();
+  if (tab === 'dex') renderDex();
+  if (tab === 'rank') renderRank();
+}
+
+function defaultBubble(){
+  const p = pet;
+  if (p.stage === 'egg') return '…（ころん）';
+  if (p.critical) return 'たすけて…';
+  if (p.sick) return 'なんだかぐったり…';
+  if (p.wagamama) return 'ねぇねぇ、かまって！';
+  if (p.hunger <= 1) return 'おなかすいた…';
+  if (p.poop >= 2) return 'おへやがにおう…';
+  if (p.mood <= 1) return 'たいくつ…';
+  const h = new Date().getHours();
+  return h < 11 ? 'おはよう！' : h < 15 ? 'きてくれた！' : 'きょうもおつかれさま';
+}
+
+function renderHome(){
+  const p = pet;
+  const egg = p.stage === 'egg';
+  const plazaCount = plazaData && plazaData.met ? plazaData.met.length : 0;
+  $app.innerHTML = `
+    <div class="top">
+      <div class="petname">${esc(petLabel(p))}</div>
+      <span class="chip">${p.generation}代目</span>
+      <span class="chip">${p.ageDays}さい</span>
+      <button class="menu-btn" data-act="menu" aria-label="メニュー">…</button>
+    </div>
+    <div class="room ${p.critical ? 'dark' : ''}">
+      <div class="bubble" id="bubble">${esc(bubbleText || defaultBubble())}</div>
+      <div class="pet-wrap ${egg ? '' : 'wander'}"><div class="bounce" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div></div>
+      <div class="poops">${Array.from({length:p.poop}, drawPoop).join('')}</div>
+      ${plazaCount ? `<div class="plaza-badge">ひろばに${plazaCount}匹いるよ</div>` : ''}
+    </div>
+    ${egg ? `<p class="lead" style="margin-top:14px">たまごはもうすぐかえりそう。次に来たときに会えるかも。</p>` : `
+    <div class="stats">
+      <div class="stat">おなか <span class="hearts">${hearts(p.hunger)}</span></div>
+      <div class="stat">ごきげん <span class="hearts">${hearts(p.mood)}</span></div>
+      <div class="stat">たいじゅう <b>${p.weight}</b></div>
+      <div class="stat">しつけ <b>${p.discipline}%</b></div>
+    </div>
+    <div class="care">
+      <button data-c="feed" ${p.hunger >= 4 ? 'disabled' : ''} class="${p.hunger <= 1 ? 'alert' : ''}">ごはん</button>
+      <button data-c="snack">おやつ<small>のこり${p.snackLeft}</small></button>
+      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>のこり${p.playLeft}</small></button>
+      <button data-c="clean" ${p.poop ? '' : 'disabled'} class="${p.poop >= 2 ? 'alert' : ''}">そうじ</button>
+      <button data-c="medicine" ${p.sick ? '' : 'disabled'} class="${p.sick ? 'alert' : ''}">くすり</button>
+      <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる</button>
+    </div>
+    ${p.married ? `<p class="lead" style="margin-top:14px">${esc(p.partnerName)}となかよしの印を結んでいます。</p>` : ''}`}
+  `;
+}
+
+const CARE_TEXT = {
+  feed:'もぐもぐ…おいしい！', snack:'あまーい！', clean:'すっきり！', medicine:'にがい…でもがんばる', scold:'…しゅん'
+};
+const REASON_TEXT = {
+  full:'おなかいっぱいみたい', tired:'今日はもう遊びつかれたみたい', clean:'おへやはきれいだよ',
+  healthy:'元気だから、くすりはいらないよ', nowagamama:'しかる理由がないよ', egg:'まだたまごだよ'
+};
+
+async function doCare(type, extra = {}){
+  if (busy) return;
+  busy = true;
   try{
-    history=JSON.parse(
-      localStorage.getItem("nfcOmikujiHistory")
-    ) || [];
-  }catch(e){}
+    const r = await api('care', Object.assign({ type }, extra));
+    pet = r.pet;
+    bubbleText = r.done ? (type === 'play' ? (extra.win ? 'やったー！' : 'ざんねん…') : CARE_TEXT[type]) : REASON_TEXT[r.reason] || '';
+    queueEvents(r.events);
+    render();
+    flushEvents();
+  }catch(e){ toast(e.message); }
+  finally{ busy = false; }
+}
 
-  const container=document.getElementById("history");
-  container.innerHTML="";
+/* ===== あそぶ（どっち向くかなゲーム） ===== */
+function openPlay(){
+  showSheet(`
+    <div class="art">${drawPet(pet.form, pet.eggType)}</div>
+    <h3>どっちを向くかな？</h3>
+    <p>当たったら、ごきげんが上がるよ</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn sub" data-guess="left">ひだり</button>
+      <button class="btn sub" data-guess="right">みぎ</button>
+    </div>`, sheet => {
+    sheet.addEventListener('click', e => {
+      const b = e.target.closest('[data-guess]');
+      if (!b) return;
+      const turn = Math.random() < .5 ? 'left' : 'right';
+      const win = turn === b.dataset.guess;
+      sheet.querySelector('.art').innerHTML = drawPet(pet.form, pet.eggType, { flip: turn === 'left' });
+      sheet.querySelector('h3').textContent = win ? 'あたり！' : 'はずれ…';
+      sheet.querySelector('p').textContent = turn === 'left' ? 'ひだりを向いた' : 'みぎを向いた';
+      sheet.querySelectorAll('[data-guess]').forEach(x => x.disabled = true);
+      setTimeout(() => { closeSheet(); doCare('play', { win }); }, 1100);
+    });
+  });
+}
 
-  if(history.length===0){
-    document.getElementById("historySection").style.display="none";
+/* ===== ひろば ===== */
+async function loadPlaza(){
+  try{
+    plazaData = await api('plaza');
+    if (plazaData.pet) pet = plazaData.pet;
+    queueEvents(plazaData.events);
+  }catch(e){ /* ひろばは失敗しても育成は続ける */ }
+}
+
+function renderPlaza(){
+  const d = plazaData;
+  if (!d){ $app.innerHTML = `<h2>ひろば</h2><p class="lead">読み込み中…</p>`; loadPlaza().then(render); return; }
+  const meAdult = pet.stage === 'adult';
+  const met = d.met.map(m => {
+    const canPropose = meAdult && !pet.married && stageOf(m.form) === 'adult' && m.friendship >= 5;
+    return `
+    <div class="card friend">
+      ${drawPet(m.form, m.eggType)}
+      <div>
+        <div class="who">${esc(m.nickname)}さんの${esc(m.petName || m.formName)}</div>
+        <div class="meta">${esc(m.formName)}　${esc(m.timeLabel)}に来た　なかよし${m.friendship}</div>
+        ${m.stamp ? `<span class="stampbub">${esc(m.stamp)}</span>` : ''}
+        ${canPropose ? `<div><button class="small-btn" data-propose="${esc(m.petId)}">お見合いを申し込む</button></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  const foot = !d.met.length ? (d.footprint ? `
+    <div class="card friend">
+      ${d.footprint.form ? drawPet(d.footprint.form, 'shiro', { silhouette:true }) : ''}
+      <div>
+        <div class="who">足あとがのこっている</div>
+        <div class="meta">${esc(d.footprint.nickname)}さんの${esc(d.footprint.petName)}　${esc(d.footprint.timeLabel)}</div>
+        ${d.footprint.stamp ? `<span class="stampbub">${esc(d.footprint.stamp)}</span>` : ''}
+      </div>
+    </div>` : `<div class="card">まだ誰も来ていません。ひとことを残して、次の人を待とう。</div>`) : '';
+  const props = (d.proposals || []).map(p => `
+    <div class="card">${esc(p.nickname)}さんの${esc(p.petName || p.formName)}から、お見合いの申し込みが届いています。
+      <button class="small-btn" data-accept="${esc(p.petId)}">受ける</button></div>`).join('');
+  $app.innerHTML = `
+    <h2>いまのひろば</h2>
+    <p class="lead">${d.met.length ? `${d.met.length}匹と遊んだよ。` : '少し前に来た子はいないみたい。'}</p>
+    ${props}${met}${foot}
+    <h3>次に来る人へひとこと</h3>
+    <div class="stamps">${(d.stamps || []).map((s, i) => `<button data-stamp="${i}">${esc(s)}</button>`).join('')}</div>
+  `;
+}
+
+/* ===== ずかん ===== */
+let dexData = null;
+function renderDex(){
+  if (!dexData){
+    $app.innerHTML = `<h2>ずかん</h2><p class="lead">読み込み中…</p>`;
+    api('dex').then(d => { dexData = d; if (tab === 'dex') render(); }).catch(e => toast(e.message));
     return;
   }
+  const d = dexData;
+  const mineByForm = {};
+  d.mine.forEach(k => { const [f, eg] = k.split(':'); if (!mineByForm[f]) mineByForm[f] = eg; });
+  const officeForms = new Set(d.office.map(o => o.formKey.split(':')[0]));
+  const forms = d.forms.filter(f => f.form !== 'egg');
+  const groups = [['baby','ベビー'],['child','こども'],['young','ヤング'],['adult','おとな']];
+  const cell = f => {
+    const eg = mineByForm[f.form];
+    if (eg) return `<div class="dexcell">${drawPet(f.form, eg)}${esc(f.name)}</div>`;
+    if (f.hidden) return `<div class="dexcell none"><div class="q">？</div>？？？</div>`;
+    return `<div class="dexcell none">${drawPet(f.form, 'shiro', { silhouette:true })}？？？</div>`;
+  };
+  const myCount = forms.filter(f => mineByForm[f.form]).length;
+  const officeCount = forms.filter(f => officeForms.has(f.form)).length;
+  let html = `<h2>ずかん</h2>
+    <p class="count">あなたが見つけた姿 ${myCount} / ${forms.length}</p>
+    <p class="lead">職場のだれかが見つけた姿 ${officeCount} / ${forms.length}</p>`;
+  groups.forEach(([st, label]) => {
+    html += `<h3>${label}</h3><div class="dexgrid">${forms.filter(f => f.stage === st && !f.hidden).map(cell).join('')}</div>`;
+  });
+  html += `<h3>ひみつの姿</h3><div class="dexgrid">${forms.filter(f => f.hidden).map(cell).join('')}</div>`;
+  const hints = d.hints.filter(h => h.hint);
+  if (hints.length){
+    html += `<h3>職場で見つかったひみつのヒント</h3>` + hints.map(h => `<div class="card"><b>${esc(h.name)}</b><br>${esc(h.hint)}</div>`).join('');
+  }
+  $app.innerHTML = html;
+}
 
-  history.forEach(item=>{
-    const d=item.date.split("-");
-    const div=document.createElement("div");
+/* ===== ランキング ===== */
+let rankData = null;
+function renderRank(){
+  if (!rankData){
+    $app.innerHTML = `<h2>ランキング</h2><p class="lead">読み込み中…</p>`;
+    api('ranking').then(d => { rankData = d; if (tab === 'rank') render(); }).catch(e => toast(e.message));
+    return;
+  }
+  const d = rankData;
+  const list = (rows, unit, withPet = true) => rows.length ? rows.map((r, i) => `
+    <div class="rank"><span class="no">${i+1}</span><span>${esc(r.nickname)}${withPet ? `さんの${esc(r.petName || r.formName)}` : 'さん'}</span><span class="v">${r.value}${unit}</span></div>`).join('')
+    : `<p class="lead" style="margin:0">まだ記録がありません</p>`;
+  $app.innerHTML = `
+    <h2>今週のランキング</h2>
+    <h3>長生き</h3><div class="card">${list(d.longevity, '日')}</div>
+    <h3>出会いの数</h3><div class="card">${list(d.encounters, '回')}</div>
+    <h3>来た日数</h3><div class="card">${list(d.attendance, '日', false)}</div>
+    <h3>殿堂入り（歴代の最長寿）</h3>
+    <div class="card">${d.hallOfFame ? `${esc(d.hallOfFame.nickname)}さんの${esc(d.hallOfFame.petName || d.hallOfFame.formName)}　<b>${d.hallOfFame.days}日</b>` : 'まだ天に還った子はいません'}</div>
+  `;
+}
 
-    div.className="history-card";
+/* ===== 操作の受付（まとめて） ===== */
+$app.addEventListener('click', async e => {
+  const c = e.target.closest('[data-c]');
+  if (c){ if (c.dataset.c === 'play') openPlay(); else doCare(c.dataset.c); return; }
+  if (e.target.closest('[data-act="menu"]')){ openMenu(); return; }
+  const st = e.target.closest('[data-stamp]');
+  if (st){
+    try{ const r = await api('stamp', { index:Number(st.dataset.stamp) }); toast(`「${r.stamp}」を残しました`); }
+    catch(err){ toast(err.message); }
+    return;
+  }
+  const pr = e.target.closest('[data-propose]');
+  if (pr){
+    try{ await api('propose', { petId: pr.dataset.propose }); pr.disabled = true; toast('お見合いを申し込みました'); }
+    catch(err){ toast(err.message); }
+    return;
+  }
+  const ac = e.target.closest('[data-accept]');
+  if (ac){
+    try{
+      const r = await api('accept', { petId: ac.dataset.accept });
+      pet = r.pet; queueEvents(r.events);
+      plazaData.proposals = plazaData.proposals.filter(p => p.petId !== ac.dataset.accept);
+      render(); flushEvents();
+    }catch(err){ toast(err.message); }
+  }
+});
 
-    div.innerHTML=`
-      <div class="history-date">${Number(d[1])}/${Number(d[2])}</div>
-      <div class="history-fortune ${item.className}">${item.fortune}</div>
-    `;
+/* ============================================================
+   演出（進化・孵化・天に還るなど）
+   ============================================================ */
+function queueEvents(list){ (list || []).forEach(ev => eventQueue.push(ev)); }
 
-    container.appendChild(div);
+function flushEvents(){
+  if (document.querySelector('.overlay') || !eventQueue.length) return;
+  const ev = eventQueue.shift();
+  let art = '', title = '', text = '', cls = '';
+  const nm = f => FORM_NAME[f] || '';
+  switch (ev.type){
+    case 'hatched':
+      art = drawPet(ev.to, pet.eggType); cls = 'flash';
+      title = 'たまごがかえった！'; text = `${nm(ev.to)}が生まれました`; break;
+    case 'evolved':
+      art = drawPet(ev.to, pet.eggType); cls = ev.hidden ? 'flash glow' : 'flash';
+      title = ev.hidden ? 'ひみつの姿があらわれた！' : `${nm(ev.to)}に進化した！`;
+      text = `${nm(ev.from)}から${nm(ev.to)}になりました`; break;
+    case 'ascended':
+      art = drawPet(ev.from, pet.eggType); cls = 'ascend glow';
+      title = '天に還っていきました';
+      text = `${ev.reason === '老衰' ? '長生きして' : ''}光に包まれて空へ。あとに${{hana:'はなたまご',hoshi:'ほしたまご',shiro:'しろたまご'}[ev.eggType]}が残っています（${ev.generation}代目）`; break;
+    case 'rescued':
+      art = drawPet(pet.form, pet.eggType); title = '危ないところだった…'; text = '元気を取り戻しました'; break;
+    case 'married':
+      art = drawPet(pet.form, pet.eggType, { pattern:true }); cls = 'glow';
+      title = 'なかよしの印を結んだ'; text = `${ev.partner}と特別ななかよしになりました`; break;
+    default:
+      return flushEvents(); // わがままは吹き出しだけ
+  }
+  const dex = ev.newDex ? '<p>図鑑に新しい姿が登録されました</p>' : '';
+  showSheet(`<div class="art">${art}</div><h3>${esc(title)}</h3><p>${esc(text)}</p>${dex}<button class="btn" data-close>とじる</button>`, sheet => {
+    sheet.classList.add(...cls.split(' ').filter(Boolean));
+    sheet.querySelector('[data-close]').addEventListener('click', () => { closeSheet(); dexData = null; flushEvents(); });
   });
 }
 
-function particles(count){
-  const symbols=["✦","✧","◆","❀","✨"];
+function showSheet(html, onReady){
+  closeSheet();
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.appendChild(ov);
+  if (onReady) onReady(ov.querySelector('.sheet'));
+}
+function closeSheet(){ document.querySelectorAll('.overlay').forEach(o => o.remove()); }
 
-  for(let i=0;i<count;i++){
-    const p=document.createElement("div");
-
-    p.className="particle";
-    p.textContent=randomFrom(symbols);
-    p.style.left=Math.random()*100+"vw";
-    p.style.fontSize=randomInt(12,28)+"px";
-    p.style.color=Math.random()>.45 ? "#ffe59b" : "#d8baff";
-    p.style.animationDuration=(2.5+Math.random()*2.8)+"s";
-    p.style.animationDelay=(Math.random()*.8)+"s";
-
-    document.body.appendChild(p);
-
-    setTimeout(()=>p.remove(),6500);
-  }
+let toastTimer = null;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.remove(), 2600);
 }
 
-function flash(){
-  const f=document.createElement("div");
-  f.className="flash";
-  document.body.appendChild(f);
-  setTimeout(()=>f.remove(),700);
+/* ===== メニュー（じゅもん） ===== */
+function fmtCode(c){ return String(c || '').replace(/(.{4})(?=.)/g, '$1 '); }
+function openMenu(){
+  const code = store.get(LS_CODE);
+  showSheet(`
+    <h3>ふっかつのじゅもん</h3>
+    ${code ? `<div class="code">${esc(fmtCode(code))}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
+           : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
+    <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
+    <button class="btn" data-close>とじる</button>`, sheet => {
+    sheet.querySelector('[data-close]').onclick = closeSheet;
+    sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
+  });
 }
 
-async function shareResult(){
-  const result=loadTodayResult();
-
-  const text=
-`今日の運勢は「${result.fortune}」
-
-総合運 ${result.scores["総合運"]}
-仕事運 ${result.scores["仕事運"]}
-金運 ${result.scores["金運"]}
-
-本日の特殊運：
-${result.specialTitle}
-
-幸運時刻：
-${result.luckyTime}
-
-今日の一言：
-${result.oneWord}`;
-
-  if(navigator.share){
+/* ============================================================
+   はじめての人・じゅもん入力
+   ============================================================ */
+function renderWelcome(){
+  $nav.classList.add('hidden');
+  $app.innerHTML = `
+    <div style="text-align:center;margin-top:24px">
+      <div style="width:150px;height:150px;margin:0 auto">${drawEgg('shiro')}</div>
+      <h2 style="margin-top:4px">たまごを見つけた</h2>
+      <p class="lead">このタグにふれるたびに、お世話ができます。</p>
+    </div>
+    <label for="nick">あなたのニックネーム</label>
+    <input id="nick" maxlength="12" placeholder="例：ひなた" autocomplete="off">
+    <label for="pname">ペットの名前（あとで変えられません）</label>
+    <input id="pname" maxlength="10" placeholder="空欄でもOK" autocomplete="off">
+    <button class="btn" id="go">たまごを受け取る</button>
+    <button class="btn sub" id="toRestore">じゅもんで続きから遊ぶ</button>
+  `;
+  document.getElementById('toRestore').onclick = () => renderRestore(false);
+  document.getElementById('go').onclick = async ev => {
+    const nick = document.getElementById('nick').value.trim();
+    if (!nick){ toast('ニックネームを入力してください'); return; }
+    ev.target.disabled = true;
     try{
-      await navigator.share({
-        title:"本日の運勢",
-        text:text
-      });
-    }catch(e){}
-  }else{
-    await navigator.clipboard.writeText(text);
-    alert("結果をコピーしました");
-  }
+      const r = await api('register', { nickname:nick, petName:document.getElementById('pname').value.trim() });
+      auth = { userId:r.userId, token:r.token };
+      store.set(LS_AUTH, auth);
+      store.set(LS_CODE, r.code);
+      pet = r.pet; nickname = nick;
+      renderCode(r.code);
+    }catch(e){ toast(e.message); ev.target.disabled = false; }
+  };
 }
 
-window.addEventListener("load",()=>{
-  setTimeout(startAnalysis,500);
-});
+function renderCode(code){
+  $app.innerHTML = `
+    <h2 style="margin-top:24px">ふっかつのじゅもん</h2>
+    <p class="lead">スマホを変えたり、データが消えたりしたときに必要です。スクリーンショットかメモで残してください。</p>
+    <div class="card code">${esc(fmtCode(code))}</div>
+    <button class="btn" id="ok">メモしました</button>
+  `;
+  document.getElementById('ok').onclick = () => { tab = 'home'; render(); loadPlaza().then(render); };
+}
+
+function renderRestore(fromMenu){
+  $nav.classList.add('hidden');
+  $app.innerHTML = `
+    <h2 style="margin-top:24px">じゅもんで続きから</h2>
+    <p class="lead">${fromMenu ? 'この端末のペットは、じゅもんのペットに切り替わります。' : '前のスマホでメモしたじゅもんを入力してください。'}</p>
+    <label for="code">ふっかつのじゅもん（12文字）</label>
+    <input id="code" maxlength="20" placeholder="ひらがな12文字" autocomplete="off">
+    <button class="btn" id="go">呼び出す</button>
+    <button class="btn sub" id="back">もどる</button>
+  `;
+  document.getElementById('back').onclick = () => pet ? (tab = 'home', render()) : renderWelcome();
+  document.getElementById('go').onclick = async ev => {
+    const code = document.getElementById('code').value.replace(/\s/g, '');
+    ev.target.disabled = true;
+    try{
+      auth = null;
+      const r = await api('restore', { code });
+      auth = { userId:r.userId, token:r.token };
+      store.set(LS_AUTH, auth);
+      store.set(LS_CODE, code);
+      await boot();
+    }catch(e){ toast(e.message); ev.target.disabled = false; auth = store.get(LS_AUTH); }
+  };
+}
+
+/* ============================================================
+   起動
+   ============================================================ */
+function renderError(msg){
+  $nav.classList.add('hidden');
+  $app.innerHTML = `
+    <div class="loading"><div>
+      <div style="width:120px;height:120px;margin:0 auto">${drawPet('besomochi','shiro')}</div>
+      <p>${esc(msg)}</p>
+      <button class="btn" id="retry">もう一度</button>
+    </div></div>`;
+  document.getElementById('retry').onclick = boot;
+}
+
+async function boot(){
+  document.getElementById('bootArt') && (document.getElementById('bootArt').innerHTML = drawEgg('shiro'));
+  if (!GAS_URL || GAS_URL.indexOf('http') !== 0){ renderError('GAS_URL が設定されていません'); return; }
+  if (!auth){ renderWelcome(); return; }
+  try{
+    const r = await api('state');
+    pet = r.pet; nickname = r.nickname;
+    queueEvents(r.events);
+    bubbleText = '';
+    tab = 'home';
+    render();
+    flushEvents();
+    // ひろばにも立ち寄る（出会いの記録）
+    await loadPlaza();
+    if (tab === 'home') render();
+    flushEvents();
+  }catch(e){
+    if (/認証/.test(e.message)){ store.del(LS_AUTH); auth = null; renderWelcome(); return; }
+    renderError('つながりませんでした。電波のよい場所でもう一度ためしてください。');
+  }
+}
+boot();
 </script>
 </body>
 </html>
