@@ -160,6 +160,15 @@ label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
 .loading{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--sub);font-weight:700}
 .loading svg{width:120px;height:120px}
 
+/* ===== どっち向くかなゲーム ===== */
+.sheet .art.wiggle{animation:wiggle .18s ease-in-out infinite}
+@keyframes wiggle{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.sheet .art.turn-left{animation:turnL .35s ease-out forwards}
+.sheet .art.turn-right{animation:turnR .35s ease-out forwards}
+@keyframes turnL{to{transform:translateX(-26px) rotate(-10deg)}}
+@keyframes turnR{to{transform:translateX(26px) rotate(10deg)}}
+.arrow{font-size:34px;font-weight:900;height:40px;line-height:40px;color:#E25C74}
+
 /* ===== お世話の演出 ===== */
 .pet-wrap.paused{animation-play-state:paused}
 .bounce.r-munch{animation:munch .28s ease-in-out 4}
@@ -398,7 +407,14 @@ function drawPet(form, eggType = 'shiro', opt = {}){
     sparkle = [[18,30],[100,24],[104,70],[14,76]].map(([x,y]) => `<path d="M${x} ${y-6} q1 5 6 6 q-5 1 -6 6 q-1 -5 -6 -6 q5 -1 6 -6z" fill="#FFE07A" stroke="${INK}" stroke-width="1.5"/>`).join('');
   }
   const flip = opt.flip ? ` transform="translate(120 0) scale(-1 1)"` : '';
-  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sil?'まだ見つかっていない姿':(FORM_NAME[form]||'')}"><g filter="url(#wob)"${flip}>${sparkle}${back.join('')}${feet}<path d="${body}" fill="${col}" ${st}/>${belly}${acc.join('')}${face.join('')}</g></svg>`;
+  // 向き：顔を左右に寄せ、反対側に「サッ」と振り向いた線を描く
+  const lk = opt.look === 'left' ? -1 : opt.look === 'right' ? 1 : 0;
+  const faceG = `<g transform="translate(${lk * rx * .38} ${lk ? 1 : 0})">${face.join('')}</g>`;
+  const swish = lk ? [0, 1, 2].map(i => {
+    const x = cx - lk * (rx + 8 + i * 2), y = cy - ry * .6 + i * 12;
+    return `<path d="M${x} ${y} q${-lk * 6} 4 ${-lk * 10} 0" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>`;
+  }).join('') : '';
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sil?'まだ見つかっていない姿':(FORM_NAME[form]||'')}"><g filter="url(#wob)"${flip}>${sparkle}${back.join('')}${feet}<path d="${body}" fill="${col}" ${st}/>${belly}${acc.join('')}${faceG}${swish}</g></svg>`;
 }
 
 function drawEgg(eggType, opt = {}){
@@ -504,6 +520,12 @@ async function doCare(type, extra = {}){
   if (busy) return;
   busy = true;
   setCareDisabled(true);
+  // 残り回数は通信を待たずに先に減らして見せる（確定値は応答後に上書き）
+  const left = { snack:'snackLeft', play:'playLeft' }[type];
+  if (left && pet[left] > 0){
+    const sm = document.querySelector(`.care [data-c="${type}"] small`);
+    if (sm) sm.textContent = 'のこり' + (pet[left] - 1);
+  }
   const fx = playFx(type, extra);
   try{
     const [r] = await Promise.all([api('care', Object.assign({ type }, extra)), fx]);
@@ -585,22 +607,36 @@ function playFx(type, extra){
 function openPlay(){
   showSheet(`
     <div class="art">${drawPet(pet.form, pet.eggType)}</div>
+    <div class="arrow" id="arrow"></div>
     <h3>どっちを向くかな？</h3>
     <p>当たったら、ごきげんが上がるよ</p>
     <div style="display:flex;gap:10px">
-      <button class="btn sub" data-guess="left">ひだり</button>
-      <button class="btn sub" data-guess="right">みぎ</button>
+      <button class="btn sub" data-guess="left">← ひだり</button>
+      <button class="btn sub" data-guess="right">みぎ →</button>
     </div>`, sheet => {
     sheet.addEventListener('click', e => {
       const b = e.target.closest('[data-guess]');
       if (!b) return;
+      const guess = b.dataset.guess;
       const turn = Math.random() < .5 ? 'left' : 'right';
-      const win = turn === b.dataset.guess;
-      sheet.querySelector('.art').innerHTML = drawPet(pet.form, pet.eggType, { flip: turn === 'left' });
-      sheet.querySelector('h3').textContent = win ? 'あたり！' : 'はずれ…';
-      sheet.querySelector('p').textContent = turn === 'left' ? 'ひだりを向いた' : 'みぎを向いた';
-      sheet.querySelectorAll('[data-guess]').forEach(x => x.disabled = true);
-      setTimeout(() => { closeSheet(); doCare('play', { win }); }, 1100);
+      const win = turn === guess;
+      const art = sheet.querySelector('.art');
+      sheet.querySelectorAll('[data-guess]').forEach(x => { x.disabled = true; if (x === b) x.style.background = 'var(--butter)'; });
+      // ① ためる（ぷるぷる）
+      art.classList.add('wiggle');
+      sheet.querySelector('h3').textContent = 'どっちかな…';
+      sheet.querySelector('p').textContent = guess === 'left' ? 'あなたは「ひだり」' : 'あなたは「みぎ」';
+      // ② 振り向く
+      setTimeout(() => {
+        art.classList.remove('wiggle');
+        art.innerHTML = drawPet(pet.form, pet.eggType, { look: turn });
+        art.classList.add(turn === 'left' ? 'turn-left' : 'turn-right');
+        sheet.querySelector('#arrow').textContent = turn === 'left' ? '←' : '→';
+        sheet.querySelector('h3').textContent = win ? 'あたり！' : 'はずれ…';
+        sheet.querySelector('p').textContent = turn === 'left' ? 'ひだりを向いた！' : 'みぎを向いた！';
+      }, 900);
+      // ③ 閉じて結果を送る
+      setTimeout(() => { closeSheet(); doCare('play', { win }); }, 2300);
     });
   });
 }
