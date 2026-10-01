@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFC Mystery Gacha</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at center,#27223d 0%,#101018 45%,#000 100%);
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.wrap{
+  width:92%;
+  max-width:420px;
+  text-align:center;
+}
+
+h1{
+  margin-bottom:8px;
+  letter-spacing:2px;
+  font-size:25px;
+}
+
+.sub{
+  color:#999;
+  margin-bottom:30px;
+  font-size:13px;
+  letter-spacing:2px;
+}
+
+.card{
+  min-height:300px;
+  border-radius:24px;
+  border:1px solid #444;
+  padding:30px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:linear-gradient(145deg,#191919,#292929);
+  box-shadow:0 10px 50px rgba(0,0,0,.6);
+  transition:.7s;
+}
+
+.card.opening{
+  transform:rotateY(720deg) scale(1.07);
+}
+
+.rarity{
+  font-weight:800;
+  font-size:30px;
+  margin-bottom:25px;
+}
+
+.result{
+  font-size:21px;
+  line-height:1.7;
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:16px;
+  padding:18px;
+  margin-top:25px;
+  font-size:20px;
+  font-weight:800;
+  background:#fff;
+  color:#000;
+}
+
+button:active{
+  transform:scale(.97);
+}
+
+.NORMAL{
+  color:#ddd;
+}
+
+.RARE{
+  color:#5cc8ff;
+  text-shadow:0 0 10px #168bd1;
+}
+
+.SR{
+  color:#d778ff;
+  text-shadow:0 0 12px #9233c5;
+}
+
+.LEGENDARY{
+  color:#ffd84a;
+  text-shadow:
+    0 0 10px gold,
+    0 0 25px orange;
+}
+
+.star{
+  position:fixed;
+  pointer-events:none;
+  animation:fall 1.8s linear forwards;
+}
+
+@keyframes fall{
+  from{
+    transform:translateY(-20px) rotate(0deg);
+    opacity:1;
+  }
+  to{
+    transform:translateY(110vh) rotate(500deg);
+    opacity:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>MYSTERY GACHA</h1>
+<div class="sub">NFC ITEM DETECTED</div>
+
+<div id="card" class="card">
+  <div id="rarity" class="rarity">READY</div>
+  <div id="result" class="result">
+    OPENを押してください
+  </div>
+</div>
+
+<button onclick="gacha()">OPEN</button>
+
+</div>
+
+<script>
+
+const items = [
+  {
+    rarity:"NORMAL",
+    weight:45,
+    text:"今日はコーヒーを飲もう ☕"
+  },
+  {
+    rarity:"NORMAL",
+    weight:25,
+    text:"今日は少し早めに寝よう 😴"
+  },
+  {
+    rarity:"RARE",
+    weight:15,
+    text:"好きなお菓子を1つ買ってよい 🍫"
+  },
+  {
+    rarity:"RARE",
+    weight:8,
+    text:"今日はデザート追加 🍰"
+  },
+  {
+    rarity:"SR",
+    weight:5,
+    text:"今日の夕食を決める権利獲得 🍣"
+  },
+  {
+    rarity:"LEGENDARY",
+    weight:2,
+    text:"🌈 好きなものを食べてよい 🌈"
+  }
+];
+
+function gacha(){
+
+  const card = document.getElementById("card");
+  const rarity = document.getElementById("rarity");
+  const result = document.getElementById("result");
+
+  rarity.className="rarity";
+  rarity.textContent="SCANNING...";
+  result.textContent="解析しています…";
+
+  card.classList.add("opening");
+
+  setTimeout(()=>{
+
+    const total =
+      items.reduce((sum,item)=>sum+item.weight,0);
+
+    let r=Math.random()*total;
+    let selected=items[0];
+
+    for(const item of items){
+      r-=item.weight;
+
+      if(r<=0){
+        selected=item;
+        break;
+      }
+    }
+
+    rarity.textContent=selected.rarity;
+    rarity.className="rarity "+selected.rarity;
+    result.textContent=selected.text;
+
+    card.classList.remove("opening");
+
+    if(selected.rarity==="LEGENDARY"){
+      effect();
+    }
+
+  },1200);
+}
+
+function effect(){
+
+  for(let i=0;i<45;i++){
+
+    const s=document.createElement("div");
+
+    s.className="star";
+    s.textContent=["✨","⭐","🌟"][Math.floor(Math.random()*3)];
+
+    s.style.left=Math.random()*100+"vw";
+    s.style.top="-30px";
+    s.style.fontSize=(18+Math.random()*25)+"px";
+    s.style.animationDelay=Math.random()*.5+"s";
+
+    document.body.appendChild(s);
+
+    setTimeout(()=>{
+      s.remove();
+    },2500);
+  }
+}
+
+</script>
+
+</body>
+</html>
