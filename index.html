@@ -114,7 +114,8 @@ input{
   background:#fff;color:var(--ink)
 }
 label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
-.code{font-size:28px;font-weight:900;letter-spacing:.12em;text-align:center;padding:14px 0;word-break:keep-all}
+.code{font-size:24px;font-weight:900;letter-spacing:.08em;text-align:center;padding:14px 0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px}
+.code span{white-space:nowrap}
 
 /* ===== ひろば ===== */
 .friend{display:flex;gap:12px;align-items:center}
@@ -149,7 +150,7 @@ label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
 .sheet h3{font-size:19px;margin:8px 0 4px}
 .sheet p{margin:4px 0;color:var(--sub);font-size:14px}
 .glow .art{filter:drop-shadow(0 0 18px #ffe07a) drop-shadow(0 0 30px #d6b8ff)}
-.flash{animation:flash 1.2s ease-out}
+.flash .art{animation:flash 1.2s ease-out}
 @keyframes flash{0%{filter:brightness(4) saturate(0)}100%{filter:none}}
 .ascend .art{animation:rise 2.4s ease-in-out}
 @keyframes rise{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:.6}}
@@ -659,7 +660,7 @@ function flushEvents(){
       title = ev.hidden ? 'ひみつの姿があらわれた！' : `${nm(ev.to)}に進化した！`;
       text = `${nm(ev.from)}から${nm(ev.to)}になりました`; break;
     case 'ascended':
-      art = drawPet(ev.from, pet.eggType); cls = 'ascend glow';
+      art = drawPet(ev.from, ev.fromEggType || pet.eggType); cls = 'ascend glow';
       title = '天に還っていきました';
       text = `${ev.reason === '老衰' ? '長生きして' : ''}光に包まれて空へ。あとに${{hana:'はなたまご',hoshi:'ほしたまご',shiro:'しろたまご'}[ev.eggType]}が残っています（${ev.generation}代目）`; break;
     case 'rescued':
@@ -698,12 +699,13 @@ function toast(msg){
 }
 
 /* ===== メニュー（じゅもん） ===== */
-function fmtCode(c){ return String(c || '').replace(/(.{4})(?=.)/g, '$1 '); }
+// じゅもんを4文字ずつのかたまりで表示（途中で改行させない）
+function codeHtml(c){ return (String(c || '').match(/.{1,4}/g) || []).map(g => `<span>${esc(g)}</span>`).join(''); }
 function openMenu(){
   const code = store.get(LS_CODE);
   showSheet(`
     <h3>ふっかつのじゅもん</h3>
-    ${code ? `<div class="code">${esc(fmtCode(code))}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
+    ${code ? `<div class="code">${codeHtml(code)}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
            : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
     <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
     <button class="btn" data-close>とじる</button>`, sheet => {
@@ -750,7 +752,7 @@ function renderCode(code){
   $app.innerHTML = `
     <h2 style="margin-top:24px">ふっかつのじゅもん</h2>
     <p class="lead">スマホを変えたり、データが消えたりしたときに必要です。スクリーンショットかメモで残してください。</p>
-    <div class="card code">${esc(fmtCode(code))}</div>
+    <div class="card code">${codeHtml(code)}</div>
     <button class="btn" id="ok">メモしました</button>
   `;
   document.getElementById('ok').onclick = () => { tab = 'home'; render(); loadPlaza().then(render); };
