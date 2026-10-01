@@ -165,41 +165,39 @@ label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
 .look{transform:translate(calc(var(--lx,0) * 1px), calc(var(--ly,0) * 1px));transition:transform .25s ease-out}
 .pet-wrap .eyes{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
-/* 空（時間帯）と床 */
-.room{background:#F6E3E7}
-.room.night{background:#4B4660}
-.room.night::after{border-top-color:rgba(255,255,255,.18)}
-.sky{position:absolute;left:-12px;right:-12px;top:-12px;height:calc(68% + 12px);z-index:0;overflow:hidden;
-  transform:translate(calc(var(--tx,0) * -7px), calc(var(--ty,0) * -4px));transition:transform .2s ease-out}
-.sky.dawn{background:linear-gradient(#FFD9C9,#FFF4EC)}
-.sky.day{background:linear-gradient(#D7ECFB,#FFFDFB)}
-.sky.dusk{background:linear-gradient(#F5AE9C,#FFE0CC)}
-.sky.night{background:linear-gradient(#273356,#4F5A86)}
-.sky.cloudy{filter:saturate(.55) brightness(.97)}
-.sky .sun{position:absolute;right:38px;top:34px;width:34px;height:34px;border-radius:50%;background:#FFE58F;border:2.5px solid var(--ink);box-shadow:0 0 0 8px rgba(255,229,143,.35)}
-.sky.dusk .sun{top:70px;background:#FFB37D;box-shadow:0 0 0 10px rgba(255,179,125,.35)}
-.sky .moon{position:absolute;right:40px;top:30px;width:28px;height:28px;border-radius:50%;box-shadow:-7px 4px 0 0 #FFF1B5;transform:rotate(-20deg)}
-.sky .star{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:twinkle 2.6s ease-in-out infinite}
+/* 背景：やわらかい風景（空・光・丘・地面・粒子感） */
+.room{background:#DDEFE3;border-width:2.5px;box-shadow:0 10px 30px -12px rgba(90,69,72,.35), inset 0 0 0 1px rgba(255,255,255,.4)}
+.room::after{display:none}
+.room.night{background:#3A4568}
+.scene{position:absolute;inset:0;z-index:0;overflow:hidden}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.scene .cloud{position:absolute;height:26px;border-radius:30px;background:rgba(255,255,255,.85);filter:blur(3px);animation:drift 46s linear infinite}
+.scene .cloud::before,.scene .cloud::after{content:"";position:absolute;bottom:6px;border-radius:50%;background:inherit}
+.scene .cloud::before{left:14%;width:46%;height:34px}
+.scene .cloud::after{left:44%;width:38%;height:26px}
+.scene.night .cloud{background:rgba(160,170,210,.35)}
+.scene.dim{filter:saturate(.6) brightness(.96)}
+@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(520px)}}
+.scene .twinkle{animation:twinkle 3s ease-in-out infinite}
 @keyframes twinkle{50%{opacity:.25}}
-.sky .cloud{position:absolute;height:22px;border-radius:20px;background:#fff;border:2.5px solid rgba(90,69,72,.5);animation:drift 38s linear infinite}
-.sky.night .cloud{background:#8C93B3}
-@keyframes drift{from{transform:translateX(-140px)}to{transform:translateX(480px)}}
+.room.dark .scene{filter:brightness(.45) saturate(.5)}
+/* ペットの足もとの影 */
+.shadow{position:absolute;left:50%;bottom:11%;width:46%;height:9%;margin-left:-23%;border-radius:50%;background:radial-gradient(closest-side, rgba(40,30,50,.28), rgba(40,30,50,0));pointer-events:none}
 /* 天気のつぶ */
 .weather{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .weather i{position:absolute;top:-20px;display:block}
-.weather .rain{width:2px;height:14px;background:rgba(110,150,200,.75);border-radius:2px;animation:rain .8s linear infinite}
+.weather .rain{width:1.5px;height:18px;background:linear-gradient(rgba(255,255,255,0),rgba(150,185,225,.85));border-radius:2px;animation:rain .7s linear infinite}
 @keyframes rain{to{transform:translate(-30px, 300px)}}
-.weather .snow{width:7px;height:7px;border-radius:50%;background:#fff;border:1.5px solid rgba(90,69,72,.35);animation:snow 6s linear infinite}
+.weather .snow{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.9);filter:blur(.4px);animation:snow 6s linear infinite}
 @keyframes snow{0%{transform:translate(0,0)}50%{transform:translate(14px,150px)}100%{transform:translate(-6px,300px)}}
-/* 傾きで奥行き */
-.pet-layer{position:absolute;inset:0;z-index:1;transform:translate(calc(var(--tx,0) * 6px), calc(var(--ty,0) * 3px));transition:transform .2s ease-out}
+/* ペットと床の層 */
+.pet-layer{position:absolute;inset:0;z-index:1}
 /* なでる */
 .pet-wrap{touch-action:none;cursor:grab}
 .bounce.r-pet{animation:petsquish .35s ease-in-out}
 @keyframes petsquish{50%{transform:scale(1.1,.86)}}
 
 /* ===== 進化の豪華演出 ===== */
-.room.dark .sky{filter:brightness(.45) saturate(.5)}
 .evo{background:radial-gradient(circle at 50% 38%, #fff 0, var(--card) 60%)}
 .evo .art{position:relative}
 .evo .art.shake{animation:evoShake .12s linear infinite}
@@ -571,7 +569,7 @@ function renderHome(){
       <div class="bubble" id="bubble">${esc(bubbleText || defaultBubble())}</div>
       ${skyHtml()}
       <div class="pet-layer">
-      <div class="pet-wrap ${egg || p.frozen ? '' : 'wander'}"><div class="${p.frozen ? '' : 'bounce'}" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div>${p.frozen ? `<div class="ice">${drawIce()}</div>` : ''}</div>
+      <div class="pet-wrap ${egg || p.frozen ? '' : 'wander'}"><div class="shadow"></div><div class="${p.frozen ? '' : 'bounce'}" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div>${p.frozen ? `<div class="ice">${drawIce()}</div>` : ''}</div>
       <div class="poops">${Array.from({length:p.poop}, drawPoop).join('')}</div>
       </div>
       <div class="weather">${weatherHtml()}</div>
@@ -629,21 +627,58 @@ async function loadWeather(){
   }catch(e){ /* 天気が取れなくても遊べる */ }
 }
 
+// 時間帯ごとの色（空の上・中・下、遠い丘、近い丘、地面、光）
+const PALETTE = {
+  dawn:  { sky:['#FFC4B4','#FFDCCB','#FFF1E4'], far:'#F3C7C4', near:'#E8B2BB', ground:['#F7DADB','#EFC7CC'], glow:'#FFE2B8', orb:'#FFD9A0' },
+  day:   { sky:['#B9DEF8','#D9EEFB','#F3F9FE'], far:'#CBE6DA', near:'#AED9C3', ground:['#D3EDD9','#BFE2C9'], glow:'#FFF6D6', orb:'#FFF0B0' },
+  dusk:  { sky:['#EE9488','#F6BC9E','#FFE0C4'], far:'#E2A6A8', near:'#CF8C9C', ground:['#EFC5BF','#E2AFB0'], glow:'#FFC79A', orb:'#FFB27C' },
+  night: { sky:['#1C2747','#2F3C68','#47548A'], far:'#38456E', near:'#2C385D', ground:['#3A4568','#323C5D'], glow:'#8E9BE0', orb:'#FFF3C4' }
+};
 function skyHtml(){
-  const t = skyTime();
-  let deco = '';
-  if (t === 'night'){
-    deco += '<div class="moon"></div>';
-    for (let i = 0; i < 18; i++){
-      const x = (i * 53) % 100, y = (i * 37) % 60 + 4;
-      deco += `<span class="star" style="left:${x}%;top:${y}%;animation-delay:${(i % 6) * .4}s"></span>`;
+  const t = skyTime(), c = PALETTE[t];
+  const night = t === 'night';
+  // 太陽・月の位置（夕方は低く）
+  const ox = 318, oy = t === 'dusk' ? 118 : t === 'dawn' ? 96 : 58;
+  let stars = '';
+  if (night){
+    for (let i = 0; i < 26; i++){
+      const x = (i * 61) % 400, y = (i * 37) % 120 + 8, r = i % 5 === 0 ? 1.6 : 1;
+      stars += `<circle class="twinkle" cx="${x}" cy="${y}" r="${r}" fill="#fff" style="animation-delay:${(i % 7) * .45}s"/>`;
     }
-  } else if (weatherKind === 'clear') deco += '<div class="sun"></div>';
-  const clouds = weatherKind === 'clear' ? 1 : 3;
-  for (let i = 0; i < clouds; i++){
-    deco += `<div class="cloud" style="top:${18 + i * 26}px;width:${60 + i * 14}px;animation-delay:${-i * 13}s"></div>`;
   }
-  return `<div class="sky ${t} ${weatherKind !== 'clear' ? 'cloudy' : ''}">${deco}</div>`;
+  const orb = night
+    ? `<mask id="gMoon"><rect width="400" height="260" fill="#fff"/><circle cx="${ox + 8}" cy="${oy - 5}" r="14" fill="#000"/></mask><circle cx="${ox}" cy="${oy}" r="16" fill="${c.orb}" mask="url(#gMoon)"/>`
+    : `<circle cx="${ox}" cy="${oy}" r="18" fill="${c.orb}"/>`;
+  const dim = weatherKind !== 'clear';
+  let clouds = '';
+  const nc = weatherKind === 'clear' ? 2 : 4;
+  for (let i = 0; i < nc; i++){
+    clouds += `<div class="cloud" style="top:${16 + i * 22}px;width:${70 + (i % 3) * 22}px;animation-delay:${-i * 11}s;opacity:${dim ? .95 : .75}"></div>`;
+  }
+  return `<div class="scene ${t} ${dim ? 'dim' : ''}">
+    <svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${c.sky[0]}"/><stop offset=".55" stop-color="${c.sky[1]}"/><stop offset="1" stop-color="${c.sky[2]}"/>
+        </linearGradient>
+        <radialGradient id="gGlow"><stop offset="0" stop-color="${c.glow}" stop-opacity=".9"/><stop offset="1" stop-color="${c.glow}" stop-opacity="0"/></radialGradient>
+        <linearGradient id="gGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.ground[0]}"/><stop offset="1" stop-color="${c.ground[1]}"/></linearGradient>
+        <linearGradient id="gFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="${night ? .06 : .35}"/></linearGradient>
+        <filter id="gBlur"><feGaussianBlur stdDeviation="6"/></filter>
+        <filter id="gGrain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+      </defs>
+      <rect width="400" height="260" fill="url(#gSky)"/>
+      <circle cx="${ox}" cy="${oy}" r="${night ? 60 : 80}" fill="url(#gGlow)"/>
+      <circle cx="70" cy="40" r="70" fill="${c.glow}" opacity="${night ? .08 : .18}" filter="url(#gBlur)"/>
+      ${stars}${orb}
+      <path d="M0 150 C60 118 110 128 160 140 C220 154 260 112 320 118 C360 122 385 136 400 140 V260 H0Z" fill="${c.far}" opacity=".9"/>
+      <rect y="110" width="400" height="60" fill="url(#gFog)"/>
+      <path d="M0 176 C70 150 130 158 200 168 C270 178 330 150 400 160 V260 H0Z" fill="${c.near}"/>
+      <path d="M-20 200 C80 182 160 178 220 182 C300 187 360 196 420 206 V260 H-20Z" fill="url(#gGround)"/>
+      <rect width="400" height="260" filter="url(#gGrain)" opacity="${night ? .07 : .05}"/>
+    </svg>
+    ${clouds}
+  </div>`;
 }
 
 function weatherHtml(){
@@ -657,36 +692,7 @@ function weatherHtml(){
   return h;
 }
 
-// 傾き（Androidは自動、iPhoneはメニューから許可）
-let tiltOn = false;
-function onTilt(e){
-  if (e.gamma == null) return;
-  const tx = Math.max(-1, Math.min(1, e.gamma / 25));
-  const ty = Math.max(-1, Math.min(1, ((e.beta || 45) - 45) / 25));
-  const room = document.querySelector('.room');
-  if (room){ room.style.setProperty('--tx', tx.toFixed(2)); room.style.setProperty('--ty', ty.toFixed(2)); }
-  if (Date.now() - lastPointer > 2000) setLook(tx * 2.5, ty * 1.5);
-}
-function startTilt(){
-  if (tiltOn) return;
-  tiltOn = true;
-  window.addEventListener('deviceorientation', onTilt);
-}
-async function askTilt(){
-  try{
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      const r = await DeviceOrientationEvent.requestPermission();
-      if (r !== 'granted'){ toast('かたむきは使えませんでした'); return; }
-    }
-    startTilt(); store.set('nfcpet.tilt', true); toast('スマホをかたむけてみてね');
-  }catch(e){ toast('この端末では使えないようです'); }
-}
-// iPhone以外は許可不要なので最初から有効
-if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') startTilt();
-else if (store.get('nfcpet.tilt')) startTilt(); // 許可済みなら（Safariは毎回許可が要る場合あり）
-
 // 視線：指の方向を見る
-let lastPointer = 0;
 function setLook(x, y){
   const w = document.querySelector('.room .pet-wrap');
   if (!w) return;
@@ -698,7 +704,6 @@ document.addEventListener('pointermove', e => {
   const r = w.getBoundingClientRect();
   const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height * .6);
   const len = Math.hypot(dx, dy) || 1;
-  lastPointer = Date.now();
   setLook(dx / len * 2.6, dy / len * 1.6);
   if (petting) petMove(e);
 });
@@ -1233,15 +1238,12 @@ function openMenu(){
            : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
     <button class="btn sub" data-guide>あそびかた</button>
     <button class="btn sub" data-pin>暗証番号を変える</button>
-    ${typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function' ? '<button class="btn sub" data-tilt>かたむきに反応させる</button>' : ''}
     <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
     ${pet && !pet.frozen ? `<button class="btn ice-btn" data-freeze>冷凍保存する（長く来られないとき）</button>` : ''}
     <button class="btn" data-close>とじる</button>`, sheet => {
     sheet.querySelector('[data-close]').onclick = closeSheet;
     sheet.querySelector('[data-guide]').onclick = () => { closeSheet(); openGuide(); };
     sheet.querySelector('[data-pin]').onclick = () => { closeSheet(); openSetPin(true); };
-    const tl = sheet.querySelector('[data-tilt]');
-    if (tl) tl.onclick = () => { closeSheet(); askTilt(); };
     const fz = sheet.querySelector('[data-freeze]');
     if (fz) fz.onclick = () => { closeSheet(); confirmFreeze(); };
     sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
