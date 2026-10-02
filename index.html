@@ -102,6 +102,24 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .foot{font-size:11px;color:var(--sub);text-align:center;margin-top:18px;line-height:1.8}
 .fade{animation:fade .6s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* 時間帯 */
+.hours{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.hr{border-radius:10px;padding:8px 0 6px;text-align:center;font-size:10px;color:var(--sub);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.hr b{display:block;font-size:13px;color:var(--ink)}
+.hr i{display:block;height:4px;border-radius:2px;margin:6px 6px 0;background:rgba(255,255,255,.12)}
+.hr.lv3{border-color:rgba(242,211,138,.7);background:rgba(242,211,138,.16)} .hr.lv3 i{background:var(--gold)}
+.hr.lv2 i{background:#cdb3f5} .hr.lv1 i{background:rgba(255,255,255,.25)} .hr.lv0 i{background:rgba(255,154,168,.6)}
+.hr.now{outline:2px solid #fff;outline-offset:1px}
+/* 1週間 */
+.week{display:grid;gap:6px}
+.wd{display:grid;grid-template-columns:62px 52px 1fr;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px}
+.wd .r{font-family:"Shippori Mincho",serif;font-weight:800;font-size:18px;color:var(--gold);text-align:center}
+.wd.best{background:rgba(242,211,138,.14);border:1px solid rgba(242,211,138,.5)}
+.wd.today{outline:1px solid rgba(255,255,255,.4)}
+.wd small{color:var(--sub)}
+.count{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.count span{font-size:12px;border:1px solid var(--line);border-radius:12px;padding:6px 10px}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -140,13 +158,18 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 
   <!-- 個人の運勢 -->
   <section class="panel hidden fade" id="personal"></section>
+  <!-- 今日のいい時間 -->
+  <section class="panel hidden fade" id="hourPanel"></section>
+  <!-- 1週間 -->
+  <section class="panel hidden fade" id="weekPanel"></section>
   <!-- 九星盤 -->
   <section class="panel hidden fade" id="boardPanel"></section>
   <!-- 今日の暦 -->
   <section class="panel fade" id="koyomi"></section>
 
   <div class="panel hidden" id="others">
-    <button class="btn ghost" id="otherBtn" style="margin-top:0">ほかの人の生年月日で見る</button>
+    <button class="btn ghost hidden" id="backSelf" style="margin-top:0">自分の運勢にもどる</button>
+    <button class="btn ghost" id="otherBtn">ほかの人の生年月日で見る</button>
     <button class="btn ghost" id="changeBtn">自分の生年月日を変える</button>
   </div>
 
@@ -361,6 +384,8 @@ function renderPersonal(b){
     <p class="note">${r.myDir === '中央' ? '本命星が中宮に入る日（八方ふさがり）。遠出や大きな決断は控えめに。' : `今日、${STAR_S[h]}は九星盤の「${r.myDir}」に回っています。`}</p>
   `;
   renderBoard(r);
+  renderHours(h);
+  renderWeek(b);
   return r;
 }
 
@@ -378,6 +403,77 @@ function renderBoard(r){
     }).join('')}</div>
     <div class="legend"><span><i style="background:rgba(242,211,138,.6)"></i>あなたの星</span><span><i style="background:rgba(143,227,181,.6)"></i>吉方位</span><span><i style="background:rgba(255,154,168,.55)"></i>避けたい方位</span></div>
   `;
+}
+
+/* ===== 今日のいい時間（時盤：2時間ごとの九星盤） =====
+   陽遁：子午卯酉の日は子の刻=一白、丑辰未戌=四緑、寅巳申亥=七赤から順行
+   陰遁：子午卯酉の日は子の刻=九紫、丑辰未戌=六白、寅巳申亥=三碧から逆行 */
+function isYang(s){
+  // 翌日との差が+1なら陽遁、-1なら陰遁。切り替えの前日（差が0）は前日との差で判定
+  const a = dayInfo(s), b = dayInfo(addDays(s, 1)), p = dayInfo(addDays(s, -1));
+  const step = (from, to) => ((to.star - from.star) % 9 + 9) % 9;
+  if (b && step(a, b) === 1) return true;
+  if (b && step(a, b) === 8) return false;
+  return p ? step(p, a) === 1 : true;
+}
+function hourStar(info, k){ // k：0=子の刻(23-1時)〜11=亥の刻
+  const g = info.branch % 3; // 0:子午卯酉 1:丑辰未戌 2:寅巳申亥
+  if (isYang(info.date)){ const s0 = [1, 4, 7][g]; return (s0 - 1 + k) % 9 + 1; }
+  const s0 = [9, 6, 3][g]; return ((s0 - 1 - k) % 9 + 9) % 9 + 1;
+}
+const KOKU = [[7,'7-9'],[9,'9-11'],[11,'11-13'],[13,'13-15'],[15,'15-17'],[17,'17-19'],[19,'19-21']]; // 辰〜戌の刻
+const ROKUYO_TIME = { '先勝':[7,9,11], '友引':[7,9,17,19], '先負':[13,15,17], '赤口':[11], '大安':[], '仏滅':[] };
+function renderHours(honmei){
+  const nowH = +new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Tokyo', hour:'2-digit', hour12:false }).format(new Date()) % 24;
+  const list = KOKU.map(([start, label]) => {
+    const k = ((start + 1) / 2) % 12;   // 7時→辰の刻(4)
+    const c = hourStar(INFO, k);
+    const dir = dirOf(c, honmei);
+    let sc = PALACE[dir].score;
+    const rc = relation(c, honmei);
+    sc += c === honmei ? 0 : rc === '生気' ? 1 : rc === '比和' ? .5 : rc === '剋' ? -.5 : 0;
+    if (ROKUYO_TIME[INFO.rokuyo].includes(start)) sc += .5;
+    if (INFO.rokuyo === '友引' && start === 11) sc -= .5;
+    return { start, label, sc, dir, now: nowH >= start && nowH < start + 2 };
+  });
+  const max = Math.max(...list.map(x => x.sc));
+  const best = list.filter(x => x.sc === max);
+  list.forEach(x => x.lv = x.sc === max ? 3 : x.sc >= max - 1 ? 2 : x.sc >= 2.5 ? 1 : 0);
+  const tip = PALACE[best[0].dir];
+  $('hourPanel').innerHTML = `
+    <h2>今日のいい時間</h2>
+    <p class="lead"><span class="big">${best.map(x => x.label.replace('-', '〜') + '時').join('、')}</span></p>
+    <p class="note" style="margin-top:0">この時間は「${tip.title.replace('日', '時間')}」。${tip.work}に向いています。</p>
+    <div class="hours">${list.map(x => `<div class="hr lv${x.lv} ${x.now ? 'now' : ''}"><b>${x.start}</b>時<i></i></div>`).join('')}</div>
+    <p class="note">2時間ごとの九星盤（時盤）と六曜の時間帯から求めています。白枠は今の時間です。</p>`;
+}
+
+/* ===== 1週間の運勢 ===== */
+function renderWeek(b){
+  const h = honmeiOf(b);
+  const rows = [];
+  for (let i = 0; i < 7; i++){
+    const s = addDays(TODAY, i), x = dayInfo(s);
+    if (!x) break;
+    const r = personal(x, h);
+    rows.push({ s, x, r });
+  }
+  const bestScore = Math.max(...rows.map(o => o.r.score));
+  const next = name => { for (let i = 0; i < 400; i++){ const x = dayInfo(addDays(TODAY, i)); if (!x) return null; if (x.kichi.some(k => k[0] === name)) return i; } return null; };
+  const wdName = s => '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
+  const cd = [['天赦日', next('天赦日')], ['一粒万倍日', next('一粒万倍日')]].filter(([, n]) => n !== null);
+  $('weekPanel').innerHTML = `
+    <h2>この1週間</h2>
+    <div class="week">${rows.map(({ s, x, r }, i) => {
+      const [, m, d] = s.split('-').map(Number);
+      const tags = [x.rokuyo].concat(x.kichi.filter(k => k[1]).map(k => k[0]));
+      return `<div class="wd ${r.score === bestScore ? 'best' : ''} ${i === 0 ? 'today' : ''}">
+        <div>${i === 0 ? '<b>今日</b>' : `${m}/${d}`}<small>（${wdName(s)}）</small></div>
+        <div class="r">${r.rank}</div>
+        <div><small>${tags.join('・')}</small></div></div>`;
+    }).join('')}</div>
+    ${cd.length ? `<div class="count">${cd.map(([n, k]) => `<span>次の${n}：${k === 0 ? '<b>今日</b>' : `あと${k}日（${addDays(TODAY, k).slice(5).replace('-', '/')}）`}</span>`).join('')}</div>` : ''}
+    <p class="note">金色の日がこの1週間でいちばん運気のよい日です。大事な予定の参考にどうぞ。</p>`;
 }
 
 /* ===== ガチャ演出 ===== */
@@ -400,7 +496,7 @@ function draw(){
     setTimeout(() => {
       $('rays').classList.add('on');
       burst(r.rank === '大吉' ? 34 : 18);
-      ['personal','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
+      ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
       renderPersonal(b);
       $('draw').textContent = 'もう一度めくる';
       $('draw').disabled = false;
@@ -420,24 +516,27 @@ function burst(n){
   }
 }
 
-function showMain(){
+function showMain(push = true){
+  if (push) history.pushState({ v: 'main', temp: tempBirth }, '');
+  $('backSelf').classList.toggle('hidden', !tempBirth);
   $('setup').classList.add('hidden');
   $('gacha').classList.remove('hidden');
   $('others').classList.remove('hidden');
-  ['personal','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.add('hidden'));
   $('card').classList.remove('flip');
   $('rays').classList.remove('on');
   $('draw').textContent = tempBirth ? 'この人の札を引く' : '今日の札を引く';
 }
-function showSetup(forOther){
+function showSetup(forOther, push = true){
+  if (push) history.pushState({ v: 'setup', other: !!forOther }, '');
   $('setup').classList.remove('hidden');
   $('gacha').classList.add('hidden');
   $('others').classList.add('hidden');
-  ['personal','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.add('hidden'));
   $('setup').dataset.other = forOther ? '1' : '';
   $('setup').querySelector('h2').textContent = forOther ? 'その人の生年月日' : '生年月日を教えてください';
   $('saveBirth').textContent = forOther ? 'この生年月日で占う（保存しません）' : 'この生年月日で占う';
-  $('skipBirth').textContent = forOther ? 'もどる' : '暦だけ見る';
+  $('skipBirth').textContent = forOther || birth ? 'もどる' : '暦だけ見る';
   $('birth').value = !forOther && birth ? birth.replace(/-/g, '') : '';
   $('birth').dispatchEvent(new Event('input'));
 }
@@ -475,11 +574,19 @@ $('skipBirth').onclick = () => {
 };
 $('draw').onclick = draw;
 $('otherBtn').onclick = () => showSetup(true);
+$('backSelf').onclick = () => { tempBirth = null; showMain(); };
+// スマホの「戻る」で前の画面へ（ページから出ていかないように）
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (!st || st.v === 'main'){ tempBirth = st ? st.temp || null : null; if (birth || tempBirth) showMain(false); else showSetup(false, false); }
+  else if (st.v === 'setup') showSetup(st.other, false);
+});
 $('changeBtn').onclick = () => { tempBirth = null; showSetup(false); };
 
 $('today').textContent = wareki(TODAY);
 renderKoyomi();
-if (birth) showMain(); else showSetup(false);
+history.replaceState({ v: birth ? 'main' : 'setup', other: false }, '');
+if (birth) showMain(false); else showSetup(false, false);
 </script>
 </body>
 </html>
