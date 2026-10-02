@@ -119,6 +119,17 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .wd small{color:var(--sub)}
 .count{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .count span{font-size:12px;border:1px solid var(--line);border-radius:12px;padding:6px 10px}
+.history-head{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.streak{min-width:86px;text-align:center;border:1px solid var(--line);border-radius:14px;padding:8px 10px;background:rgba(242,211,138,.08)}
+.streak b{display:block;font-family:"Shippori Mincho",serif;font-size:22px;color:var(--gold);line-height:1.2}
+.streak small{display:block;font-size:10px;color:var(--sub)}
+.trend{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:58px;margin:10px 0 4px;padding:4px 2px 0}
+.trend i{display:block;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#ffe6a6,#c99b45);opacity:.72;min-height:8px}
+.trend i.todaybar{opacity:1;box-shadow:0 0 12px rgba(242,211,138,.55)}
+.trend-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;font-size:9px;color:var(--sub);text-align:center;margin-bottom:10px}
+.charm{margin:14px 0 2px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(242,211,138,.07);text-align:center}
+.charm small{display:block;color:var(--sub);font-size:10px;letter-spacing:.14em}
+.charm b{display:block;color:var(--gold);font-family:"Shippori Mincho",serif;font-size:18px;margin-top:2px}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -328,11 +339,41 @@ function personal(info, honmei){
 /* ===== 画面 ===== */
 const $ = id => document.getElementById(id);
 const LS_BIRTH = 'koyomi.birth';
+const LS_VISITS = 'koyomi.visits';
 const store = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
   set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
+function readVisits(){
+  try{
+    const a = JSON.parse(store.get(LS_VISITS) || '[]');
+    return Array.isArray(a) ? a.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)) : [];
+  }catch(e){ return []; }
+}
+function recordVisit(){
+  const a = Array.from(new Set(readVisits().concat(TODAY))).sort();
+  store.set(LS_VISITS, JSON.stringify(a.slice(-120)));
+}
+function visitStreak(){
+  const set = new Set(readVisits());
+  let n = 0;
+  for (let i = 0; i < 120; i++){
+    if (!set.has(addDays(TODAY, -i))) break;
+    n++;
+  }
+  return n;
+}
+const CHARM_WORDS = [
+  '急がず、ひとつずつ整える', '迷ったら、丁寧な方を選ぶ', '小さな一歩を先に出す',
+  '人の話を最後まで聞く', '今日は余白を残して動く', '決める前に一度だけ確認する',
+  'できたことを一つ数える', '言葉を少しやわらかくする', '後回しを一つだけ終わらせる',
+  '身近な人への感謝を言葉にする', '整えてから始める', '無理に答えを急がない'
+];
+function charmWord(honmei, info){
+  return CHARM_WORDS[(info.g + honmei * 3 + info.star) % CHARM_WORDS.length];
+}
+
 const TODAY = jstToday();
 const INFO = dayInfo(TODAY);
 let birth = store.get(LS_BIRTH);
@@ -372,6 +413,7 @@ function renderPersonal(b){
     <h2>${STAR[h]}のあなた</h2>
     <p class="lead"><span class="big">${r.P.title}</span></p>
     <p class="lead">${r.P.msg}</p>
+    <div class="charm"><small>今日の御守り言葉</small><b>${charmWord(h, INFO)}</b></div>
     <dl class="kv">
       <dt>仕事</dt><dd>${r.P.work}</dd>
       <dt>人間関係</dt><dd>${r.P.love}</dd>
@@ -448,32 +490,59 @@ function renderHours(honmei){
     <p class="note">2時間ごとの九星盤（時盤）と六曜の時間帯から求めています。白枠は今の時間です。</p>`;
 }
 
-/* ===== 1週間の運勢 ===== */
+/* ===== 最近7日間の運勢（未来は表示しない） ===== */
 function renderWeek(b){
   const h = honmeiOf(b);
   const rows = [];
-  for (let i = 0; i < 7; i++){
+  for (let i = -6; i <= 0; i++){
     const s = addDays(TODAY, i), x = dayInfo(s);
-    if (!x) break;
+    if (!x) continue;
     const r = personal(x, h);
-    rows.push({ s, x, r });
+    rows.push({ s, x, r, offset:i });
   }
+  if (!rows.length){ $('weekPanel').innerHTML = '<h2>最近の運勢</h2><p class="note">表示できる履歴がありません。</p>'; return; }
+
   const bestScore = Math.max(...rows.map(o => o.r.score));
   const next = name => { for (let i = 0; i < 400; i++){ const x = dayInfo(addDays(TODAY, i)); if (!x) return null; if (x.kichi.some(k => k[0] === name)) return i; } return null; };
   const wdName = s => '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
   const cd = [['天赦日', next('天赦日')], ['一粒万倍日', next('一粒万倍日')]].filter(([, n]) => n !== null);
+  const own = !tempBirth && birth && b === birth;
+  const streak = own ? visitStreak() : 0;
+
+  const first = rows.slice(0, 3).reduce((a,o) => a + o.r.score, 0) / Math.min(3, rows.length);
+  const last = rows.slice(-3).reduce((a,o) => a + o.r.score, 0) / Math.min(3, rows.length);
+  const delta = last - first;
+  const flow = delta >= .8 ? '上向き' : delta <= -.8 ? 'ひと休み' : '安定';
+  const flowMsg = flow === '上向き' ? '直近は少しずつ流れが上向いています。' : flow === 'ひと休み' ? '直近は無理をせず、整える時期です。' : '大きな波はなく、落ち着いた流れです。';
+
+  const minSc = Math.min(...rows.map(o => o.r.score));
+  const maxSc = Math.max(...rows.map(o => o.r.score));
+  const span = Math.max(1, maxSc - minSc);
+
   $('weekPanel').innerHTML = `
-    <h2>この1週間</h2>
-    <div class="week">${rows.map(({ s, x, r }, i) => {
+    <div class="history-head">
+      <div><h2 style="margin-bottom:2px">最近の運勢</h2><p class="note" style="margin:0">過去6日＋今日。明日の運勢は明日のお楽しみです。</p></div>
+      ${own ? `<div class="streak"><b>${streak}日</b><small>連続で札を引いた日</small></div>` : ''}
+    </div>
+    <div class="trend">${rows.map(({r,offset}) => {
+      const hgt = 18 + Math.round(((r.score - minSc) / span) * 36);
+      return `<i class="${offset === 0 ? 'todaybar' : ''}" style="height:${hgt}px" title="${r.rank}"></i>`;
+    }).join('')}</div>
+    <div class="trend-labels">${rows.map(({s,offset}) => {
+      const [,m,d] = s.split('-').map(Number);
+      return `<span>${offset === 0 ? '今日' : `${m}/${d}`}</span>`;
+    }).join('')}</div>
+    <div class="week">${rows.map(({ s, x, r, offset }) => {
       const [, m, d] = s.split('-').map(Number);
       const tags = [x.rokuyo].concat(x.kichi.filter(k => k[1]).map(k => k[0]));
-      return `<div class="wd ${r.score === bestScore ? 'best' : ''} ${i === 0 ? 'today' : ''}">
-        <div>${i === 0 ? '<b>今日</b>' : `${m}/${d}`}<small>（${wdName(s)}）</small></div>
+      return `<div class="wd ${r.score === bestScore ? 'best' : ''} ${offset === 0 ? 'today' : ''}">
+        <div>${offset === 0 ? '<b>今日</b>' : `${m}/${d}`}<small>（${wdName(s)}）</small></div>
         <div class="r">${r.rank}</div>
         <div><small>${tags.join('・')}</small></div></div>`;
     }).join('')}</div>
+    <p class="note" style="margin-top:10px"><b style="color:var(--gold)">7日間の流れ：${flow}</b>　${flowMsg}</p>
     ${cd.length ? `<div class="count">${cd.map(([n, k]) => `<span>次の${n}：${k === 0 ? '<b>今日</b>' : `あと${k}日（${addDays(TODAY, k).slice(5).replace('-', '/')}）`}</span>`).join('')}</div>` : ''}
-    <p class="note">金色の日がこの1週間でいちばん運気のよい日です。大事な予定の参考にどうぞ。</p>`;
+    <p class="note">金色の日は、この7日間の中で運勢スコアが最も高かった日です。未来の個人運勢は表示しません。</p>`;
 }
 
 /* ===== ガチャ演出 ===== */
@@ -481,6 +550,7 @@ let drawing = false;
 function draw(){
   if (drawing || !INFO) return;
   const b = tempBirth || birth;
+  if (!tempBirth && birth && b === birth) recordVisit();
   drawing = true;
   const r = personal(INFO, honmeiOf(b));
   const card = $('card');
@@ -495,6 +565,7 @@ function draw(){
     card.classList.add('flip');
     setTimeout(() => {
       $('rays').classList.add('on');
+      if (navigator.vibrate) navigator.vibrate(r.rank === '大吉' ? [40,30,70] : 45);
       burst(r.rank === '大吉' ? 34 : 18);
       ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
       renderPersonal(b);
