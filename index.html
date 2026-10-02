@@ -3,1471 +3,459 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#FBEFF1">
-<title>ぽてぽてひろば</title>
+<meta name="theme-color" content="#120b26">
+<title>NFC 暦占い</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* ===== 色と基本 ===== */
 :root{
-  --paper:#FBEFF1;   /* 桜もちの白 */
-  --card:#FFFDFB;
-  --ink:#5A4548;     /* ココア色の線 */
-  --sub:#9A8487;
-  --pink:#F2A7B8;
-  --mint:#B9E3CF;
-  --butter:#FFE59A;
-  --sky:#C9DDF5;
-  --dim:#EADCDF;
+  --bg1:#0d0820; --bg2:#1d1240; --gold:#f2d38a; --gold2:#c99b45; --ink:#f4eefc; --sub:#b7aacd;
+  --panel:rgba(255,255,255,.06); --line:rgba(242,211,138,.28); --good:#8fe3b5; --bad:#ff9aa8;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{background:#0d0820}
+html,body{margin:0;min-height:100%}
 body{
-  margin:0;color:var(--ink);background:var(--paper);
-  font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
-  font-weight:500;line-height:1.6;
-  padding-top:env(safe-area-inset-top,0px);
+  color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7;
+  background:radial-gradient(120% 70% at 50% -10%, #3a2378 0, rgba(58,35,120,0) 60%),
+             radial-gradient(80% 50% at 100% 100%, #2a1550 0, rgba(42,21,80,0) 70%),
+             linear-gradient(var(--bg2), var(--bg1));
+  background-repeat:no-repeat;background-color:#0d0820;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
 }
-button{font:inherit;color:inherit}
-#app{max-width:440px;margin:0 auto;min-height:100%;padding:12px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+/* 星くず */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(1px 1px at 20% 30%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 70% 20%,#fff 50%,transparent 51%),
+  radial-gradient(1.5px 1.5px at 40% 70%,#ffe9b0 50%,transparent 51%),radial-gradient(1px 1px at 85% 60%,#fff 50%,transparent 51%),
+  radial-gradient(1px 1px at 10% 85%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 60% 45%,#fff 50%,transparent 51%);
+  background-size:260px 260px;animation:twinkle 6s ease-in-out infinite alternate}
+@keyframes twinkle{to{opacity:.25}}
+main{position:relative;max-width:460px;margin:0 auto;padding:22px 18px 40px}
+h1,h2,h3,.mincho{font-family:"Shippori Mincho","Yu Mincho","Hiragino Mincho ProN",serif}
+.head{text-align:center;margin-bottom:18px}
+.head .small{font-size:12px;letter-spacing:.3em;color:var(--gold)}
+.head h1{margin:2px 0 4px;font-size:30px;letter-spacing:.12em;
+  background:linear-gradient(180deg,#fff6dc,#f2d38a 55%,#c99b45);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head .date{font-size:14px;color:var(--sub)}
+.panel{background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:16px;
+  box-shadow:0 20px 40px -24px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.08)}
+.panel h2{margin:0 0 10px;font-size:18px;color:var(--gold);letter-spacing:.08em}
+label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
+input[type=date]{width:100%;height:50px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);font:inherit;font-size:17px;padding:0 14px;color-scheme:dark}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;font:inherit;font-weight:700;font-size:17px;cursor:pointer;margin-top:12px;
+  color:#2a1a05;background:linear-gradient(180deg,#ffe6a6,#e6b85c);box-shadow:0 10px 26px -10px rgba(242,211,138,.8)}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--line);box-shadow:none;font-weight:500;font-size:15px;padding:12px}
+.btn:active{transform:scale(.98)}
+.note{font-size:12px;color:var(--sub);margin:8px 0 0}
 .hidden{display:none!important}
 
-/* ===== 上部 ===== */
-.top{display:flex;align-items:center;gap:8px;margin:4px 0 12px}
-.petname{font-weight:900;font-size:22px;letter-spacing:.02em}
-.chip{font-size:12px;font-weight:700;padding:2px 10px;border:2px solid var(--ink);border-radius:99px;background:var(--card)}
-.menu-btn{margin-left:auto;width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);font-weight:900;font-size:18px;line-height:1}
+/* ガチャ */
+.stage{position:relative;height:300px;display:grid;place-items:center;perspective:900px}
+.card{position:relative;width:190px;height:270px;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.3,1.4,.5,1)}
+.card .face{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;display:grid;place-items:center;text-align:center}
+.card .back{background:repeating-linear-gradient(45deg,rgba(242,211,138,.12) 0 8px,transparent 8px 16px),linear-gradient(160deg,#3b2475,#170d33);
+  border:2px solid var(--gold2);box-shadow:0 0 0 6px rgba(242,211,138,.08), 0 20px 40px -10px rgba(0,0,0,.7)}
+.card .back .sigil{width:110px;height:110px;border:2px solid var(--gold);border-radius:50%;display:grid;place-items:center;font-family:"Shippori Mincho",serif;font-size:42px;color:var(--gold);
+  box-shadow:inset 0 0 20px rgba(242,211,138,.3)}
+.card .front{transform:rotateY(180deg);background:linear-gradient(170deg,#fffaf0,#f3e3bd);color:#3b2410;border:2px solid #fff3cf;
+  box-shadow:0 0 60px -10px rgba(255,220,140,.9)}
+.card.flip{transform:rotateY(180deg)}
+.card.shake{animation:cshake .09s linear infinite}
+@keyframes cshake{25%{transform:rotate(-2deg) translateY(-2px)}75%{transform:rotate(2deg)}}
+.rank{font-family:"Shippori Mincho",serif;font-weight:800;font-size:54px;line-height:1.1;letter-spacing:.08em}
+.rank-sub{font-size:12px;letter-spacing:.2em;color:#8a6a3a}
+.rays{position:absolute;width:420px;height:420px;border-radius:50%;opacity:0;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 10deg,rgba(255,226,150,.35) 10deg 14deg,transparent 14deg 30deg);animation:spin 12s linear infinite}
+.rays.on{opacity:1;transition:opacity .6s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pt{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffe39a;box-shadow:0 0 10px #ffd36b;animation:burst 1.4s ease-out forwards;pointer-events:none}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
 
-/* ===== へや ===== */
-.room{
-  position:relative;height:260px;border:3px solid var(--ink);border-radius:28px 28px 22px 22px;
-  background:linear-gradient(#FFFDFB 0 68%, #F6E3E7 68% 100%);overflow:hidden;
-}
-.room::after{content:"";position:absolute;left:0;right:0;top:68%;border-top:2.5px dashed rgba(90,69,72,.25);z-index:0}
-.room > *{z-index:1}
-.room.dark{background:linear-gradient(#5d5160 0 68%, #4b4250 68% 100%)}
-.room.dark .bubble{background:#efe6ea}
-.pet-wrap{position:absolute;left:50%;bottom:22px;width:170px;height:170px;transform:translateX(-50%)}
-.pet-wrap svg{width:100%;height:100%;overflow:visible}
-.bounce{animation:bounce 1.6s ease-in-out infinite;transform-origin:50% 100%}
-@keyframes bounce{0%,100%{transform:scale(1,1)}50%{transform:scale(1.04,.95)}}
-.wander{animation:wander 9s ease-in-out infinite}
-@keyframes wander{0%,100%{transform:translateX(-50%)}30%{transform:translateX(-80%)}70%{transform:translateX(-20%)}}
-.poops{position:absolute;right:16px;bottom:18px;display:flex;gap:2px}
-.poops svg{width:34px;height:34px}
-.bubble{
-  position:absolute;left:50%;top:14px;transform:translateX(-50%);max-width:80%;
-  background:var(--card);border:2.5px solid var(--ink);border-radius:18px;padding:6px 14px;
-  font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-.bubble::after{content:"";position:absolute;left:50%;bottom:-9px;width:12px;height:12px;background:inherit;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
-.plaza-badge{position:absolute;left:12px;bottom:12px;font-size:12px;font-weight:700;background:var(--mint);border:2px solid var(--ink);border-radius:99px;padding:2px 10px}
+/* 結果 */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--sub)}
+.kv dd{margin:0;font-weight:500}
+.lead{font-size:15px;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:12px;border-radius:99px;padding:3px 10px;border:1px solid var(--line);color:var(--gold)}
+.chip.bad{color:var(--bad);border-color:rgba(255,154,168,.4)}
+.big{font-family:"Shippori Mincho",serif;font-size:22px;font-weight:700;color:var(--gold)}
+.dir-row{display:flex;gap:10px;margin:6px 0 2px}
+.dir{flex:1;text-align:center;border-radius:14px;padding:10px 6px;background:rgba(143,227,181,.1);border:1px solid rgba(143,227,181,.35)}
+.dir.bad{background:rgba(255,154,168,.08);border-color:rgba(255,154,168,.35)}
+.dir b{display:block;font-size:20px;font-family:"Shippori Mincho",serif}
+.dir small{font-size:11px;color:var(--sub)}
+.swatch{display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:-3px;margin-right:6px;border:1px solid rgba(255,255,255,.5)}
 
-/* ===== ステータス ===== */
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin:14px 4px 10px;font-size:14px}
-.stat{display:flex;align-items:center;justify-content:space-between}
-.hearts{letter-spacing:2px;font-size:17px;color:var(--pink);-webkit-text-stroke:.6px var(--ink)}
-.hearts .off{color:var(--dim)}
-.stat b{font-weight:900}
-
-/* ===== お世話ボタン（シール風） ===== */
-.care{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
-.care button{
-  position:relative;height:64px;border:2.5px solid var(--ink);border-radius:20px;background:var(--card);
-  box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:16px;transition:transform .08s, box-shadow .08s
-}
-.care button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
-.care button small{display:block;font-size:11px;font-weight:700;color:var(--sub);line-height:1.1}
-.care button[data-c="feed"]{background:#FFF1D6}
-.care button[data-c="snack"]{background:#FFE3EA}
-.care button[data-c="play"]{background:#E3F4EB}
-.care button[data-c="clean"]{background:#E6EFFB}
-.care button[data-c="medicine"]{background:#F1E8FA}
-.care button[data-c="scold"]{background:#FFF6C9}
-.care button:disabled{opacity:.38;box-shadow:0 4px 0 rgba(90,69,72,.35)}
-.care button.alert::before{content:"";position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#F27E95;border:2.5px solid var(--ink)}
-
-/* ===== 下のタブ ===== */
-nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:3px solid var(--ink);
-  display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))
-}
-nav .inner{display:flex;width:100%;max-width:440px}
-nav button{flex:1;border:0;background:none;padding:8px 0;font-weight:700;font-size:13px;border-radius:14px}
-nav button[aria-current="true"]{background:var(--pink);font-weight:900}
-
-/* ===== カードと文字 ===== */
-h2{font-size:20px;font-weight:900;margin:8px 4px 12px}
-h3{font-size:15px;font-weight:900;margin:20px 4px 8px}
-.card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;padding:14px 16px;margin-bottom:12px}
-.lead{color:var(--sub);font-size:14px;margin:0 4px 12px}
-.btn{
-  display:block;width:100%;height:54px;border:2.5px solid var(--ink);border-radius:18px;background:var(--pink);
-  box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:17px;margin-top:12px
-}
-.btn.sub{background:var(--card)}
-.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
-.btn:disabled{opacity:.5}
-input{
-  width:100%;height:50px;border:2.5px solid var(--ink);border-radius:16px;padding:0 14px;font:inherit;font-size:17px;
-  background:#fff;color:var(--ink)
-}
-label{display:block;font-weight:700;font-size:14px;margin:12px 4px 6px}
-.code{font-size:24px;font-weight:900;letter-spacing:.08em;text-align:center;padding:14px 0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px}
-.code span{white-space:nowrap}
-
-/* ===== ひろば ===== */
-.friend{display:flex;gap:12px;align-items:center}
-.friend svg{width:84px;height:84px;flex:none}
-.friend .who{font-weight:900}
-.friend .meta{font-size:12px;color:var(--sub)}
-.stampbub{display:inline-block;margin-top:4px;font-size:13px;font-weight:700;background:var(--butter);border:2px solid var(--ink);border-radius:12px;padding:1px 10px}
-.stamps{display:flex;flex-wrap:wrap;gap:8px}
-.stamps button{border:2px solid var(--ink);border-radius:99px;background:var(--card);padding:6px 14px;font-weight:700}
-.small-btn{margin-top:8px;border:2px solid var(--ink);border-radius:12px;background:var(--mint);padding:4px 12px;font-weight:900;font-size:13px}
-
-/* ===== ずかん ===== */
-.dexgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.dexcell{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:4px 2px 6px;text-align:center;font-size:11px;font-weight:700}
-.dexcell svg{width:100%;height:64px}
-.dexcell.none{color:var(--sub);border-style:dashed}
-.q{height:64px;display:grid;place-items:center;font-size:28px;font-weight:900;color:var(--dim)}
-.count{font-weight:900;font-size:15px;margin:0 4px}
-
-/* ===== ランキング ===== */
-.rank{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:2px dotted var(--dim)}
-.rank:last-child{border-bottom:0}
-.rank .no{font-weight:900;width:1.5em}
-.rank .v{margin-left:auto;font-weight:900}
-
-/* ===== 演出の窓 ===== */
-.overlay{position:fixed;inset:0;z-index:20;background:rgba(90,69,72,.45);display:grid;place-items:center;padding:20px}
-.sheet{width:100%;max-width:380px;background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:20px;text-align:center;animation:pop .35s ease-out}
-@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
-.sheet .art{width:160px;height:160px;margin:0 auto}
-.sheet .art svg{width:100%;height:100%;overflow:visible}
-.sheet h3{font-size:19px;margin:8px 0 4px}
-.sheet p{margin:4px 0;color:var(--sub);font-size:14px}
-.glow .art{filter:drop-shadow(0 0 18px #ffe07a) drop-shadow(0 0 30px #d6b8ff)}
-.flash .art{animation:flash 1.2s ease-out}
-@keyframes flash{0%{filter:brightness(4) saturate(0)}100%{filter:none}}
-.ascend .art{animation:rise 2.4s ease-in-out}
-@keyframes rise{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:.6}}
-
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--ink);color:#fff;border-radius:99px;padding:8px 18px;font-weight:700;font-size:14px;max-width:90%}
-.loading{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--sub);font-weight:700}
-.loading svg{width:120px;height:120px}
-
-/* ===== 生きてる見た目 ===== */
-/* まばたき・視線 */
-.look{transform:translate(calc(var(--lx,0) * 1px), calc(var(--ly,0) * 1px));transition:transform .25s ease-out}
-.pet-wrap .eyes{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
-@keyframes blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
-/* 背景：やわらかい風景（空・光・丘・地面・粒子感） */
-.room{background:#DDEFE3;border-width:2.5px;box-shadow:0 10px 30px -12px rgba(90,69,72,.35), inset 0 0 0 1px rgba(255,255,255,.4)}
-.room::after{display:none}
-.room.night{background:#3A4568}
-.scene{position:absolute;inset:0;z-index:0;overflow:hidden}
-.scene svg{position:absolute;inset:0;width:100%;height:100%}
-.scene .cloud{position:absolute;height:26px;border-radius:30px;background:rgba(255,255,255,.85);filter:blur(3px);animation:drift 46s linear infinite}
-.scene .cloud::before,.scene .cloud::after{content:"";position:absolute;bottom:6px;border-radius:50%;background:inherit}
-.scene .cloud::before{left:14%;width:46%;height:34px}
-.scene .cloud::after{left:44%;width:38%;height:26px}
-.scene.night .cloud{background:rgba(160,170,210,.35)}
-.scene.dim{filter:saturate(.6) brightness(.96)}
-@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(520px)}}
-.scene .twinkle{animation:twinkle 3s ease-in-out infinite}
-@keyframes twinkle{50%{opacity:.25}}
-.room.dark .scene{filter:brightness(.45) saturate(.5)}
-/* ペットの足もとの影 */
-.shadow{position:absolute;left:50%;bottom:11%;width:46%;height:9%;margin-left:-23%;border-radius:50%;background:radial-gradient(closest-side, rgba(40,30,50,.28), rgba(40,30,50,0));pointer-events:none}
-/* 天気のつぶ */
-.weather{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
-.weather i{position:absolute;top:-20px;display:block}
-.weather .rain{width:1.5px;height:18px;background:linear-gradient(rgba(255,255,255,0),rgba(150,185,225,.85));border-radius:2px;animation:rain .7s linear infinite}
-@keyframes rain{to{transform:translate(-30px, 300px)}}
-.weather .snow{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.9);filter:blur(.4px);animation:snow 6s linear infinite}
-@keyframes snow{0%{transform:translate(0,0)}50%{transform:translate(14px,150px)}100%{transform:translate(-6px,300px)}}
-/* ペットと床の層 */
-.pet-layer{position:absolute;inset:0;z-index:1}
-/* なでる */
-.pet-wrap{touch-action:none;cursor:grab}
-.bounce.r-pet{animation:petsquish .35s ease-in-out}
-@keyframes petsquish{50%{transform:scale(1.1,.86)}}
-
-/* ===== 進化の豪華演出 ===== */
-.evo{background:radial-gradient(circle at 50% 38%, #fff 0, var(--card) 60%)}
-.evo .art{position:relative}
-.evo .art.shake{animation:evoShake .12s linear infinite}
-@keyframes evoShake{25%{transform:translate(-3px,1px) rotate(-2deg)}75%{transform:translate(3px,-1px) rotate(2deg)}}
-.evo .art.sil{filter:brightness(0) invert(1) drop-shadow(0 0 10px #ffd86b) drop-shadow(0 0 22px #ffb3d0)}
-.evo .art.pop{animation:evoPop .6s cubic-bezier(.3,1.6,.5,1)}
-@keyframes evoPop{0%{transform:scale(.4)}100%{transform:scale(1)}}
-.evo .ring{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border-radius:50%;border:4px solid #ffd86b;animation:ring 1s ease-out forwards;pointer-events:none}
-@keyframes ring{to{transform:scale(6);opacity:0}}
-.evo .pt{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;border:1.5px solid var(--ink);animation:burst 1.2s ease-out forwards;pointer-events:none}
-@keyframes burst{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
-.evo .rest{opacity:0;transition:opacity .4s}
-.evo .rest.show{opacity:1}
-.evo.hidden-form{background:radial-gradient(circle at 50% 38%, #FFF7D6 0, #F3E9FF 70%)}
-
-/* ===== ホーム下部：せいちょう・なかま ===== */
-.section-title{font-size:14px;font-weight:900;margin:20px 4px 8px}
-.track{display:flex;align-items:center;gap:0;margin:4px 0 10px}
-.track .st{flex:none;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);display:grid;place-items:center;font-size:11px;font-weight:900}
-.track .st.done{background:var(--mint)}
-.track .st.now{background:var(--pink);transform:scale(1.18)}
-.track .ln{flex:1;height:3px;background:var(--dim)}
-.track .ln.done{background:var(--ink)}
-.track-labels{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--sub);margin:0 -4px}
-.track-labels span{width:38px;text-align:center}
-.mates{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
-.mate{flex:none;width:76px;text-align:center;font-size:11px;font-weight:700;border:0;background:none;padding:0}
-.mate svg{width:64px;height:64px}
-.mate .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ===== 冷凍保存 ===== */
-.ice{position:absolute;inset:0;pointer-events:none}
-.ice svg{width:100%;height:100%}
-.frozen-card{text-align:center}
-.frozen-card b{font-size:18px}
-.btn.ice-btn{background:#D9ECFA}
-
-/* ===== どっち向くかなゲーム ===== */
-.sheet .art.wiggle{animation:wiggle .18s ease-in-out infinite}
-@keyframes wiggle{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
-.sheet .art.turn-left{animation:turnL .35s ease-out forwards}
-.sheet .art.turn-right{animation:turnR .35s ease-out forwards}
-@keyframes turnL{to{transform:translateX(-26px) rotate(-10deg)}}
-@keyframes turnR{to{transform:translateX(26px) rotate(10deg)}}
-.arrow{font-size:34px;font-weight:900;height:40px;line-height:40px;color:#E25C74}
-
-/* ===== お世話の演出 ===== */
-.pet-wrap.paused{animation-play-state:paused}
-.bounce.r-munch{animation:munch .28s ease-in-out 4}
-@keyframes munch{50%{transform:scale(1.07,.88)}}
-.bounce.r-hop{animation:hop .5s ease-out 2}
-@keyframes hop{50%{transform:translateY(-28px) scale(.95,1.06)}}
-.bounce.r-shake{animation:shake .12s linear 7}
-@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.bounce.r-shrink{animation:shrink 1.1s ease-in-out}
-@keyframes shrink{30%,70%{transform:scale(.86,.8)}}
-.bounce.r-slump{animation:slump 1.1s ease-in-out}
-@keyframes slump{40%,80%{transform:scale(1.06,.86) translateY(4px)}}
-.fx{position:absolute;pointer-events:none;z-index:3}
-.fx svg{width:100%;height:100%;overflow:visible}
-.fx-food{right:-18px;bottom:30px;width:52px;height:52px;animation:drop .45s cubic-bezier(.3,1.4,.6,1) both, bite 1s .5s steps(1) forwards}
-@keyframes drop{from{transform:translateY(-150px) rotate(-20deg)}to{transform:none}}
-@keyframes bite{0%{clip-path:inset(0)}25%{clip-path:inset(0 0 0 28%)}50%{clip-path:inset(0 0 0 55%)}75%{clip-path:inset(0 0 0 80%)}100%{clip-path:inset(0 0 0 100%)}}
-.fx-float{width:22px;height:22px;animation:floatup 1.3s ease-out forwards}
-@keyframes floatup{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-80px) scale(1.1);opacity:0}}
-.fx-mark{left:50%;top:-10px;width:40px;height:52px;margin-left:-20px;font-size:44px;font-weight:900;line-height:52px;text-align:center;color:#E25C74;animation:pop .25s ease-out both}
-.fx-pill{left:50%;top:0;width:44px;height:44px;margin-left:-22px;animation:drop .45s cubic-bezier(.3,1.4,.6,1) both}
-.fx-broom{right:24px;bottom:8px;width:64px;height:64px;animation:sweep 1.2s ease-in-out forwards}
-@keyframes sweep{0%{transform:translateX(-50px) rotate(-12deg)}25%{transform:translateX(0) rotate(10deg)}50%{transform:translateX(-36px) rotate(-12deg)}75%{transform:translateX(6px) rotate(10deg)}100%{transform:translateX(-20px) rotate(0)}}
-.poops.sweep{transition:opacity .6s .3s, transform .6s .3s;opacity:0;transform:translateX(70px)}
-
+/* 九星盤（南が上） */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px auto 8px;max-width:300px}
+.cell{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;text-align:center;font-size:11px;color:var(--sub);position:relative}
+.cell .s{font-family:"Shippori Mincho",serif;font-size:20px;color:var(--ink);font-weight:700;line-height:1.1}
+.cell.me{border-color:var(--gold);box-shadow:0 0 18px -2px rgba(242,211,138,.7);background:rgba(242,211,138,.12)}
+.cell.good{background:rgba(143,227,181,.13);border-color:rgba(143,227,181,.45)}
+.cell.bad{background:rgba(255,154,168,.1);border-color:rgba(255,154,168,.4)}
+.cell .tag{position:absolute;top:4px;left:0;right:0;font-size:9px;color:var(--gold)}
+.legend{display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--sub)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.foot{font-size:11px;color:var(--sub);text-align:center;margin-top:18px;line-height:1.8}
+.fade{animation:fade .6s ease-out both}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-:focus-visible{outline:3px solid #7aa7e0;outline-offset:2px}
 </style>
 </head>
 <body>
-<!-- 手描き風のゆれ線フィルター（全体で共有） -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <filter id="wob" x="-10%" y="-10%" width="120%" height="120%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/>
-      <feDisplacementMap in="SourceGraphic" scale="2.2"/>
-    </filter>
-  </defs>
-</svg>
-
-<div id="app"><div class="loading" id="boot"><div><div id="bootArt"></div>とことこ…</div></div></div>
-
-<nav id="nav" class="hidden" aria-label="メニュー">
-  <div class="inner">
-    <button data-tab="home" aria-current="true">そだてる</button>
-    <button data-tab="plaza">ひろば</button>
-    <button data-tab="dex">ずかん</button>
-    <button data-tab="rank">ランキング</button>
+<main>
+  <div class="head">
+    <div class="small">KOYOMI ・ KYUSEI</div>
+    <h1>NFC 暦占い</h1>
+    <div class="date" id="today"></div>
   </div>
-</nav>
+
+  <!-- 生年月日 -->
+  <section class="panel hidden" id="setup">
+    <h2>生年月日を教えてください</h2>
+    <p class="lead">生まれ年の九星（本命星）を出して、今日の九星盤と照らし合わせます。</p>
+    <label for="birth">生年月日</label>
+    <input type="date" id="birth" min="1920-01-01" max="2025-12-31">
+    <button class="btn" id="saveBirth">この生年月日で占う</button>
+    <button class="btn ghost" id="skipBirth">暦だけ見る</button>
+    <p class="note">生年月日はこのスマホの中だけに保存され、どこにも送信しません。</p>
+  </section>
+
+  <!-- ガチャ -->
+  <section class="panel hidden" id="gacha">
+    <div class="stage" id="stage">
+      <div class="rays" id="rays"></div>
+      <div class="card" id="card">
+        <div class="face back"><div class="sigil">暦</div></div>
+        <div class="face front"><div><div class="rank-sub" id="rankSub">本日の運勢</div><div class="rank" id="rankText">大吉</div><div class="rank-sub" id="rankStar"></div></div></div>
+      </div>
+    </div>
+    <button class="btn" id="draw">今日の札を引く</button>
+    <p class="note" style="text-align:center">同じ日・同じ生まれなら、何度引いても同じ結果です（暦で決まるため）。</p>
+  </section>
+
+  <!-- 個人の運勢 -->
+  <section class="panel hidden fade" id="personal"></section>
+  <!-- 九星盤 -->
+  <section class="panel hidden fade" id="boardPanel"></section>
+  <!-- 今日の暦 -->
+  <section class="panel fade" id="koyomi"></section>
+
+  <div class="panel hidden" id="others">
+    <button class="btn ghost" id="otherBtn" style="margin-top:0">ほかの人の生年月日で見る</button>
+    <button class="btn ghost" id="changeBtn">自分の生年月日を変える</button>
+  </div>
+
+  <p class="foot">
+    六曜・干支・日家九星・十二直・選日・二十四節気は、太陽と月の位置の天文計算と、伝統的な暦注の規則から求めています（公開されている暦と照合済み）。<br>
+    暦注や九星気学は昔からの習わしで、科学的な根拠があるものではありません。参考としてお楽しみください。
+  </p>
+</main>
 
 <script>
 /* ============================================================
-   設定：GASのウェブアプリURLをここに貼る
+   暦データ（2025-12-01〜2028-12-31）
+   1日8文字：六曜(0大安〜5仏滅) 旧暦月(2桁・閏は+20) 旧暦日(2) 日家九星(1) 節月の地支(16進1) 二十四節気(a〜x / -)
    ============================================================ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxvsdIWFpX63dTDsAwr2EdYsusIqrXz6VwSLfYkISkB_oaTqknvZD_T5OjDUwZdL8p6/exec';
+const DATA_START = '2025-12-01';
+const DATA = '410122b-510131b-010149b-110158b-210167b-310176b-4101850r5101940-0102030-1102120-2102210-3102390-4102480-5102570-0102660-1102750-2102840-3102930-4103020-0110110-1110210s2110320-3110430-4110540-5110650-0110760-1110870-2110980-3111090-4111110-5111220-0111330-1111440-2111550-3111660-4111771t5111881-0111991-1112011-2112121-3112231-4112341-5112451-0112561-1112671-2112781-3112891-4112911-5113021-1120131-2120241u3120351-4120461-5120571-0120681-1120791-2120811-3120921-4121031-5121141-0121251-1121361-2121471-3121581-4121691-5121712v0121822-1121932-2122042-3122152-4122262-5122372-0122482-1122592-2122612-3122722-4122832-5122942-2010152-3010262-4010372w5010482-0010592-1010612-2010722-3010832-4010942-5011052-0011162-1011272-2011382-3011492-4011512-5011622-0011733x1011843-2011953-3012063-4012173-5012283-0012393-1012413-2012523-3012633-4012743-5012853-0012963-1013073-3020183-4020293a5020313-0020423-1020533-2020643-3020753-4020863-5020973-0021083-1021193-2021213-3021323-4021433-5021543-0021653-1021763-2021874b3021984-4022094-5022114-0022224-1022334-2022444-3022554-4022664-5022774-0022884-1022994-4030114-5030224-0030334-1030444c2030554-3030664-4030774-5030884-0030994-1031014-2031124-3031234-4031344-5031454-0031564-1031674-2031784-3031894-4031915d5032025-0032135-1032245-2032355-3032465-4032575-5032685-0032795-1032815-2032925-3033035-5040145-0040255-1040365-2040475-3040585e4040695-5040715-0040825-1040935-2041045-3041155-4041265-5041375-0041485-1041595-2041615-3041725-4041835-5041945-0042055-1042166f2042276-3042386-4042496-5042516-0042626-1042736-2042846-3042956-0050166-1050276-2050386-3050496-4050596-5050686-0050776g1050866-2050956-3051046-4051136-5051226-0051316-1051496-2051586-3051676-4051766-5051856-0051946-1052036-2052126-3052216-4052397h5052487-0052577-1052667-2052757-3052847-4052937-1060127-2060217-3060397-4060487-5060577-0060667-1060757-2060847-3060937-4061027i5061117-0061297-1061387-2061477-3061567-4061657-5061747-0061837-1061927-2062017-3062197-4062287-5062377-0062467-1062558j2062648-3062738-4062828-5062918-0063098-2070188-3070278-4070368-5070458-0070548-1070638-2070728-3070818-4070998-5071088-0071178k1071268-2071358-3071448-4071538-5071628-0071718-1071898-2071988-3072078-4072168-5072258-0072348-1072438-2072528-3072619l4072799-5072889-0072979-3080169-4080259-5080349-0080439-1080529-2080619-3080799-4080889-5080979-0081069-1081159-2081249-3081339m4081429-5081519-0081699-1081789-2081879-3081969-4082059-5082149-0082239-1082329-2082419-3082599-4082689-5082779-008286an108295a-208304a-409013a-509022a-009031a-109049a-209058a-309067a-409076a-509085a-009094a-109103a-209112a-309121a-409139ao509148a-009157a-109166a-209175a-309184a-409193a-509202a-009211a-109229a-209238a-309247a-409256a-509265a-009274a-109283bp209292b-510011b-010029b-110038b-210047b-310056b-410065b-510074b-010083b-110092b-210101b-310119b-410128b-510137b-010146bq110155b-210164b-310173b-410182b-510191b-010209b-110218b-210227b-310236b-410245b-510254b-010263b-110272b-210281b-3102990r4103080-0110170-1110260-2110350-3110440-4110530-5110620-0110710-1110810-2110920-3111030-4111140-5111250-0111360-1111470s2111580-3111690-4111710-5111820-0111930-1112040-2112150-3112260-4112370-5112480-0112590-1112610-2112720-3112831t4112941-5113051-1120161-2120271-3120381-4120491-5120511-0120621-1120731-2120841-3120951-4121061-5121171-0121281-1121391u2121411-3121521-4121631-5121741-0121851-1121961-2122071-3122181-4122291-5122311-0122421-1122531-2122641-3122751-4122862v5122972-0123082-2010192-3010212-4010322-5010432-0010542-1010652-2010762-3010872-4010982-5011092-0011112-1011222-2011332w3011442-4011552-5011662-0011772-1011882-2011992-3012012-4012122-5012232-0012342-1012452-2012562-3012672-4012782-5012893x0012913-3020123-4020233-5020343-0020453-1020563-2020673-3020783-4020893-5020913-0021023-1021133-2021243-3021353-4021463a5021573-0021683-1021793-2021813-3021923-4022033-5022143-0022253-1022363-2022473-3022583-4022693-5022713-0022823-1022934b2023044-4030154-5030264-0030374-1030484-2030594-3030614-4030724-5030834-0030944-1031054-2031164-3031274-4031384-5031494c0031514-1031624-2031734-3031844-4031954-5032064-0032174-1032284-2032394-3032414-4032524-5032634-0032744-1032854-2032964-5040175d0040285-1040395-2040415-3040525-4040635-5040745-0040855-1040965-2041075-3041185-4041295-5041315-0041425-1041535-2041645e3041755-4041865-5041975-0042085-1042195-2042215-3042325-4042435-5042545-0042655-1042765-2042875-3042985-4043095-0050115-1050226f2050336-3050446-4050556-5050666-0050776-1050886-2050996-3051096-4051186-5051276-0051366-1051456-2051546-3051636-4051726g5051816-0051996-1052086-2052176-3052266-4052356-5052446-0052536-1052626-2052716-3052896-4052986-1060176-2060266-3060356-4060447h5060537-0060627-1060717-2060897-3060987-4061077-5061167-0061257-1061347-2061437-3061527-4061617-5061797-0061887-1061977-2062067i3062157-4062247-5062337-0062427-1062517-2062697-3062787-4062877-5062967-2070157-3070247-4070337-5070427-0070517-1070697-2070788j3070878-4070968-5071058-0071148-1071238-2071328-3071418-4071598-5071688-0071778-1071868-2071958-3072048-4072138-5072228k0072318-1072498-2072588-3072678-4072768-5072858-0072948-1073038-3080128-4080218-5080398-0080488-1080578-2080668-3080758-4080849l5080939-0081029-1081119-2081299-3081389-4081479-5081569-0081659-1081749-2081839-3081929-4082019-5082199-0082289-1082379m2082469-3082559-4082649-5082739-0082829-1082919-4090199-5090289-0090379-1090469-2090559-3090649-4090739-5090829-009091an109109a-209118a-309127a-409136a-509145a-009154a-109163a-209172a-309181a-409199a-509208a-009217a-109226a-209235a-309244a-409253ao509262a-009271a-109289a-209298a-510017a-010026a-110035a-210044a-310053a-410062a-510071a-010089a-110098a-210107a-310116bp410125b-510134b-010143b-110152b-210161b-310179b-410188b-510197b-010206b-110215b-210224b-310233b-410242b-510251bq010269b-110278b-210287b-310296b-410305b-011014b-111023b-211032b-311041b-411059b-511068b-011077b-111086b-211095b-3111040r4111130-5111220-0111310-1111410-2111520-3111630-4111740-5111850-0111960-1112070-2112180-3112290-4112310-5112420-0112530s1112640-2112750-3112860-4112970-5113080-1120190-2120210-3120320-4120430-5120540-0120650-1120760-2120870-3120980-4121091t5121111-0121221-1121331-2121441-3121551-4121661-5121771-0121881-1121991-2122011-3122121-4122231-5122341-0122451u1122561-2122671-3122781-4122891-5122911-0123021-2010131-3010241-4010351-5010461-0010571-1010681-2010791-3010811-4010922v5011032-0011142-1011252-2011362-3011472-4011582-5011692-0011712-1011822-2011932-3012042-4012152-5012262-0012372-1012482w2012592-3012612-4012722-5012832-0012942-3020152-4020262-5020372-0020482-1020592-2020612-3020722-4020832-5020942-0021053x1021163-2021273-3021383-4021493-5021513-0021623-1021733-2021843-3021953-4022063-5022173-0022283-1022393-2022413-3022523a4022633-5022743-0022853-1022963-2023073-4030183-5030293-0030313-1030423-2030533-3030643-4030753-5030863-0030973-1031084b2031194-3031214-4031324-5031434-0031544-1031654-2031764-3031874-4031984-5032094-0032114-1032224-2032334-3032444-4032554c5032664-0032774-1032884-2032994-3033014-5040124-0040234-1040344-2040454-3040564-4040674-5040784-0040894-1040914-2041024-3041135d4041245-5041355-0041465-1041575-2041685-3041795-4041815-5041925-0042035-1042145-2042255-3042365-4042475-5042585-0042695e1042715-2042825-3042935-0050145-1050255-2050365-3050475-4050585-5050695-0050715-1050825-2050935-3051045-4051155-5051265-0051376f1051486-2051596-3051696-4051786-5051876-0051966-1052056-2052146-3052236-4052326-5052416-0052596-1052686-2052776-3052866-4052956g5053046-0250136-1250226-2250316-3250496-4250586-5250676-0250766-1250856-2250946-3251036-4251126-5251216-0251396-1251487h2251577-3251667-4251757-5251847-0251937-1252027-2252117-3252297-4252387-5252477-0252567-1252657-2252747-3252837-4252927-1060117i2060297-3060387-4060477-5060567-0060657-1060747-2060837-3060927-4061017-5061197-0061287-1061377-2061467-3061557-4061647-5061738j0061828-1061918-2062098-3062188-4062278-5062368-0062458-1062548-2062638-3062728-4062818-5062998-2070188-3070278-4070368k5070458-0070548-1070638-2070728-3070818-4070998-5071088-0071178-1071268-2071358-3071448-4071538-5071628-0071718-1071898-2071989l3072079-4072169-5072259-0072349-1072439-2072529-3072619-4072799-5072889-0072979-1073069-3080159-4080249-5080339-0080429m1080519-2080699-3080789-4080879-5080969-0081059-1081149-2081239-3081329-4081419-5081599-0081689-1081779-2081869-3081959-408204an508213a-008222a-108231a-208249a-308258a-408267a-508276a-008285a-108294a-409013a-509022a-009031a-109049a-209058a-309067ao409076a-509085a-009094a-109103a-209112a-309121a-409139a-509148a-009157a-109166a-209175a-309184a-409193a-509202a-009211bp109229b-209238b-309247b-409256b-509265b-009274b-109283b-209292b-510011b-010029b-110038b-210047b-310056b-410065b-510074bq010083b-110092b-210101b-310119b-410128b-510137b-010146b-110155b-210164b-310173b-410182b-510191b-010201b-1102120r2102230-3102340-4102450-5102560-0102670-1102780-2102890-3102910-4103020-0110130-1110240-2110350-3110460-4110570-5110680s0110790-1110810-2110920-3111030-4111140-5111250-0111360-1111470-2111580-3111690-';
 
-/* ===== 保存（ブラウザ） ===== */
-const LS_AUTH = 'nfcpet.auth';
-const LS_CODE = 'nfcpet.code';
+const ROKUYO = ['大安','赤口','先勝','友引','先負','仏滅'];
+const ROKUYO_DESC = {
+  '大安':'終日よし。何事を始めるにもよい日。', '赤口':'正午前後（11〜13時ごろ）だけよい日。', '先勝':'午前中がよく、午後はやや控えめに。',
+  '友引':'朝・夕はよく、正午ごろは控えめに。', '先負':'午前は控えめ、午後からがよい日。', '仏滅':'何事も控えめに過ごす日とされます。'
+};
+const KAN = '甲乙丙丁戊己庚辛壬癸', SHI = '子丑寅卯辰巳午未申酉戌亥';
+const TERMS = ['春分','清明','穀雨','立夏','小満','芒種','夏至','小暑','大暑','立秋','処暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至','小寒','大寒','立春','雨水','啓蟄'];
+const STAR = ['', '一白水星','二黒土星','三碧木星','四緑木星','五黄土星','六白金星','七赤金星','八白土星','九紫火星'];
+const STAR_S = ['', '一白','二黒','三碧','四緑','五黄','六白','七赤','八白','九紫'];
+const ELEM = ['', '水','土','木','木','土','金','金','土','火'];
+const GEN = { '木':'火', '火':'土', '土':'金', '金':'水', '水':'木' }; // 生む関係
+const STAR_COLOR = ['', ['白','#f4f6fb'],['茶','#a7835a'],['青','#5b8de0'],['緑','#5fbf87'],['黄','#f2cf4f'],['金','#e6c36b'],['赤','#e7667a'],['ベージュ','#e9d9bf'],['紫','#a776e6']];
+const CHOKU = ['建','除','満','平','定','執','破','危','成','納','開','閉'];
+const CHOKU_DESC = {
+  '建':'物事を建て始める日。祭事・開業によいが、土を動かすことは控える。','除':'障りを取り除く日。掃除や治療の始めによい。',
+  '満':'すべてが満ちる日。新しい事・移転・祝い事によい。','平':'平らかな日。地固めや話し合いによい。',
+  '定':'物事が定まる日。契約・決定によい。','執':'物事を執り行う日。祭事・手続きによい。',
+  '破':'物事を破る日。交渉ごと以外は控えめに。','危':'危ぶむ日。高い所や勝負ごとは慎重に。',
+  '成':'物事が成就する日。新しい事・開店によい。','納':'物事を納める日。片付け・収納・買い物によい。',
+  '開':'開き通じる日。開店・入学・始め事によい。','閉':'閉じる日。貯蓄や締めくくりによい。'
+};
+const CHOKU_SCORE = {'建':.3,'除':.3,'満':.3,'平':0,'定':.3,'執':0,'破':-.5,'危':-.3,'成':.5,'納':.3,'開':.5,'閉':-.3};
+const CHOKU_ACT = {
+  '建':'新しい予定を立ててみる','除':'机まわりを片付ける','満':'ずっと気になっていたことに手をつける','平':'人の話をじっくり聞く',
+  '定':'迷っていたことを1つ決める','執':'手続きや提出物を片付ける','破':'古いやり方を1つ見直す','危':'いつもより確認を1回多めに',
+  '成':'仕上げを1つ終わらせる','納':'書類やデータを整理する','開':'初めての人に声をかける','閉':'今日は早めに切り上げる'
+};
+// 方位（後天定位：その方位にもともといる星）
+const HOME = {1:'北',2:'南西',3:'東',4:'南東',5:'中央',6:'北西',7:'西',8:'北東',9:'南'};
+const DIR_HOME = {'北':1,'南西':2,'東':3,'南東':4,'中央':5,'北西':6,'西':7,'北東':8,'南':9};
+const OPP = {'北':'南','南':'北','東':'西','西':'東','北東':'南西','南西':'北東','南東':'北西','北西':'南東'};
+const BRANCH_DIR = ['北','北東','北東','東','南東','南東','南','南西','南西','西','北西','北西'];
+// 本命星がいる宮の意味（その日の自分の居場所）
+const PALACE = {
+  '北':{score:2, title:'静かに力をためる日', msg:'表に出るより、準備や考えごとに向いています。無理に動かず、体を休めると次につながります。', work:'資料の読み込みや下準備', love:'深い話ができる日'},
+  '南西':{score:3, title:'コツコツが実を結ぶ日', msg:'地道な作業がはかどります。目立たない仕事ほど、あとで評価されます。', work:'ルーティンの丁寧な仕上げ', love:'身近な人への気づかい'},
+  '東':{score:4, title:'動き出すと流れに乗れる日', msg:'思い立ったらまず一歩。新しい提案や連絡は、今日のうちに出してみましょう。', work:'企画や提案を出す', love:'自分から声をかける'},
+  '南東':{score:5, title:'縁と信用に恵まれる日', msg:'人とのつながりが広がります。頼まれごとを気持ちよく引き受けると、信用が増えます。', work:'調整・交渉ごと', love:'紹介や再会にご縁'},
+  '中央':{score:2, title:'足元を固める日', msg:'周りの動きに振り回されやすい日。大きな決断は避け、いつも通りを丁寧に。', work:'確認作業と見直し', love:'聞き役に回る'},
+  '北西':{score:5, title:'実力が認められる日', msg:'責任ある役目が回ってきやすく、目上の人の引き立ても。堂々と取り組みましょう。', work:'リーダー役・決裁ごと', love:'頼られて信頼が深まる'},
+  '西':{score:4, title:'楽しみと実りの日', msg:'会話や食事の場で運気が上がります。お金の流れも良いですが、使いすぎには注意。', work:'雑談から良い案が出る', love:'食事やお茶に誘う'},
+  '北東':{score:3, title:'切り替えの日', msg:'流れが変わる節目。やり方を見直したり、引き継ぎを整えたりするのに向いています。', work:'手順の見直し・引き継ぎ', love:'関係の新しい一歩'},
+  '南':{score:4, title:'注目される日', msg:'ひらめきが冴え、人前に出ると評価されます。感情的な言い方にだけ気をつけて。', work:'発表・プレゼン', love:'第一印象が光る'}
+};
+// 一粒万倍日（節月の地支 → その日の地支）
+const MANBAI = {2:'丑午',3:'酉寅',4:'子卯',5:'卯辰',6:'巳午',7:'酉午',8:'子未',9:'卯申',10:'酉午',11:'酉戌',0:'亥子',1:'卯子'};
+const FUJOJU = {1:[3,11,19,27],7:[3,11,19,27],2:[2,10,18,26],8:[2,10,18,26],3:[1,9,17,25],9:[1,9,17,25],4:[4,12,20,28],10:[4,12,20,28],5:[5,13,21,29],11:[5,13,21,29],6:[6,14,22,30],12:[6,14,22,30]};
+
+/* ===== 日付 ===== */
+function jstToday(){ return new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Tokyo' }).format(new Date()); }
+function toUTC(s){ const [y,m,d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); }
+function diffDays(a, b){ return Math.round((toUTC(b) - toUTC(a)) / 86400000); }
+function addDays(s, n){ return new Date(toUTC(s) + n * 86400000).toISOString().slice(0, 10); }
+function ganshi(s){ const jdn = Math.floor(toUTC(s) / 86400000) + 2440588; return (jdn + 49) % 60; }
+
+// その日の暦を読み出す
+function dayInfo(s){
+  const i = diffDays(DATA_START, s);
+  if (i < 0 || (i + 1) * 8 > DATA.length) return null;
+  const r = DATA.substr(i * 8, 8);
+  const lmRaw = parseInt(r.substr(1, 2), 10);
+  const info = {
+    date: s, rokuyo: ROKUYO[+r[0]], lm: lmRaw > 20 ? lmRaw - 20 : lmRaw, leap: lmRaw > 20, ld: parseInt(r.substr(3, 2), 10),
+    star: +r[5], sb: parseInt(r[6], 16), term: r[7] === '-' ? '' : TERMS[r.charCodeAt(7) - 97], g: ganshi(s)
+  };
+  info.kan = KAN[info.g % 10]; info.shi = SHI[info.g % 12]; info.branch = info.g % 12;
+  info.choku = CHOKU[(info.branch - info.sb + 12) % 12];
+  info.kichi = kichi(info);
+  return info;
+}
+
+function kichi(x){
+  const br = SHI[x.branch], out = [];
+  if (MANBAI[x.sb].includes(br)) out.push(['一粒万倍日', 1]);
+  const season = [2,3,4].includes(x.sb) ? 14 : [5,6,7].includes(x.sb) ? 30 : [8,9,10].includes(x.sb) ? 44 : 0; // 戊寅・甲午・戊申・甲子
+  if (x.g === season) out.push(['天赦日', 1]);
+  if (br === '寅') out.push(['寅の日', 1]);
+  if (x.g === 5) out.push(['己巳の日', 1]); else if (br === '巳') out.push(['巳の日', 1]);
+  if (FUJOJU[x.lm].includes(x.ld)) out.push(['不成就日', 0]);
+  return out;
+}
+
+// 直近の二十四節気
+function termNear(s){
+  for (let k = 0; k < 20; k++){ const d = dayInfo(addDays(s, -k)); if (d && d.term) return { name: d.term, ago: k }; }
+  return null;
+}
+function termNext(s){
+  for (let k = 1; k < 20; k++){ const d = dayInfo(addDays(s, k)); if (d && d.term) return { name: d.term, in: k }; }
+  return null;
+}
+
+/* ===== 九星 ===== */
+// 日盤：中宮の星がcのとき、方位dirにいる星（日本の九星気学の順行配置）
+function starAt(c, dir){ const h = DIR_HOME[dir]; return ((h + c - 5 - 1) % 9 + 9) % 9 + 1; }
+function dirOf(c, star){ const h = ((star - c + 5 - 1) % 9 + 9) % 9 + 1; return HOME[h]; }
+function relation(s, honmei){
+  const a = ELEM[s], b = ELEM[honmei];
+  if (a === b) return '比和';
+  if (GEN[a] === b) return '生気';   // sがあなたを生む
+  if (GEN[b] === a) return '退気';   // あなたがsを生む
+  return '剋';
+}
+// 本命星（立春前の生まれは前年扱い）
+function honmeiOf(birth){
+  let [y, m, d] = birth.split('-').map(Number);
+  if (m === 1 || (m === 2 && d < 4)) y--;
+  const n = (11 - (y % 9)) % 9;
+  return n === 0 ? 9 : n;
+}
+
+function personal(info, honmei){
+  const c = info.star;
+  const myDir = dirOf(c, honmei);
+  const goDir = dirOf(c, 5);
+  const bad = {};
+  const mark = (dir, name) => { if (dir && dir !== '中央') (bad[dir] = bad[dir] || []).push(name); };
+  if (goDir !== '中央'){ mark(goDir, '五黄殺'); mark(OPP[goDir], '暗剣殺'); }
+  if (myDir !== '中央'){ mark(myDir, '本命殺'); mark(OPP[myDir], '本命的殺'); }
+  mark(OPP[BRANCH_DIR[info.branch]], '日破');
+  const order = { '生気':0, '比和':1, '退気':2 };
+  const good = Object.keys(OPP).map(dir => ({ dir, s: starAt(c, dir) }))
+    .filter(x => !bad[x.dir] && x.s !== 5 && x.s !== honmei && order[relation(x.s, honmei)] !== undefined)
+    .map(x => ({ ...x, rel: relation(x.s, honmei) }))
+    .sort((a, b) => order[a.rel] - order[b.rel]);
+  // 点数：自分のいる宮＋中宮星との相性＋その日の暦注
+  const P = PALACE[myDir];
+  let score = P.score;
+  const rc = relation(c, honmei);
+  score += c === honmei ? 0 : rc === '生気' ? 1 : rc === '比和' ? .5 : rc === '剋' ? -.5 : 0;
+  info.kichi.forEach(([n]) => { score += n === '天赦日' ? 1 : n === '一粒万倍日' ? .5 : n === '不成就日' ? -.5 : 0; });
+  score += info.rokuyo === '大安' ? .5 : info.rokuyo === '仏滅' ? -.5 : 0;
+  score += CHOKU_SCORE[info.choku];
+  const rank = score >= 5.5 ? '大吉' : score >= 4.5 ? '吉' : score >= 3.5 ? '中吉' : score >= 2.5 ? '小吉' : '末吉';
+  const luckyStar = good.length ? good[0].s : [1,2,3,4,5,6,7,8,9].find(s => s !== 5 && relation(s, honmei) === '生気') || honmei;
+  return { honmei, myDir, P, rank, score, good: good.slice(0, 2), bad, luckyStar, c };
+}
+
+/* ===== 画面 ===== */
+const $ = id => document.getElementById(id);
+const LS_BIRTH = 'koyomi.birth';
 const store = {
-  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
-  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
+const TODAY = jstToday();
+const INFO = dayInfo(TODAY);
+let birth = store.get(LS_BIRTH);
+let tempBirth = null;
 
-/* ===== 状態 ===== */
-let auth = store.get(LS_AUTH);
-let pet = null;
-let nickname = '';
-let plazaData = null;
-let tab = 'home';
-let busy = false;
-let bubbleText = '';
-const eventQueue = [];
-
-const $app = document.getElementById('app');
-const $nav = document.getElementById('nav');
-
-/* ===== 通信 ===== */
-async function api(action, extra = {}){
-  const body = Object.assign({ action }, extra);
-  if (auth){ body.userId = auth.userId; body.token = auth.token; }
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 事前確認を避ける
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || '処理できませんでした');
-  return data;
+function wareki(s){
+  const [y, m, d] = s.split('-').map(Number);
+  const wd = '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
+  return `${y}年${m}月${d}日（${wd}）・令和${y - 2018}年`;
 }
 
-/* ============================================================
-   キャラの絵（SVGで描く・すべてオリジナル）
-   ============================================================ */
-const STAGE_OF = {
-  punimaru:'baby', koromochi:'child', besomochi:'child', kirikko:'young', amaenbo:'young', zunguri:'young', hinekure:'young'
-};
-const FORM_NAME = {
-  punimaru:'ぷにまる', koromochi:'ころもち', besomochi:'べそもち', kirikko:'きりっこ', amaenbo:'あまえんぼ',
-  zunguri:'ずんぐり', hinekure:'ひねくれ', hoshimaru:'ほしまる', asatsuyu:'あさつゆ', nikoniko:'にこにこ団長',
-  hitonatsu:'ひとなつ', manpuku:'まんぷく', nemunemu:'ねむねむ', pyonpyon:'ぴょんぴょん', omochiyama:'おもち山',
-  nonbiri:'のんびり', tsuntsun:'つんつん', yorunoko:'よるのこ', shonbori:'しょんぼり', houkiboshi:'ほうき星',
-  kiniro:'きんいろ', fukkatsu:'ふっかつ', minnanoko:'みんなのこ', sakura:'さくら', yukinko:'ゆきんこ'
-};
-function stageOf(form){ return form === 'egg' ? 'egg' : (STAGE_OF[form] || 'adult'); }
-
-// 形態ごとの描き分け設定
-const FORM_DEF = {
-  punimaru:{s:.62,ear:'none',eye:'dot',mouth:'w'},
-  koromochi:{s:.74,ear:'nub',eye:'dot',mouth:'w'},
-  besomochi:{s:.74,ear:'nub',eye:'teary',mouth:'flat',sweat:1},
-  kirikko:{s:.84,h:1.1,ear:'tuft',eye:'sharp',mouth:'smile',brow:1},
-  amaenbo:{s:.84,ear:'ribbon',eye:'happy',mouth:'w',blush:2},
-  zunguri:{s:.86,w:1.2,ear:'nub',eye:'dot',mouth:'o'},
-  hinekure:{s:.84,ear:'cowlick',eye:'side',mouth:'flat'},
-  hoshimaru:{s:1,ear:'star',eye:'happy',mouth:'smile'},
-  asatsuyu:{s:1,ear:'sprout',eye:'dot',mouth:'smile'},
-  nikoniko:{s:1,ear:'crown',eye:'happy',mouth:'open'},
-  hitonatsu:{s:1,ear:'heart',eye:'dot',mouth:'w',blush:2},
-  manpuku:{s:1,w:1.3,ear:'nub',eye:'happy',mouth:'w',belly:1},
-  nemunemu:{s:1,ear:'nightcap',eye:'sleep',mouth:'o'},
-  pyonpyon:{s:.95,h:1.1,ear:'wing',eye:'dot',mouth:'open'},
-  omochiyama:{s:1.05,w:1.25,h:1.15,ear:'none',eye:'dot',mouth:'w',peak:1},
-  nonbiri:{s:1,w:1.25,h:.85,ear:'nub',eye:'sleep',mouth:'smile'},
-  tsuntsun:{s:1,ear:'spike',eye:'sharp',mouth:'flat',brow:1},
-  yorunoko:{s:1,ear:'moon',eye:'dot',mouth:'flat',col:'#C3CBEE'},
-  shonbori:{s:1,ear:'cloud',eye:'teary',mouth:'flat',sweat:1},
-  houkiboshi:{s:1,ear:'comet',eye:'happy',mouth:'open',col:'#DCD0F7',sparkle:1},
-  kiniro:{s:1,ear:'crown',eye:'happy',mouth:'smile',col:'#F8DC7A',sparkle:1},
-  fukkatsu:{s:1,ear:'halo',eye:'happy',mouth:'smile',wingBack:1},
-  minnanoko:{s:1,ear:'heart',eye:'happy',mouth:'open',friends:1},
-  sakura:{s:1,ear:'petal',eye:'dot',mouth:'w',col:'#FFD3DE'},
-  yukinko:{s:1,ear:'snowcap',eye:'dot',mouth:'o',col:'#E1F0FB'}
-};
-const EGG_COL = { shiro:'#FFF6EC', hoshi:'#FFF1BF', hana:'#FFDCE5' };
-const INK = '#5A4548';
-
-function starPath(cx, cy, r){
-  let d = '';
-  for (let i = 0; i < 10; i++){
-    const a = -Math.PI/2 + i*Math.PI/5, rr = i%2 ? r*.45 : r;
-    d += (i ? 'L' : 'M') + (cx + rr*Math.cos(a)).toFixed(1) + ' ' + (cy + rr*Math.sin(a)).toFixed(1);
-  }
-  return d + 'Z';
-}
-function heartPath(x, y, r){
-  return `M${x} ${y+r*.9} C${x-r*1.4} ${y-r*.1} ${x-r*.6} ${y-r*1.2} ${x} ${y-r*.35} C${x+r*.6} ${y-r*1.2} ${x+r*1.4} ${y-r*.1} ${x} ${y+r*.9}Z`;
-}
-
-// 絵を作る（opt: silhouette / sick / flip / pattern）
-function drawPet(form, eggType = 'shiro', opt = {}){
-  const sw = 3;
-  const st = `stroke="${INK}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"`;
-  if (form === 'egg') return drawEgg(eggType, opt);
-  const d = FORM_DEF[form] || FORM_DEF.punimaru;
-  const sil = !!opt.silhouette;
-  const col = sil ? '#EADCDF' : (d.col || EGG_COL[eggType] || EGG_COL.shiro);
-  const s = d.s, rx = 34*s*(d.w||1), ry = 30*s*(d.h||1);
-  const cx = 60, cy = 98 - ry*.68, top = cy - ry*1.0;
-  const back = [], front = [], face = [], eyes = [];
-
-  // 体の後ろに描くもの
-  if (d.ear === 'nub'){
-    [-1,1].forEach(k => back.push(`<circle cx="${cx+k*rx*.55}" cy="${top+ry*.18}" r="${7*s}" fill="${col}" ${st}/>`));
-  }
-  if (d.ear === 'wing' || d.wingBack){
-    [-1,1].forEach(k => back.push(`<path d="M${cx+k*rx*.8} ${cy-ry*.2} q${k*18} -14 ${k*24} 2 q${k*-8} 2 ${k*-6} 10 q${k*-8} 0 ${k*-18} -4z" fill="#fff" ${st}/>`));
-  }
-  if (d.friends && !sil){
-    [-1,1].forEach(k => back.push(`<g><ellipse cx="${cx+k*(rx+14)}" cy="92" rx="10" ry="8" fill="${EGG_COL[k<0?'hana':'hoshi']}" ${st}/><circle cx="${cx+k*(rx+14)-3}" cy="91" r="1.4" fill="${INK}"/><circle cx="${cx+k*(rx+14)+3}" cy="91" r="1.4" fill="${INK}"/></g>`));
-  }
-
-  // 体（下が少し平たいおもち形）
-  const peak = d.peak ? .55 : 1;
-  const body = `M${cx-rx} ${cy} C${cx-rx*peak} ${cy-ry*1.35} ${cx+rx*peak} ${cy-ry*1.35} ${cx+rx} ${cy} C${cx+rx} ${cy+ry*.9} ${cx-rx} ${cy+ry*.9} ${cx-rx} ${cy}Z`;
-  const feet = [-1,1].map(k => `<ellipse cx="${cx+k*rx*.45}" cy="${cy+ry*.64}" rx="${7*s}" ry="${4*s}" fill="${col}" ${st}/>`).join('');
-  let belly = d.belly && !sil ? `<ellipse cx="${cx}" cy="${cy+ry*.25}" rx="${rx*.55}" ry="${ry*.38}" fill="#fff" opacity=".7"/>` : '';
-
-  // 頭の飾り
-  const acc = [];
-  const A = (svg) => acc.push(svg);
-  switch (d.ear){
-    case 'tuft': A(`<path d="M${cx-6} ${top+3} q2 -12 8 -10 M${cx} ${top+2} q4 -14 10 -8 M${cx+6} ${top+4} q6 -8 9 -2" fill="none" ${st}/>`); break;
-    case 'ribbon': A(`<path d="M${cx+rx*.35} ${top+6} l-12 -8 v14 z M${cx+rx*.35} ${top+6} l12 -8 v14 z" fill="${sil?col:'#F7A9BE'}" ${st}/><circle cx="${cx+rx*.35}" cy="${top+6}" r="3" fill="${sil?col:'#F7A9BE'}" ${st}/>`); break;
-    case 'cowlick': A(`<path d="M${cx} ${top+2} q-2 -14 9 -14 q8 2 2 9" fill="none" ${st}/>`); break;
-    case 'star': A(`<path d="${starPath(cx, top-8, 11)}" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
-    case 'sprout': A(`<path d="M${cx} ${top+2} v-12" fill="none" ${st}/><path d="M${cx} ${top-8} q-12 -8 -16 2 q10 4 16 -2z M${cx} ${top-10} q12 -10 17 0 q-10 5 -17 0z" fill="${sil?col:'#9FD8B8'}" ${st}/>${sil?'':`<path d="M${cx+20} ${top-4} q4 6 0 8 q-4 -2 0 -8z" fill="#BFDBF7" ${st}/>`}`); break;
-    case 'crown': A(`<path d="M${cx-14} ${top+2} l2 -16 l7 8 l5 -12 l5 12 l7 -8 l2 16 z" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
-    case 'heart': A(`<path d="M${cx} ${top+2} q-4 -10 2 -16" fill="none" ${st}/><path d="${heartPath(cx+3, top-18, 7)}" fill="${sil?col:'#F7A9BE'}" ${st}/>`); break;
-    case 'nightcap': A(`<path d="M${cx-rx*.7} ${top+ry*.35} q${rx*.4} -${ry*.9} ${rx*1.3} -${ry*.2} q-8 2 -12 10 z" fill="${sil?col:'#C9DDF5'}" ${st}/><circle cx="${cx+rx*.6+4}" cy="${top-ry*.1}" r="5" fill="#fff" ${st}/>`); break;
-    case 'spike': A(`<path d="M${cx-16} ${top+6} l4 -14 l6 10 l6 -14 l6 14 l6 -10 l4 14" fill="${col}" ${st}/>`); break;
-    case 'moon': A(`<path d="M${cx+4} ${top-24} a12 12 0 1 0 10 18 a9 9 0 1 1 -10 -18z" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
-    case 'cloud': A(`<path d="M${cx-20} ${top-12} q-8 0 -6 -8 q2 -8 10 -5 q4 -9 14 -5 q10 -4 12 6 q8 2 4 10 z" fill="${sil?col:'#EEF1F6'}" ${st}/>${sil?'':`<path d="M${cx-6} ${top-6} v6 M${cx+6} ${top-6} v6" ${st} stroke="#9EC3EA"/>`}`); break;
-    case 'comet': A(`<path d="M${cx+10} ${top-14} q-30 -6 -48 -22" fill="none" stroke="${sil?col:'#D6C3FA'}" stroke-width="7" stroke-linecap="round"/><path d="${starPath(cx+10, top-12, 10)}" fill="${sil?col:'#FFE07A'}" ${st}/>`); break;
-    case 'halo': A(`<ellipse cx="${cx}" cy="${top-10}" rx="18" ry="5" fill="none" stroke="${sil?col:'#F5C94A'}" stroke-width="4"/>`); break;
-    case 'petal': A(`<path d="M${cx} ${top+2} q-12 -10 -4 -20 q4 6 4 6 q0 0 4 -6 q8 10 -4 20z" fill="${sil?col:'#F9B7C8'}" ${st}/>`); break;
-    case 'snowcap': A(`<path d="M${cx-rx*.75} ${top+ry*.38} q${rx*.75} -${ry*.85} ${rx*1.5} 0 q-${rx*.2} 8 -${rx*.4} 2 q-${rx*.35} 7 -${rx*.7} 0 q-${rx*.25} 6 -${rx*.4} -2z" fill="#fff" ${st}/>`); break;
-  }
-
-  // 顔
-  if (!sil){
-    const ey = cy - ry*.05, ex = rx*.32, sx = d.eye === 'side' ? 2.5 : 0;
-    const er = 3.2*Math.max(s,.8);
-    [-1,1].forEach(k => {
-      const x = cx + k*ex + sx;
-      const eye = opt.sick ? 'teary' : d.eye;
-      if (eye === 'dot' || eye === 'side' || eye === 'teary'){
-        eyes.push(`<circle cx="${x}" cy="${ey}" r="${er}" fill="${INK}"/><circle cx="${x+1}" cy="${ey-1.2}" r="1" fill="#fff"/>`);
-        if (eye === 'teary' && k === 1) face.push(`<path d="M${x+2} ${ey+5} q3 5 0 7 q-3 -2 0 -7z" fill="#BFDBF7" stroke="${INK}" stroke-width="1.5"/>`);
-      } else if (eye === 'happy'){
-        eyes.push(`<path d="M${x-4} ${ey+1.5} q4 -6 8 0" fill="none" ${st}/>`);
-      } else if (eye === 'sleep'){
-        eyes.push(`<path d="M${x-4} ${ey} h8" fill="none" ${st}/>`);
-      } else if (eye === 'sharp'){
-        eyes.push(`<circle cx="${x}" cy="${ey+1}" r="${er*.85}" fill="${INK}"/>`);
-      }
-      if (d.brow) face.push(`<path d="M${x-5*k} ${ey-9} l${8*k} 3" fill="none" ${st}/>`);
-      const bl = d.blush === 2 ? 1.4 : 1;
-      face.push(`<ellipse cx="${cx+k*(ex+9)}" cy="${ey+7}" rx="${4.5*bl}" ry="${2.6*bl}" fill="#F5A3B4" opacity=".7"/>`);
-    });
-    const my = cy + ry*.22;
-    const mouth = opt.sick ? 'flat' : d.mouth;
-    if (mouth === 'w') face.push(`<path d="M${cx-5} ${my} q2.5 4 5 0 q2.5 4 5 0" fill="none" ${st} stroke-width="2.4"/>`);
-    if (mouth === 'smile') face.push(`<path d="M${cx-5} ${my} q5 5 10 0" fill="none" ${st} stroke-width="2.4"/>`);
-    if (mouth === 'o') face.push(`<ellipse cx="${cx}" cy="${my+1}" rx="2.4" ry="3" fill="${INK}"/>`);
-    if (mouth === 'flat') face.push(`<path d="M${cx-4} ${my+1.5} q2 -1.5 4 0 q2 1.5 4 0" fill="none" ${st} stroke-width="2.2"/>`);
-    if (mouth === 'open') face.push(`<path d="M${cx-5} ${my} q5 8 10 0 z" fill="#E37F92" ${st} stroke-width="2.2"/>`);
-    if (d.sweat || opt.sick) face.push(`<path d="M${cx+rx*.85} ${cy-ry*.6} q4 6 0 9 q-4 -3 0 -9z" fill="#BFDBF7" stroke="${INK}" stroke-width="1.8"/>`);
-    if (opt.sick) face.push(`<path d="M${cx-ex-4} ${cy-ry*.55} v6 M${cx-ex+1} ${cy-ry*.6} v7 M${cx-ex+6} ${cy-ry*.55} v6" stroke="#9EC3EA" stroke-width="2" stroke-linecap="round"/>`);
-    if (opt.pattern) face.push(`<path d="${heartPath(cx-rx*.62, cy+ry*.2, 4)}" fill="#F5A3B4" stroke="${INK}" stroke-width="1.5"/>`);
-  }
-  let sparkle = '';
-  if (d.sparkle && !sil){
-    sparkle = [[18,30],[100,24],[104,70],[14,76]].map(([x,y]) => `<path d="M${x} ${y-6} q1 5 6 6 q-5 1 -6 6 q-1 -5 -6 -6 q5 -1 6 -6z" fill="#FFE07A" stroke="${INK}" stroke-width="1.5"/>`).join('');
-  }
-  const flip = opt.flip ? ` transform="translate(120 0) scale(-1 1)"` : '';
-  // 向き：顔を左右に寄せ、反対側に「サッ」と振り向いた線を描く
-  const lk = opt.look === 'left' ? -1 : opt.look === 'right' ? 1 : 0;
-  // 目は「視線（look）」と「まばたき（eyes）」の2重グループにする
-  const faceG = `<g transform="translate(${lk * rx * .38} ${lk ? 1 : 0})"><g class="look"><g class="eyes">${eyes.join('')}</g></g>${face.join('')}</g>`;
-  const swish = lk ? [0, 1, 2].map(i => {
-    const x = cx - lk * (rx + 8 + i * 2), y = cy - ry * .6 + i * 12;
-    return `<path d="M${x} ${y} q${-lk * 6} 4 ${-lk * 10} 0" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>`;
-  }).join('') : '';
-  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sil?'まだ見つかっていない姿':(FORM_NAME[form]||'')}"><g filter="url(#wob)"${flip}>${sparkle}${back.join('')}${feet}<path d="${body}" fill="${col}" ${st}/>${belly}${acc.join('')}${faceG}${swish}</g></svg>`;
-}
-
-function drawEgg(eggType, opt = {}){
-  const col = EGG_COL[eggType] || EGG_COL.shiro;
-  const st = `stroke="${INK}" stroke-width="3"`;
-  let marks = '';
-  if (eggType === 'shiro') marks = [[52,66],[68,58],[62,80],[48,86]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#B9E3CF" stroke="${INK}" stroke-width="1.5"/>`).join('');
-  if (eggType === 'hoshi') marks = [[50,64],[70,74],[56,86]].map(([x,y]) => `<path d="${starPath(x,y,5)}" fill="#FFE07A" stroke="${INK}" stroke-width="1.5"/>`).join('');
-  if (eggType === 'hana') marks = [[52,66],[70,76],[56,88]].map(([x,y]) => `<g fill="#F7A9BE" stroke="${INK}" stroke-width="1.3"><circle cx="${x-3}" cy="${y}" r="2.6"/><circle cx="${x+3}" cy="${y}" r="2.6"/><circle cx="${x}" cy="${y-3}" r="2.6"/><circle cx="${x}" cy="${y+3}" r="2.6"/></g>`).join('');
-  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="たまご"><g filter="url(#wob)"><path d="M60 40 C80 40 88 70 86 82 C84 96 74 102 60 102 C46 102 36 96 34 82 C32 70 40 40 60 40Z" fill="${col}" ${st}/>${marks}</g></svg>`;
-}
-
-function drawIce(){
-  return `<svg viewBox="0 0 120 120"><g filter="url(#wob)"><rect x="14" y="26" width="92" height="80" rx="16" fill="#DDF0FB" fill-opacity=".62" stroke="#8DB8E3" stroke-width="3"/><path d="M26 40 l10 -6 M24 52 l18 -11 M92 84 l-10 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g></svg>`;
-}
-
-function drawPoop(){
-  return `<svg viewBox="0 0 40 40"><g filter="url(#wob)"><path d="M8 32 q-4 -8 6 -9 q-3 -8 6 -9 q2 -6 6 -4 q-2 4 2 6 q8 2 4 8 q8 2 4 8z" fill="#D2B48C" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/></g></svg>`;
-}
-
-/* ============================================================
-   画面の描画
-   ============================================================ */
-function setTab(t){
-  tab = t;
-  // タブを開くたびに最新を取り直す
-  if (t === 'rank') rankData = null;
-  if (t === 'dex') dexData = null;
-  if (t === 'plaza') plazaData = null;
-  [...$nav.querySelectorAll('button')].forEach(b => b.setAttribute('aria-current', b.dataset.tab === t ? 'true' : 'false'));
-  render();
-  window.scrollTo(0, 0);
-}
-$nav.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
-
-function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function petLabel(p){ return p.name || p.formName; }
-function hearts(n){ return '♥'.repeat(n) + `<span class="off">${'♥'.repeat(Math.max(0, 4-n))}</span>`; }
-
-function render(){
-  if (!pet){ return; }
-  $nav.classList.remove('hidden');
-  if (tab === 'home') renderHome();
-  if (tab === 'plaza') renderPlaza();
-  if (tab === 'dex') renderDex();
-  if (tab === 'rank') renderRank();
-}
-
-function defaultBubble(){
-  const p = pet;
-  if (p.frozen) return '（こちこち…）';
-  if (p.stage === 'egg') return '…（ころん）';
-  if (p.critical) return 'たすけて…';
-  if (p.sick) return 'なんだかぐったり…';
-  if (p.wagamama) return 'ねぇねぇ、かまって！';
-  if (p.hunger <= 1) return 'おなかすいた…';
-  if (p.poop >= 2) return 'おへやがにおう…';
-  if (p.mood <= 1) return 'たいくつ…';
-  const h = new Date().getHours();
-  return h < 11 ? 'おはよう！' : h < 15 ? 'きてくれた！' : 'きょうもおつかれさま';
-}
-
-function renderHome(){
-  const p = pet;
-  if (p.stage !== 'egg' && p.stage !== 'adult') noteStage(p, false);
-  const egg = p.stage === 'egg';
-  const plazaCount = plazaData && plazaData.met ? plazaData.met.length : 0;
-  $app.innerHTML = `
-    <div class="top">
-      <div class="petname">${esc(petLabel(p))}</div>
-      <span class="chip">${p.generation}代目</span>
-      <span class="chip">${p.ageDays}さい</span>
-      <button class="menu-btn" data-act="menu" aria-label="メニュー">…</button>
-    </div>
-    <div class="room ${p.critical ? 'dark' : ''} ${skyTime() === 'night' ? 'night' : ''}">
-      <div class="bubble" id="bubble">${esc(bubbleText || defaultBubble())}</div>
-      ${skyHtml()}
-      <div class="pet-layer">
-      <div class="pet-wrap ${egg || p.frozen ? '' : 'wander'}"><div class="shadow"></div><div class="${p.frozen ? '' : 'bounce'}" style="width:100%;height:100%">${drawPet(p.form, p.eggType, { sick:p.sick, pattern:!!p.inheritPattern })}</div>${p.frozen ? `<div class="ice">${drawIce()}</div>` : ''}</div>
-      <div class="poops">${Array.from({length:p.poop}, drawPoop).join('')}</div>
-      </div>
-      <div class="weather">${weatherHtml()}</div>
-      ${plazaCount ? `<div class="plaza-badge">ひろばに${plazaCount}匹いるよ</div>` : ''}
-    </div>
-    ${p.frozen ? `
-    <div class="card frozen-card" style="margin-top:14px">
-      <b>冷凍保存中（${p.frozenDays}日目）</b>
-      <p class="lead" style="margin:6px 0 0">年をとらず、おなかも減りません。もどってきたら解凍してあげてね。</p>
-      <button class="btn ice-btn" data-act="thaw">解凍する</button>
-    </div>` : egg ? `<p class="lead" style="margin-top:14px">たまごはもうすぐかえりそう。次に来たときに会えるかも。</p>` : `
-    <div class="stats">
-      <div class="stat">おなか <span class="hearts">${hearts(p.hunger)}</span></div>
-      <div class="stat">ごきげん <span class="hearts">${hearts(p.mood)}</span></div>
-      <div class="stat">たいじゅう <b>${p.weight}</b></div>
-      <div class="stat">しつけ <b>${p.discipline}%</b></div>
-    </div>
-    <div class="care">
-      <button data-c="feed" ${p.hunger >= 4 ? 'disabled' : ''} class="${p.hunger <= 1 ? 'alert' : ''}">ごはん<small>${p.hunger >= 4 ? 'まんぷく' : 'おなか＋1'}</small></button>
-      <button data-c="snack">おやつ<small>${p.snackLeft > 0 ? 'ごきげん＋1' : 'たべすぎ注意'}</small></button>
-      <button data-c="play" ${p.playLeft <= 0 ? 'disabled' : ''}>あそぶ<small>${p.playLeft > 0 ? 'ごきげん＋1' : 'またあした'}</small></button>
-      <button data-c="clean" ${p.poop ? '' : 'disabled'} class="${p.poop >= 2 ? 'alert' : ''}">そうじ<small>${p.poop ? 'うんち' + p.poop + 'こ' : 'きれい'}</small></button>
-      <button data-c="medicine" ${p.sick ? '' : 'disabled'} class="${p.sick ? 'alert' : ''}">くすり<small>${p.sick ? 'ぐあいが悪い' : 'げんき'}</small></button>
-      <button data-c="scold" ${p.wagamama ? '' : 'disabled'} class="${p.wagamama ? 'alert' : ''}">しかる<small>${p.wagamama ? 'わがまま中' : 'わがままの時'}</small></button>
-    </div>
-    ${p.married ? `<p class="lead" style="margin-top:14px">${esc(p.partnerName)}となかよしの印を結んでいます。</p>` : ''}`}
-    ${growthHtml(p)}
-    ${matesHtml()}
+function renderKoyomi(){
+  const x = INFO;
+  if (!x){ $('koyomi').innerHTML = '<h2>今日の暦</h2><p>暦データの期間外です（2028年末まで）。</p>'; return; }
+  const near = termNear(TODAY), next = termNext(TODAY);
+  const termText = x.term ? `今日は「${x.term}」` : near ? `${near.name}（${near.ago}日前から）` : '';
+  $('koyomi').innerHTML = `
+    <h2>今日の暦</h2>
+    <dl class="kv">
+      <dt>旧暦</dt><dd>${x.leap ? '閏' : ''}${x.lm}月${x.ld}日</dd>
+      <dt>六曜</dt><dd><span class="big" style="font-size:17px">${x.rokuyo}</span>　${ROKUYO_DESC[x.rokuyo]}</dd>
+      <dt>干支</dt><dd>${x.kan}${x.shi}（${'きのえ,きのと,ひのえ,ひのと,つちのえ,つちのと,かのえ,かのと,みずのえ,みずのと'.split(',')[x.g % 10]}・${'ね,うし,とら,う,たつ,み,うま,ひつじ,さる,とり,いぬ,い'.split(',')[x.branch]}）</dd>
+      <dt>九星</dt><dd>${STAR[x.star]}（今日の中宮）</dd>
+      <dt>十二直</dt><dd>${x.choku}　${CHOKU_DESC[x.choku]}</dd>
+      <dt>節気</dt><dd>${termText}${next ? `／${next.name}まであと${next.in}日` : ''}</dd>
+    </dl>
+    ${x.kichi.length ? `<div class="chips" style="margin-top:10px">${x.kichi.map(([n, g]) => `<span class="chip ${g ? '' : 'bad'}">${n}</span>`).join('')}</div>` : ''}
   `;
 }
 
-/* ============================================================
-   生きてる見た目：空・天気・傾き・視線・なでる
-   ============================================================ */
-function skyTime(){
-  const h = new Date().getHours();
-  return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'dusk' : 'night';
+function renderPersonal(b){
+  const h = honmeiOf(b);
+  const r = personal(INFO, h);
+  const col = STAR_COLOR[r.luckyStar];
+  const badDirs = Object.entries(r.bad).filter(([, n]) => n.some(v => v === '五黄殺' || v === '暗剣殺'));
+  $('personal').innerHTML = `
+    <h2>${STAR[h]}のあなた</h2>
+    <p class="lead"><span class="big">${r.P.title}</span></p>
+    <p class="lead">${r.P.msg}</p>
+    <dl class="kv">
+      <dt>仕事</dt><dd>${r.P.work}</dd>
+      <dt>人間関係</dt><dd>${r.P.love}</dd>
+      <dt>今日の一手</dt><dd>${CHOKU_ACT[INFO.choku]}</dd>
+      <dt>ラッキー色</dt><dd><span class="swatch" style="background:${col[1]}"></span>${col[0]}（${STAR_S[r.luckyStar]}の色）</dd>
+    </dl>
+    <h2 style="margin-top:16px;font-size:15px">今日の吉方位</h2>
+    <div class="dir-row">${r.good.length ? r.good.map(g => `<div class="dir"><b>${g.dir}</b><small>${STAR_S[g.s]}・${g.rel === '生気' ? '最大吉' : '吉'}</small></div>`).join('') : '<div class="dir"><b>なし</b><small>動くより留まる日</small></div>'}</div>
+    ${badDirs.length ? `<div class="dir-row">${badDirs.map(([d, n]) => `<div class="dir bad"><b>${d}</b><small>${n.filter(v => v === '五黄殺' || v === '暗剣殺').join('・')}（避けたい）</small></div>`).join('')}</div>` : ''}
+    <p class="note">${r.myDir === '中央' ? '本命星が中宮に入る日（八方ふさがり）。遠出や大きな決断は控えめに。' : `今日、${STAR_S[h]}は九星盤の「${r.myDir}」に回っています。`}</p>
+  `;
+  renderBoard(r);
+  return r;
 }
 
-// 倉吉の天気（画面から直接取得。30分ごとに更新、失敗したら晴れ扱い）
-const LS_WEATHER = 'nfcpet.weather';
-let weatherKind = (store.get(LS_WEATHER) || {}).kind || 'clear';
-async function loadWeather(){
-  const c = store.get(LS_WEATHER);
-  if (c && Date.now() - c.at < 30 * 60000){ weatherKind = c.kind; return; }
-  try{
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.43&longitude=133.82&current=weather_code&timezone=Asia%2FTokyo');
-    const code = (await res.json()).current.weather_code;
-    const kind = [71,73,75,77,85,86].includes(code) ? 'snow'
-      : (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95 ? 'rain'
-      : [2,3,45,48].includes(code) ? 'cloudy' : 'clear';
-    weatherKind = kind;
-    store.set(LS_WEATHER, { kind, at: Date.now() });
-    if (tab === 'home' && pet) render();
-  }catch(e){ /* 天気が取れなくても遊べる */ }
+function renderBoard(r){
+  // 方位盤は「南が上」が習わし
+  const layout = ['南東','南','南西','東','中央','西','北東','北','北西'];
+  const goodSet = new Set(r.good.map(g => g.dir));
+  $('boardPanel').innerHTML = `
+    <h2>今日の九星盤（南が上）</h2>
+    <div class="board">${layout.map(d => {
+      const s = d === '中央' ? r.c : starAt(r.c, d);
+      const cls = s === r.honmei ? 'me' : goodSet.has(d) ? 'good' : r.bad[d] && r.bad[d].some(v => v === '五黄殺' || v === '暗剣殺') ? 'bad' : '';
+      const tag = s === r.honmei ? 'あなた' : '';
+      return `<div class="cell ${cls}">${tag ? `<span class="tag">${tag}</span>` : ''}<div><div class="s">${STAR_S[s]}</div>${d}</div></div>`;
+    }).join('')}</div>
+    <div class="legend"><span><i style="background:rgba(242,211,138,.6)"></i>あなたの星</span><span><i style="background:rgba(143,227,181,.6)"></i>吉方位</span><span><i style="background:rgba(255,154,168,.55)"></i>避けたい方位</span></div>
+  `;
 }
 
-// 時間帯ごとの色（空の上・中・下、遠い丘、近い丘、地面、光）
-const PALETTE = {
-  dawn:  { sky:['#FFC4B4','#FFDCCB','#FFF1E4'], far:'#F3C7C4', near:'#E8B2BB', ground:['#F7DADB','#EFC7CC'], glow:'#FFE2B8', orb:'#FFD9A0' },
-  day:   { sky:['#B9DEF8','#D9EEFB','#F3F9FE'], far:'#CBE6DA', near:'#AED9C3', ground:['#D3EDD9','#BFE2C9'], glow:'#FFF6D6', orb:'#FFF0B0' },
-  dusk:  { sky:['#EE9488','#F6BC9E','#FFE0C4'], far:'#E2A6A8', near:'#CF8C9C', ground:['#EFC5BF','#E2AFB0'], glow:'#FFC79A', orb:'#FFB27C' },
-  night: { sky:['#1C2747','#2F3C68','#47548A'], far:'#38456E', near:'#2C385D', ground:['#3A4568','#323C5D'], glow:'#8E9BE0', orb:'#FFF3C4' }
-};
-function skyHtml(){
-  const t = skyTime(), c = PALETTE[t];
-  const night = t === 'night';
-  // 太陽・月の位置（夕方は低く）
-  const ox = 318, oy = t === 'dusk' ? 118 : t === 'dawn' ? 96 : 58;
-  let stars = '';
-  if (night){
-    for (let i = 0; i < 26; i++){
-      const x = (i * 61) % 400, y = (i * 37) % 120 + 8, r = i % 5 === 0 ? 1.6 : 1;
-      stars += `<circle class="twinkle" cx="${x}" cy="${y}" r="${r}" fill="#fff" style="animation-delay:${(i % 7) * .45}s"/>`;
-    }
-  }
-  const orb = night
-    ? `<mask id="gMoon"><rect width="400" height="260" fill="#fff"/><circle cx="${ox + 8}" cy="${oy - 5}" r="14" fill="#000"/></mask><circle cx="${ox}" cy="${oy}" r="16" fill="${c.orb}" mask="url(#gMoon)"/>`
-    : `<circle cx="${ox}" cy="${oy}" r="18" fill="${c.orb}"/>`;
-  const dim = weatherKind !== 'clear';
-  let clouds = '';
-  const nc = weatherKind === 'clear' ? 2 : 4;
-  for (let i = 0; i < nc; i++){
-    clouds += `<div class="cloud" style="top:${16 + i * 22}px;width:${70 + (i % 3) * 22}px;animation-delay:${-i * 11}s;opacity:${dim ? .95 : .75}"></div>`;
-  }
-  return `<div class="scene ${t} ${dim ? 'dim' : ''}">
-    <svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="${c.sky[0]}"/><stop offset=".55" stop-color="${c.sky[1]}"/><stop offset="1" stop-color="${c.sky[2]}"/>
-        </linearGradient>
-        <radialGradient id="gGlow"><stop offset="0" stop-color="${c.glow}" stop-opacity=".9"/><stop offset="1" stop-color="${c.glow}" stop-opacity="0"/></radialGradient>
-        <linearGradient id="gGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.ground[0]}"/><stop offset="1" stop-color="${c.ground[1]}"/></linearGradient>
-        <linearGradient id="gFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="${night ? .06 : .35}"/></linearGradient>
-        <filter id="gBlur"><feGaussianBlur stdDeviation="6"/></filter>
-        <filter id="gGrain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-      </defs>
-      <rect width="400" height="260" fill="url(#gSky)"/>
-      <circle cx="${ox}" cy="${oy}" r="${night ? 60 : 80}" fill="url(#gGlow)"/>
-      <circle cx="70" cy="40" r="70" fill="${c.glow}" opacity="${night ? .08 : .18}" filter="url(#gBlur)"/>
-      ${stars}${orb}
-      <path d="M0 150 C60 118 110 128 160 140 C220 154 260 112 320 118 C360 122 385 136 400 140 V260 H0Z" fill="${c.far}" opacity=".9"/>
-      <rect y="110" width="400" height="60" fill="url(#gFog)"/>
-      <path d="M0 176 C70 150 130 158 200 168 C270 178 330 150 400 160 V260 H0Z" fill="${c.near}"/>
-      <path d="M-20 200 C80 182 160 178 220 182 C300 187 360 196 420 206 V260 H-20Z" fill="url(#gGround)"/>
-      <rect width="400" height="260" filter="url(#gGrain)" opacity="${night ? .07 : .05}"/>
-    </svg>
-    ${clouds}
-  </div>`;
+/* ===== ガチャ演出 ===== */
+let drawing = false;
+function draw(){
+  if (drawing || !INFO) return;
+  const b = tempBirth || birth;
+  drawing = true;
+  const r = personal(INFO, honmeiOf(b));
+  const card = $('card');
+  card.classList.remove('flip');
+  $('rays').classList.remove('on');
+  $('rankText').textContent = r.rank;
+  $('rankStar').textContent = STAR[r.honmei];
+  card.classList.add('shake');
+  $('draw').disabled = true;
+  setTimeout(() => {
+    card.classList.remove('shake');
+    card.classList.add('flip');
+    setTimeout(() => {
+      $('rays').classList.add('on');
+      burst(r.rank === '大吉' ? 34 : 18);
+      ['personal','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
+      renderPersonal(b);
+      $('draw').textContent = 'もう一度めくる';
+      $('draw').disabled = false;
+      drawing = false;
+    }, 700);
+  }, 1300);
 }
-
-function weatherHtml(){
-  if (weatherKind !== 'rain' && weatherKind !== 'snow') return '';
-  const n = weatherKind === 'rain' ? 34 : 22;
-  let h = '';
+function burst(n){
+  const st = $('stage');
   for (let i = 0; i < n; i++){
-    const left = Math.random() * 110, delay = -Math.random() * (weatherKind === 'rain' ? .8 : 6);
-    h += `<i class="${weatherKind}" style="left:${left}%;animation-delay:${delay}s"></i>`;
-  }
-  return h;
-}
-
-// 視線：指の方向を見る
-function setLook(x, y){
-  const w = document.querySelector('.room .pet-wrap');
-  if (!w) return;
-  w.style.setProperty('--lx', x.toFixed(2)); w.style.setProperty('--ly', y.toFixed(2));
-}
-document.addEventListener('pointermove', e => {
-  const w = document.querySelector('.room .pet-wrap');
-  if (!w || tab !== 'home') return;
-  const r = w.getBoundingClientRect();
-  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height * .6);
-  const len = Math.hypot(dx, dy) || 1;
-  setLook(dx / len * 2.6, dy / len * 1.6);
-  if (petting) petMove(e);
-});
-
-// なでる：ペットの上で指をこする
-let petting = false, petDist = 0, lastPt = null, petTimer = null;
-const PET_LINES = ['ふにゃ〜', 'くすぐったい', 'もっと〜', 'えへへ', 'ぽかぽか'];
-document.addEventListener('pointerdown', e => {
-  const w = e.target.closest('.room .pet-wrap');
-  if (!w || !pet || pet.frozen || pet.stage === 'egg' || busy) return;
-  petting = true; petDist = 0; lastPt = { x: e.clientX, y: e.clientY };
-  w.classList.add('paused');
-});
-function petMove(e){
-  if (!lastPt) return;
-  petDist += Math.hypot(e.clientX - lastPt.x, e.clientY - lastPt.y);
-  lastPt = { x: e.clientX, y: e.clientY };
-  if (petDist > 70){
-    petDist = 0;
-    const w = document.querySelector('.room .pet-wrap');
-    const body = w && w.querySelector('.bounce');
-    if (!body) return;
-    body.classList.remove('r-pet'); void body.offsetWidth; body.classList.add('r-pet');
-    w.appendChild(fxEl('fx-float', ITEM_SVG.heart, `left:${30 + Math.random() * 40}%;top:15%`));
-    const bb = document.getElementById('bubble');
-    if (bb) bb.textContent = PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
-    if (typeof chirp === 'function') chirp('pet');
+    const a = Math.random() * Math.PI * 2, d = 90 + Math.random() * 90;
+    const p = document.createElement('i');
+    p.className = 'pt';
+    p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    st.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
   }
 }
-document.addEventListener('pointerup', () => {
-  if (!petting) return;
-  petting = false; lastPt = null;
-  clearTimeout(petTimer);
-  petTimer = setTimeout(() => { const w = document.querySelector('.room .pet-wrap'); if (w && !busy) w.classList.remove('paused'); }, 800);
-});
 
-/* ===== 進化までの日数（画面側だけで計算） =====
-   進化した日をこのブラウザに記録しておき、そこから数える。
-   記録がない時は年齢から目安を出す（孵化した日によって1日ずれることがある） */
-const LS_STAGE = 'nfcpet.stageSeen';
-const STAGE_LEN = { baby: 1, child: 3, young: 4 };
-function todayKey(){ return new Date().toLocaleDateString('sv-SE'); }
-function daysBetween(a, b){ return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
-function noteStage(p, exact){
-  const rec = store.get(LS_STAGE);
-  if (exact || !rec || rec.petId !== p.petId || rec.stage !== p.stage){
-    store.set(LS_STAGE, { petId: p.petId, stage: p.stage, day: todayKey(), exact: !!exact });
-  }
+function showMain(){
+  $('setup').classList.add('hidden');
+  $('gacha').classList.remove('hidden');
+  $('others').classList.remove('hidden');
+  ['personal','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  $('card').classList.remove('flip');
+  $('rays').classList.remove('on');
+  $('draw').textContent = tempBirth ? 'この人の札を引く' : '今日の札を引く';
 }
-function daysToNextStage(p){
-  const rec = store.get(LS_STAGE);
-  if (rec && rec.exact && rec.petId === p.petId && rec.stage === p.stage){
-    return { days: STAGE_LEN[p.stage] - daysBetween(rec.day, todayKey()), exact: true };
-  }
-  const limit = { baby: 2, child: 5, young: 9 }[p.stage];
-  return { days: limit - p.ageDays + 1, exact: false };
+function showSetup(forOther){
+  $('setup').classList.remove('hidden');
+  $('gacha').classList.add('hidden');
+  $('others').classList.add('hidden');
+  ['personal','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  $('setup').dataset.other = forOther ? '1' : '';
+  $('setup').querySelector('h2').textContent = forOther ? 'その人の生年月日' : '生年月日を教えてください';
+  $('saveBirth').textContent = forOther ? 'この生年月日で占う（保存しません）' : 'この生年月日で占う';
+  $('skipBirth').textContent = forOther ? 'もどる' : '暦だけ見る';
 }
 
-/* ===== せいちょうのすごろく ===== */
-const STAGES = [['egg','たまご'],['baby','ベビー'],['child','こども'],['young','ヤング'],['adult','おとな']];
-function growthHtml(p){
-  const idx = STAGES.findIndex(x => x[0] === p.stage);
-  let msg = '';
-  if (p.frozen) msg = '冷凍中は成長もお休みです';
-  else if (p.stage === 'egg') msg = 'もうすぐかえりそう';
-  else if (p.stage === 'adult') msg = `りっぱなおとなになりました（${p.generation}代目）`;
-  else {
-    const left = daysToNextStage(p);
-    msg = left.exact && left.days <= 0 ? '次に来た時に進化するかも！' : `つぎの進化まで あと${Math.max(1, left.days)}日くらい`;
-  }
-  const track = STAGES.map((x, i) => {
-    const cls = i < idx ? 'done' : i === idx ? 'now' : '';
-    return (i ? `<div class="ln ${i <= idx ? 'done' : ''}"></div>` : '') + `<div class="st ${cls}">${i < idx ? '✓' : ''}</div>`;
-  }).join('');
-  return `
-    <div class="section-title">せいちょう</div>
-    <div class="card">
-      <div class="track">${track}</div>
-      <div class="track-labels">${STAGES.map(x => `<span>${x[1]}</span>`).join('')}</div>
-      <p style="margin:10px 0 0;font-weight:700">${esc(msg)}</p>
-    </div>`;
-}
-
-/* ===== ひろばのなかま（ホームから一目で） ===== */
-function matesHtml(){
-  const d = plazaData;
-  let body;
-  if (pet.frozen) body = '<p class="lead" style="margin:0">冷凍中はひろばに出かけられません</p>';
-  else if (!d) body = '<p class="lead" style="margin:0">ひろばをのぞいています…</p>';
-  else if (d.met && d.met.length){
-    body = `<div class="mates">${d.met.map(m => `
-      <button class="mate" data-goplaza>${drawPet(m.form, m.eggType)}<div class="nm">${esc(m.petName || m.formName)}</div><div class="nm" style="color:var(--sub)">${esc(m.nickname)}さん</div></button>`).join('')}</div>`;
-  } else if (d.footprint){
-    body = `<p style="margin:0">${esc(d.footprint.timeLabel)}、${esc(d.footprint.nickname)}さんの${esc(d.footprint.petName || 'ペット')}が来ていたみたい${d.footprint.stamp ? `。「${esc(d.footprint.stamp)}」` : ''}</p>`;
-  } else body = '<p style="margin:0">まだ誰も来ていません。ひとことを残して、次の人を待とう</p>';
-  return `
-    <div class="section-title">いまのひろば</div>
-    <div class="card">${body}
-      ${pet.frozen ? '' : '<button class="small-btn" data-goplaza style="margin-top:12px">ひろばへ行く</button>'}
-    </div>`;
-}
-
-const CARE_TEXT = {
-  feed:'もぐもぐ…おいしい！', snack:'あまーい！', clean:'すっきり！', medicine:'にがい…でもがんばる', scold:'…しゅん'
+$('saveBirth').onclick = () => {
+  const v = $('birth').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('生年月日を選んでください'); return; }
+  if ($('setup').dataset.other){ tempBirth = v; }
+  else { birth = v; tempBirth = null; store.set(LS_BIRTH, v); }
+  showMain();
 };
-const REASON_TEXT = {
-  full:'おなかいっぱいみたい', tired:'今日はもう遊びつかれたみたい', clean:'おへやはきれいだよ',
-  healthy:'元気だから、くすりはいらないよ', nowagamama:'しかる理由がないよ', egg:'まだたまごだよ', frozen:'こおっているよ'
+$('skipBirth').onclick = () => {
+  if ($('setup').dataset.other || birth){ tempBirth = null; showMain(); return; }
+  $('setup').classList.add('hidden');
 };
+$('draw').onclick = draw;
+$('otherBtn').onclick = () => showSetup(true);
+$('changeBtn').onclick = () => { tempBirth = null; showSetup(false); };
 
-async function doCare(type, extra = {}){
-  if (busy) return;
-  busy = true;
-  setCareDisabled(true);
-  // 上限に達したら、通信を待たずに表示を切り替える（確定値は応答後に上書き）
-  const left = { snack:'snackLeft', play:'playLeft' }[type];
-  if (left && pet[left] > 0){
-    const sm = document.querySelector(`.care [data-c="${type}"] small`);
-    if (sm && pet[left] - 1 <= 0) sm.textContent = type === 'snack' ? 'たべすぎ注意' : 'またあした';
-  }
-  const fx = playFx(type, extra);
-  try{
-    const [r] = await Promise.all([api('care', Object.assign({ type }, extra)), fx]);
-    pet = r.pet;
-    bubbleText = r.done ? (type === 'play' ? (extra.win ? 'やったー！' : 'ざんねん…') : CARE_TEXT[type]) : REASON_TEXT[r.reason] || '';
-    queueEvents(r.events);
-    render();
-    flushEvents();
-  }catch(e){ toast(e.message); render(); }
-  finally{ busy = false; }
-}
-
-function setCareDisabled(on){ document.querySelectorAll('.care button').forEach(b => { if (on) b.disabled = true; }); }
-
-/* ===== お世話の演出（押した瞬間に再生） ===== */
-const ITEM_SVG = {
-  feed: `<svg viewBox="0 0 60 60"><g filter="url(#wob)" stroke="${INK}" stroke-width="3" stroke-linejoin="round"><path d="M30 8 C40 8 54 36 52 44 C50 52 10 52 8 44 C6 36 20 8 30 8Z" fill="#fff"/><rect x="20" y="36" width="20" height="14" rx="2" fill="#4F5B4E"/></g></svg>`,
-  snack: `<svg viewBox="0 0 60 60"><g filter="url(#wob)" stroke="${INK}" stroke-width="3" stroke-linejoin="round"><path d="M10 30 h40 v18 h-40z" fill="#FFE8B8"/><path d="M8 30 q6 -8 11 0 q6 -8 11 0 q6 -8 11 0 q6 -8 11 0z" fill="#fff"/><circle cx="30" cy="18" r="7" fill="#F27E95"/><path d="M28 11 q2 -4 5 -3" fill="none"/></g></svg>`,
-  pill: `<svg viewBox="0 0 60 60"><g filter="url(#wob)" stroke="${INK}" stroke-width="3"><g transform="rotate(-30 30 30)"><path d="M14 30 a10 10 0 0 1 10 -10 h6 v20 h-6 a10 10 0 0 1 -10 -10z" fill="#F7A9BE"/><path d="M30 20 h6 a10 10 0 0 1 0 20 h-6z" fill="#fff"/></g></g></svg>`,
-  broom: `<svg viewBox="0 0 70 70"><g filter="url(#wob)" stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M52 6 L34 40" fill="none"/><path d="M28 36 l14 8 l-8 18 q-12 0 -22 -8z" fill="#F6D58B"/><path d="M22 50 l8 -8 M18 56 l10 -9" fill="none"/></g></svg>`,
-  heart: `<svg viewBox="0 0 30 30"><path d="${heartPath(15,15,9)}" fill="#F7A9BE" stroke="${INK}" stroke-width="2"/></svg>`,
-  star: `<svg viewBox="0 0 30 30"><path d="${starPath(15,15,11)}" fill="#FFE07A" stroke="${INK}" stroke-width="2"/></svg>`,
-  sparkle: `<svg viewBox="0 0 30 30"><path d="M15 3 q2 10 12 12 q-10 2 -12 12 q-2 -10 -12 -12 q10 -2 12 -12z" fill="#CFE6FA" stroke="${INK}" stroke-width="2"/></svg>`,
-  drop: `<svg viewBox="0 0 30 30"><path d="M15 4 q9 12 0 20 q-9 -8 0 -20z" fill="#BFDBF7" stroke="${INK}" stroke-width="2"/></svg>`
-};
-
-function fxEl(cls, html, style = ''){
-  const el = document.createElement('div');
-  el.className = 'fx ' + cls;
-  if (style) el.setAttribute('style', style);
-  el.innerHTML = html;
-  return el;
-}
-
-// ふわっと上がるハートや星をいくつか出す
-function floaters(wrap, kind, n, delay = 0){
-  for (let i = 0; i < n; i++){
-    const x = 30 + Math.random() * 40, d = delay + i * 180;
-    wrap.appendChild(fxEl('fx-float', ITEM_SVG[kind], `left:${x}%;top:20%;animation-delay:${d}ms`));
-  }
-}
-
-function playFx(type, extra){
-  const wrap = document.querySelector('.pet-wrap');
-  const body = wrap && wrap.querySelector('.bounce');
-  if (!wrap || !body) return Promise.resolve();
-  wrap.classList.add('paused');
-  const react = (cls) => { body.classList.remove('r-munch','r-hop','r-shake','r-shrink','r-slump'); void body.offsetWidth; body.classList.add(cls); };
-  // 吹き出しの文字をその場で差し替える（重ならないように）
-  const say = (t, delay = 0) => setTimeout(() => { const bb = document.getElementById('bubble'); if (bb) bb.textContent = t; }, delay);
-  let dur = 1400;
-  switch (type){
-    case 'feed':
-      wrap.appendChild(fxEl('fx-food', ITEM_SVG.feed));
-      setTimeout(() => react('r-munch'), 450); say('もぐもぐ', 500); break;
-    case 'snack':
-      wrap.appendChild(fxEl('fx-food', ITEM_SVG.snack));
-      setTimeout(() => react('r-munch'), 450); floaters(wrap, 'heart', 3, 700); say('あまーい', 500); dur = 1600; break;
-    case 'play':
-      if (extra.win){ react('r-hop'); floaters(wrap, 'star', 2); floaters(wrap, 'heart', 2, 300); say('やったー！'); }
-      else { react('r-slump'); wrap.appendChild(fxEl('fx-float', ITEM_SVG.drop, 'left:72%;top:18%')); say('ざんねん…'); }
-      break;
-    case 'clean': {
-      wrap.parentElement.appendChild(fxEl('fx-broom', ITEM_SVG.broom));
-      const pp = document.querySelector('.poops'); if (pp) pp.classList.add('sweep');
-      floaters(wrap, 'sparkle', 3, 600); dur = 1500; break;
-    }
-    case 'medicine':
-      wrap.appendChild(fxEl('fx-pill', ITEM_SVG.pill));
-      setTimeout(() => react('r-shake'), 500); say('にがい…', 500); floaters(wrap, 'sparkle', 2, 1000); dur = 1600; break;
-    case 'scold':
-      wrap.appendChild(fxEl('fx-mark', '！'));
-      react('r-shrink'); say('…しゅん', 400); break;
-  }
-  return new Promise(res => setTimeout(res, dur));
-}
-
-/* ===== あそぶ（どっち向くかなゲーム） ===== */
-function openPlay(){
-  showSheet(`
-    <div class="art">${drawPet(pet.form, pet.eggType)}</div>
-    <div class="arrow" id="arrow"></div>
-    <h3>どっちを向くかな？</h3>
-    <p>当たったら、ごきげんが上がるよ</p>
-    <div style="display:flex;gap:10px">
-      <button class="btn sub" data-guess="left">← ひだり</button>
-      <button class="btn sub" data-guess="right">みぎ →</button>
-    </div>`, sheet => {
-    sheet.addEventListener('click', e => {
-      const b = e.target.closest('[data-guess]');
-      if (!b) return;
-      const guess = b.dataset.guess;
-      const turn = Math.random() < .5 ? 'left' : 'right';
-      const win = turn === guess;
-      const art = sheet.querySelector('.art');
-      sheet.querySelectorAll('[data-guess]').forEach(x => { x.disabled = true; if (x === b) x.style.background = 'var(--butter)'; });
-      // ① ためる（ぷるぷる）
-      art.classList.add('wiggle');
-      sheet.querySelector('h3').textContent = 'どっちかな…';
-      sheet.querySelector('p').textContent = guess === 'left' ? 'あなたは「ひだり」' : 'あなたは「みぎ」';
-      // ② 振り向く
-      setTimeout(() => {
-        art.classList.remove('wiggle');
-        art.innerHTML = drawPet(pet.form, pet.eggType, { look: turn });
-        art.classList.add(turn === 'left' ? 'turn-left' : 'turn-right');
-        sheet.querySelector('#arrow').textContent = turn === 'left' ? '←' : '→';
-        sheet.querySelector('h3').textContent = win ? 'あたり！' : 'はずれ…';
-        sheet.querySelector('p').textContent = turn === 'left' ? 'ひだりを向いた！' : 'みぎを向いた！';
-      }, 900);
-      // ③ 閉じて結果を送る
-      setTimeout(() => { closeSheet(); doCare('play', { win }); }, 2300);
-    });
-  });
-}
-
-/* ===== おやつの上限超え（仕様：あげられるが病気になる） ===== */
-function confirmSnack(){
-  showSheet(`
-    <div class="art">${drawPet(pet.form, pet.eggType, { sick:true })}</div>
-    <h3>今日はもうおやつをたくさん食べたよ</h3>
-    <p>これ以上あげると、食べすぎで具合が悪くなります。</p>
-    <button class="btn sub" data-close>やめておく</button>
-    <button class="btn" data-force>それでもあげる</button>`, sheet => {
-    sheet.querySelector('[data-close]').onclick = closeSheet;
-    sheet.querySelector('[data-force]').onclick = () => { closeSheet(); doCare('snack'); };
-  });
-}
-
-/* ===== ひろば ===== */
-async function loadPlaza(){
-  try{
-    plazaData = await api('plaza');
-    if (plazaData.pet) pet = plazaData.pet;
-    queueEvents(plazaData.events);
-  }catch(e){ /* ひろばは失敗しても育成は続ける */ }
-}
-
-function renderPlaza(){
-  const d = plazaData;
-  if (!d){ $app.innerHTML = `<h2>ひろば</h2><p class="lead">読み込み中…</p>`; loadPlaza().then(render); return; }
-  if (pet.frozen){ $app.innerHTML = `<h2>ひろば</h2><div class="card">冷凍保存中は、ひろばに出かけられません。</div>`; return; }
-  const meAdult = pet.stage === 'adult';
-  const met = d.met.map(m => {
-    const canPropose = meAdult && !pet.married && stageOf(m.form) === 'adult' && m.friendship >= 5;
-    return `
-    <div class="card friend">
-      ${drawPet(m.form, m.eggType)}
-      <div>
-        <div class="who">${esc(m.nickname)}さんの${esc(m.petName || m.formName)}</div>
-        <div class="meta">${esc(m.formName)}　${esc(m.timeLabel)}に来た　なかよし${m.friendship}</div>
-        ${m.stamp ? `<span class="stampbub">${esc(m.stamp)}</span>` : ''}
-        ${canPropose ? `<div><button class="small-btn" data-propose="${esc(m.petId)}">お見合いを申し込む</button></div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-  const foot = !d.met.length ? (d.footprint ? `
-    <div class="card friend">
-      ${d.footprint.form ? drawPet(d.footprint.form, 'shiro', { silhouette:true }) : ''}
-      <div>
-        <div class="who">足あとがのこっている</div>
-        <div class="meta">${esc(d.footprint.nickname)}さんの${esc(d.footprint.petName)}　${esc(d.footprint.timeLabel)}</div>
-        ${d.footprint.stamp ? `<span class="stampbub">${esc(d.footprint.stamp)}</span>` : ''}
-      </div>
-    </div>` : `<div class="card">まだ誰も来ていません。ひとことを残して、次の人を待とう。</div>`) : '';
-  const props = (d.proposals || []).map(p => `
-    <div class="card">${esc(p.nickname)}さんの${esc(p.petName || p.formName)}から、お見合いの申し込みが届いています。
-      <button class="small-btn" data-accept="${esc(p.petId)}">受ける</button></div>`).join('');
-  $app.innerHTML = `
-    <h2>いまのひろば</h2>
-    <p class="lead">${d.met.length ? `${d.met.length}匹と遊んだよ。` : '少し前に来た子はいないみたい。'}</p>
-    ${props}${met}${foot}
-    <h3>次に来る人へひとこと</h3>
-    <div class="stamps">${(d.stamps || []).map((s, i) => `<button data-stamp="${i}">${esc(s)}</button>`).join('')}</div>
-  `;
-}
-
-/* ===== ずかん ===== */
-let dexData = null;
-function renderDex(){
-  if (!dexData){
-    $app.innerHTML = `<h2>ずかん</h2><p class="lead">読み込み中…</p>`;
-    api('dex').then(d => { dexData = d; if (tab === 'dex') render(); }).catch(e => toast(e.message));
-    return;
-  }
-  const d = dexData;
-  const mineByForm = {};
-  d.mine.forEach(k => { const [f, eg] = k.split(':'); if (!mineByForm[f]) mineByForm[f] = eg; });
-  const officeForms = new Set(d.office.map(o => o.formKey.split(':')[0]));
-  const forms = d.forms.filter(f => f.form !== 'egg');
-  const groups = [['baby','ベビー'],['child','こども'],['young','ヤング'],['adult','おとな']];
-  const cell = f => {
-    const eg = mineByForm[f.form];
-    if (eg) return `<div class="dexcell">${drawPet(f.form, eg)}${esc(f.name)}</div>`;
-    if (f.hidden) return `<div class="dexcell none"><div class="q">？</div>？？？</div>`;
-    return `<div class="dexcell none">${drawPet(f.form, 'shiro', { silhouette:true })}？？？</div>`;
-  };
-  const myCount = forms.filter(f => mineByForm[f.form]).length;
-  const officeCount = forms.filter(f => officeForms.has(f.form)).length;
-  let html = `<h2>ずかん</h2>
-    <p class="count">あなたが見つけた姿 ${myCount} / ${forms.length}</p>
-    <p class="lead">職場のだれかが見つけた姿 ${officeCount} / ${forms.length}</p>`;
-  groups.forEach(([st, label]) => {
-    html += `<h3>${label}</h3><div class="dexgrid">${forms.filter(f => f.stage === st && !f.hidden).map(cell).join('')}</div>`;
-  });
-  html += `<h3>ひみつの姿</h3><div class="dexgrid">${forms.filter(f => f.hidden).map(cell).join('')}</div>`;
-  const hints = d.hints.filter(h => h.hint);
-  if (hints.length){
-    html += `<h3>職場で見つかったひみつのヒント</h3>` + hints.map(h => `<div class="card"><b>${esc(h.name)}</b><br>${esc(h.hint)}</div>`).join('');
-  }
-  $app.innerHTML = html;
-}
-
-/* ===== ランキング ===== */
-let rankData = null;
-function renderRank(){
-  if (!rankData){
-    $app.innerHTML = `<h2>ランキング</h2><p class="lead">読み込み中…</p>`;
-    api('ranking').then(d => { rankData = d; if (tab === 'rank') render(); }).catch(e => toast(e.message));
-    return;
-  }
-  const d = rankData;
-  const list = (rows, unit, withPet = true) => rows.length ? rows.map((r, i) => `
-    <div class="rank"><span class="no">${i+1}</span><span>${esc(r.nickname)}${withPet ? `さんの${esc(r.petName || r.formName)}` : 'さん'}</span><span class="v">${r.value}${unit}</span></div>`).join('')
-    : `<p class="lead" style="margin:0">まだ記録がありません</p>`;
-  $app.innerHTML = `
-    <h2>今週のランキング</h2>
-    <h3>長生き</h3><div class="card">${list(d.longevity, '日')}</div>
-    <h3>出会いの数</h3><div class="card">${list(d.encounters, '回')}</div>
-    <h3>来た日数</h3><div class="card">${list(d.attendance, '日', false)}</div>
-    <h3>殿堂入り（歴代の最長寿）</h3>
-    <div class="card">${d.hallOfFame ? `${esc(d.hallOfFame.nickname)}さんの${esc(d.hallOfFame.petName || d.hallOfFame.formName)}　<b>${d.hallOfFame.days}日</b>` : 'まだ天に還った子はいません'}</div>
-  `;
-}
-
-/* ===== 操作の受付（まとめて） ===== */
-$app.addEventListener('click', async e => {
-  const c = e.target.closest('[data-c]');
-  if (c){
-    if (c.dataset.c === 'play') openPlay();
-    else if (c.dataset.c === 'snack' && pet.snackLeft <= 0) confirmSnack();
-    else doCare(c.dataset.c);
-    return;
-  }
-  if (e.target.closest('[data-act="menu"]')){ openMenu(); return; }
-  if (e.target.closest('[data-goplaza]')){ setTab('plaza'); return; }
-  const th = e.target.closest('[data-act="thaw"]');
-  if (th){
-    th.disabled = true;
-    try{ const r = await api('thaw'); pet = r.pet; queueEvents(r.events); render(); flushEvents(); }
-    catch(err){ toast(err.message); th.disabled = false; }
-    return;
-  }
-  const st = e.target.closest('[data-stamp]');
-  if (st){
-    try{ const r = await api('stamp', { index:Number(st.dataset.stamp) }); toast(`「${r.stamp}」を残しました`); }
-    catch(err){ toast(err.message); }
-    return;
-  }
-  const pr = e.target.closest('[data-propose]');
-  if (pr){
-    try{ await api('propose', { petId: pr.dataset.propose }); pr.disabled = true; toast('お見合いを申し込みました'); }
-    catch(err){ toast(err.message); }
-    return;
-  }
-  const ac = e.target.closest('[data-accept]');
-  if (ac){
-    try{
-      const r = await api('accept', { petId: ac.dataset.accept });
-      pet = r.pet; queueEvents(r.events);
-      plazaData.proposals = plazaData.proposals.filter(p => p.petId !== ac.dataset.accept);
-      render(); flushEvents();
-    }catch(err){ toast(err.message); }
-  }
-});
-
-/* ============================================================
-   演出（進化・孵化・天に還るなど）
-   ============================================================ */
-function queueEvents(list){
-  (list || []).forEach(ev => {
-    eventQueue.push(ev);
-    if ((ev.type === 'hatched' || ev.type === 'evolved') && pet) noteStage({ petId: pet.petId, stage: stageOf(ev.to) }, true);
-  });
-}
-
-function flushEvents(){
-  if (document.querySelector('.overlay') || !eventQueue.length) return;
-  const ev = eventQueue.shift();
-  let art = '', title = '', text = '', cls = '';
-  const nm = f => FORM_NAME[f] || '';
-  if (ev.type === 'hatched' || ev.type === 'evolved'){ openTransform(ev); return; }
-  switch (ev.type){
-    case 'hatched':
-      art = drawPet(ev.to, pet.eggType); cls = 'flash';
-      title = 'たまごがかえった！'; text = `${nm(ev.to)}が生まれました`; break;
-    case 'evolved':
-      art = drawPet(ev.to, pet.eggType); cls = ev.hidden ? 'flash glow' : 'flash';
-      title = ev.hidden ? 'ひみつの姿があらわれた！' : `${nm(ev.to)}に進化した！`;
-      text = `${nm(ev.from)}から${nm(ev.to)}になりました`; break;
-    case 'ascended':
-      art = drawPet(ev.from, ev.fromEggType || pet.eggType); cls = 'ascend glow';
-      title = '天に還っていきました';
-      text = `${ev.reason === '老衰' ? '長生きして' : ''}光に包まれて空へ。あとに${{hana:'はなたまご',hoshi:'ほしたまご',shiro:'しろたまご'}[ev.eggType]}が残っています（${ev.generation}代目）`; break;
-    case 'rescued':
-      art = drawPet(pet.form, pet.eggType); title = '危ないところだった…'; text = '元気を取り戻しました'; break;
-    case 'frozen':
-      art = drawPet(pet.form, pet.eggType) .replace('</svg>', '') + drawIce().replace(/<svg[^>]*>/, '');
-      title = '冷凍保存しました'; text = 'もどってきたら「解凍する」を押してね。それまで時間は止まっています'; break;
-    case 'thawed':
-      art = drawPet(pet.form, pet.eggType); cls = 'flash';
-      title = 'おかえり！'; text = `${ev.days}日ぶりに解凍しました`; break;
-    case 'married':
-      art = drawPet(pet.form, pet.eggType, { pattern:true }); cls = 'glow';
-      title = 'なかよしの印を結んだ'; text = `${ev.partner}と特別ななかよしになりました`; break;
-    default:
-      return flushEvents(); // わがままは吹き出しだけ
-  }
-  const dex = ev.newDex ? '<p>図鑑に新しい姿が登録されました</p>' : '';
-  showSheet(`<div class="art">${art}</div><h3>${esc(title)}</h3><p>${esc(text)}</p>${dex}<button class="btn" data-close>とじる</button>`, sheet => {
-    sheet.classList.add(...cls.split(' ').filter(Boolean));
-    sheet.querySelector('[data-close]').addEventListener('click', () => { closeSheet(); dexData = null; flushEvents(); });
-  });
-}
-
-// 進化・孵化：ためる → 光る → シルエットが入れ替わる → はじけて登場
-function openTransform(ev){
-  const hatch = ev.type === 'hatched';
-  const nm = f => FORM_NAME[f] || '';
-  const fromArt = hatch ? drawEgg(pet.eggType) : drawPet(ev.from, pet.eggType);
-  const toArt = drawPet(ev.to, pet.eggType);
-  const title = hatch ? 'たまごがかえった！' : ev.hidden ? 'ひみつの姿があらわれた！' : `${nm(ev.to)}に進化した！`;
-  const text = hatch ? `${nm(ev.to)}が生まれました` : `${nm(ev.from)}から${nm(ev.to)}になりました`;
-  showSheet(`
-    <div class="art">${fromArt}</div>
-    <h3 id="evoTitle">${hatch ? 'あれ？ たまごが…' : 'おや…？ ようすが…'}</h3>
-    <div class="rest">
-      <p>${esc(text)}</p>
-      ${ev.newDex ? '<p>図鑑に新しい姿が登録されました</p>' : ''}
-      <button class="btn" data-close>とじる</button>
-    </div>`, sheet => {
-    sheet.classList.add('evo');
-    if (ev.hidden) sheet.classList.add('hidden-form');
-    const art = sheet.querySelector('.art');
-    const T = [];
-    const at = (ms, fn) => T.push(setTimeout(fn, ms));
-    art.classList.add('shake');
-    // シルエットの入れ替わり（だんだん速く）
-    let t = 1100;
-    [260, 220, 180, 140, 110, 90].forEach((gap, i) => {
-      at(t, () => { art.classList.add('sil'); art.innerHTML = i % 2 ? fromArt : toArt; });
-      t += gap;
-    });
-    at(t, () => {
-      art.classList.remove('shake', 'sil');
-      art.innerHTML = toArt;
-      art.classList.add('pop');
-      burst(art, ev.hidden);
-      sheet.querySelector('#evoTitle').textContent = title;
-      sheet.querySelector('.rest').classList.add('show');
-      if (typeof chirp === 'function') chirp(ev.hidden ? 'secret' : 'evolve');
-    });
-    sheet.querySelector('[data-close]').addEventListener('click', () => {
-      T.forEach(clearTimeout); closeSheet(); dexData = null; flushEvents();
-    });
-  });
-}
-
-function burst(el, special){
-  const cols = special ? ['#FF9AA2','#FFDAC1','#FFF1A8','#B5EAD7','#C7CEEA','#E2B6F7'] : ['#F7A9BE','#FFE07A','#B9E3CF','#CFE6FA'];
-  const ring = document.createElement('div'); ring.className = 'ring'; el.appendChild(ring);
-  if (special){ const r2 = ring.cloneNode(); r2.style.animationDelay = '.25s'; r2.style.borderColor = '#d6b8ff'; el.appendChild(r2); }
-  const n = special ? 30 : 20;
-  for (let i = 0; i < n; i++){
-    const a = (i / n) * Math.PI * 2 + Math.random() * .3, d = 70 + Math.random() * 60;
-    const pt = document.createElement('span');
-    pt.className = 'pt';
-    pt.style.background = cols[i % cols.length];
-    pt.style.setProperty('--dx', (Math.cos(a) * d).toFixed(0) + 'px');
-    pt.style.setProperty('--dy', (Math.sin(a) * d).toFixed(0) + 'px');
-    el.appendChild(pt);
-  }
-}
-
-function showSheet(html, onReady){
-  closeSheet();
-  const ov = document.createElement('div');
-  ov.className = 'overlay';
-  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
-  document.body.appendChild(ov);
-  if (onReady) onReady(ov.querySelector('.sheet'));
-}
-function closeSheet(){ document.querySelectorAll('.overlay').forEach(o => o.remove()); }
-
-let toastTimer = null;
-function toast(msg){
-  document.querySelectorAll('.toast').forEach(t => t.remove());
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.remove(), 2600);
-}
-
-/* ===== メニュー（じゅもん） ===== */
-// じゅもんを4文字ずつのかたまりで表示（途中で改行させない）
-function codeHtml(c){ return (String(c || '').match(/.{1,4}/g) || []).map(g => `<span>${esc(g)}</span>`).join(''); }
-function openMenu(){
-  const code = store.get(LS_CODE);
-  showSheet(`
-    <h3>ふっかつのじゅもん</h3>
-    ${code ? `<div class="code">${codeHtml(code)}</div><p>スマホを変えたときは、このじゅもんで続きから遊べます。</p>`
-           : `<p>この端末にはじゅもんが残っていません。最初にメモしたじゅもんを使ってください。</p>`}
-    <button class="btn sub" data-guide>あそびかた</button>
-    <button class="btn sub" data-pin>暗証番号を変える</button>
-    <button class="btn sub" data-restore>じゅもんで別のペットを呼び出す</button>
-    ${pet && !pet.frozen ? `<button class="btn ice-btn" data-freeze>冷凍保存する（長く来られないとき）</button>` : ''}
-    <button class="btn" data-close>とじる</button>`, sheet => {
-    sheet.querySelector('[data-close]').onclick = closeSheet;
-    sheet.querySelector('[data-guide]').onclick = () => { closeSheet(); openGuide(); };
-    sheet.querySelector('[data-pin]').onclick = () => { closeSheet(); openSetPin(true); };
-    const fz = sheet.querySelector('[data-freeze]');
-    if (fz) fz.onclick = () => { closeSheet(); confirmFreeze(); };
-    sheet.querySelector('[data-restore]').onclick = () => { closeSheet(); renderRestore(true); };
-  });
-}
-
-function confirmFreeze(){
-  if (pet.critical){ toast('危篤のときは冷凍できません。先に助けてあげてください'); return; }
-  showSheet(`
-    <div class="art" style="position:relative">${drawPet(pet.form, pet.eggType)}<div class="ice">${drawIce()}</div></div>
-    <h3>冷凍保存しますか？</h3>
-    <p>休みや出張で来られないときに。冷凍中は年をとらず、おなかも減りません。お世話とひろばはお休みになります。</p>
-    <button class="btn sub" data-close>やめておく</button>
-    <button class="btn ice-btn" data-ok>冷凍する</button>`, sheet => {
-    sheet.querySelector('[data-close]').onclick = closeSheet;
-    sheet.querySelector('[data-ok]').onclick = async ev => {
-      ev.target.disabled = true;
-      try{ const r = await api('freeze'); closeSheet(); pet = r.pet; queueEvents(r.events); tab = 'home'; render(); flushEvents(); }
-      catch(e){ toast(e.message); ev.target.disabled = false; }
-    };
-  });
-}
-
-/* ===== あそびかた ===== */
-const LS_GUIDED = 'nfcpet.guided';
-const GUIDE = [
-  { art: () => drawEgg('shiro'), title: 'タグにふれて、お世話しよう',
-    text: 'このペットは、職場のタグにスマホをかざした時だけお世話できます。1日1回来れば十分です。夜と休みの日は、ゆっくり過ごしています。' },
-  { art: () => drawPet('punimaru', 'shiro'), title: 'ハートを見てお世話',
-    text: '「おなか」が減ったらごはん、「ごきげん」が減ったらあそぶ。うんちが出たらそうじ、具合が悪そうならくすり。赤い丸がついたボタンが、今してほしいことです。' },
-  { art: () => drawPet('besomochi', 'shiro', { sick:true }), title: '3日ほど来ないと危ない',
-    text: '何日も来ないと危篤になり、やがて天に還ります（たまごが残って次の世代へ）。休みや出張で来られない時は、メニュー「…」から冷凍保存しておけば安心です。スマホを変えても、ニックネームと暗証番号で戻れます。' },
-  { art: () => drawPet('nikoniko', 'hana'), title: '育ち方で姿が変わる',
-    text: 'お世話のしかたで25通りの姿に進化します。ひろばでは同僚のペットと出会えて、仲良くなるとお見合いも。図鑑とランキングもチェックしてね。' }
-];
-
-function openGuide(){
-  let i = 0;
-  const draw = sheet => {
-    const g = GUIDE[i];
-    sheet.innerHTML = `
-      <div class="art">${g.art()}</div>
-      <p style="font-weight:700">${i + 1} / ${GUIDE.length}</p>
-      <h3>${esc(g.title)}</h3>
-      <p style="text-align:left">${esc(g.text)}</p>
-      <div style="display:flex;gap:10px">
-        ${i > 0 ? '<button class="btn sub" data-prev>もどる</button>' : ''}
-        <button class="btn" data-next>${i < GUIDE.length - 1 ? 'つぎへ' : 'はじめる'}</button>
-      </div>`;
-    sheet.querySelector('[data-next]').onclick = () => {
-      if (i < GUIDE.length - 1){ i++; draw(sheet); }
-      else { store.set(LS_GUIDED, true); closeSheet(); flushEvents(); }
-    };
-    const pv = sheet.querySelector('[data-prev]');
-    if (pv) pv.onclick = () => { i--; draw(sheet); };
-  };
-  showSheet('', draw);
-}
-
-/* ============================================================
-   はじめての人・じゅもん入力
-   ============================================================ */
-function renderWelcome(){
-  $nav.classList.add('hidden');
-  $app.innerHTML = `
-    <div style="text-align:center;margin-top:24px">
-      <div style="width:150px;height:150px;margin:0 auto">${drawEgg('shiro')}</div>
-      <h2 style="margin-top:4px">たまごを見つけた</h2>
-      <p class="lead">このタグにふれるたびに、お世話ができます。</p>
-    </div>
-    <label for="nick">あなたのニックネーム</label>
-    <input id="nick" maxlength="12" placeholder="例：ひなた" autocomplete="off">
-    <label for="pname">ペットの名前（あとで変えられません）</label>
-    <input id="pname" maxlength="10" placeholder="空欄でもOK" autocomplete="off">
-    <label for="pin">暗証番号（数字4けた）</label>
-    <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="自分で決めた数字4けた" autocomplete="off">
-    <p class="lead" style="margin:6px 4px 0">スマホを変えた時などに、ニックネームとこの番号で戻れます。</p>
-    <button class="btn" id="go">たまごを受け取る</button>
-    <button class="btn sub" id="toLogin">前に遊んでいた人はこちら</button>
-  `;
-  document.getElementById('toLogin').onclick = renderLogin;
-  document.getElementById('go').onclick = async ev => {
-    const nick = document.getElementById('nick').value.trim();
-    const pin = document.getElementById('pin').value.trim();
-    if (!nick){ toast('ニックネームを入力してください'); return; }
-    if (!/^\d{4}$/.test(pin)){ toast('暗証番号は数字4けたで入力してください'); return; }
-    ev.target.disabled = true;
-    try{
-      const r = await api('register', { nickname:nick, petName:document.getElementById('pname').value.trim(), pin });
-      auth = { userId:r.userId, token:r.token };
-      store.set(LS_AUTH, auth);
-      store.set(LS_CODE, r.code);
-      pet = r.pet; nickname = nick;
-      renderCode(r.code);
-    }catch(e){ toast(e.message); ev.target.disabled = false; }
-  };
-}
-
-function renderCode(code){
-  $app.innerHTML = `
-    <h2 style="margin-top:24px">ふっかつのじゅもん</h2>
-    <p class="lead">暗証番号を忘れてしまった時のための、予備の合言葉です。スクリーンショットで残しておくと安心です。</p>
-    <div class="card code">${codeHtml(code)}</div>
-    <button class="btn" id="ok">メモしました</button>
-  `;
-  document.getElementById('ok').onclick = () => { tab = 'home'; render(); if (!store.get(LS_GUIDED)) openGuide(); loadPlaza().then(render); };
-}
-
-function renderLogin(){
-  $nav.classList.add('hidden');
-  $app.innerHTML = `
-    <h2 style="margin-top:24px">おかえりなさい</h2>
-    <p class="lead">登録したニックネームと暗証番号を入れてください。</p>
-    <label for="lnick">ニックネーム</label>
-    <input id="lnick" maxlength="12" autocomplete="off">
-    <label for="lpin">暗証番号（数字4けた）</label>
-    <input id="lpin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
-    <button class="btn" id="go">続きから遊ぶ</button>
-    <button class="btn sub" id="back">もどる</button>
-    <p class="lead" style="margin-top:16px;text-align:center"><a href="#" id="toCode" style="color:inherit">暗証番号を忘れた時は、じゅもんで戻る</a></p>
-  `;
-  document.getElementById('back').onclick = () => pet ? (tab = 'home', render()) : renderWelcome();
-  document.getElementById('toCode').onclick = e => { e.preventDefault(); renderRestore(false); };
-  document.getElementById('go').onclick = async ev => {
-    const nickname = document.getElementById('lnick').value.trim();
-    const pin = document.getElementById('lpin').value.trim();
-    if (!nickname || !/^\d{4}$/.test(pin)){ toast('ニックネームと数字4けたを入力してください'); return; }
-    ev.target.disabled = true;
-    try{
-      const saved = auth; auth = null;
-      const r = await api('login', { nickname, pin }).catch(e => { auth = saved; throw e; });
-      auth = { userId:r.userId, token:r.token };
-      store.set(LS_AUTH, auth);
-      if (r.code) store.set(LS_CODE, r.code); else store.del(LS_CODE);
-      await boot();
-    }catch(e){ toast(e.message); ev.target.disabled = false; }
-  };
-}
-
-/* ===== 暗証番号を決める・変える ===== */
-function openSetPin(isChange){
-  showSheet(`
-    <h3>${isChange ? '暗証番号を変える' : '暗証番号を決めよう'}</h3>
-    <p>スマホを変えたりデータが消えた時に、ニックネーム「${esc(nickname)}」とこの番号で戻れます。</p>
-    <input id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="数字4けた" autocomplete="off" style="text-align:center;letter-spacing:.4em">
-    <button class="btn" data-ok>決める</button>
-    <button class="btn sub" data-close>${isChange ? 'やめる' : 'あとで'}</button>`, sheet => {
-    sheet.querySelector('[data-close]').onclick = () => { closeSheet(); flushEvents(); };
-    sheet.querySelector('[data-ok]').onclick = async ev => {
-      const pin = sheet.querySelector('#newpin').value.trim();
-      if (!/^\d{4}$/.test(pin)){ toast('数字4けたで入力してください'); return; }
-      ev.target.disabled = true;
-      try{ await api('setPin', { pin }); closeSheet(); toast('暗証番号を設定しました'); flushEvents(); }
-      catch(e){ toast(e.message); ev.target.disabled = false; }
-    };
-  });
-}
-
-function renderRestore(fromMenu){
-  $nav.classList.add('hidden');
-  $app.innerHTML = `
-    <h2 style="margin-top:24px">じゅもんで続きから</h2>
-    <p class="lead">${fromMenu ? 'この端末のペットは、じゅもんのペットに切り替わります。' : '前のスマホでメモしたじゅもんを入力してください。'}</p>
-    <label for="code">ふっかつのじゅもん（12文字）</label>
-    <input id="code" maxlength="20" placeholder="ひらがな12文字" autocomplete="off">
-    <button class="btn" id="go">呼び出す</button>
-    <button class="btn sub" id="back">もどる</button>
-  `;
-  document.getElementById('back').onclick = () => pet ? (tab = 'home', render()) : renderWelcome();
-  document.getElementById('go').onclick = async ev => {
-    const code = document.getElementById('code').value.replace(/\s/g, '');
-    ev.target.disabled = true;
-    try{
-      auth = null;
-      const r = await api('restore', { code });
-      auth = { userId:r.userId, token:r.token };
-      store.set(LS_AUTH, auth);
-      store.set(LS_CODE, code);
-      await boot();
-    }catch(e){ toast(e.message); ev.target.disabled = false; auth = store.get(LS_AUTH); }
-  };
-}
-
-/* ============================================================
-   起動
-   ============================================================ */
-function renderError(msg){
-  $nav.classList.add('hidden');
-  $app.innerHTML = `
-    <div class="loading"><div>
-      <div style="width:120px;height:120px;margin:0 auto">${drawPet('besomochi','shiro')}</div>
-      <p>${esc(msg)}</p>
-      <button class="btn" id="retry">もう一度</button>
-    </div></div>`;
-  document.getElementById('retry').onclick = boot;
-}
-
-async function boot(){
-  // ブラウザに「このサイトのデータは消さないで」と要求（効くかはブラウザ次第）
-  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  loadWeather();
-  document.getElementById('bootArt') && (document.getElementById('bootArt').innerHTML = drawEgg('shiro'));
-  if (!GAS_URL || GAS_URL.indexOf('http') !== 0){ renderError('GAS_URL が設定されていません'); return; }
-  if (!auth){ renderWelcome(); return; }
-  try{
-    const r = await api('state');
-    pet = r.pet; nickname = r.nickname;
-    queueEvents(r.events);
-    bubbleText = '';
-    tab = 'home';
-    render();
-    if (!store.get(LS_GUIDED)) openGuide();
-    else if (r.hasPin === false) openSetPin(false);
-    else flushEvents();
-    // ひろばにも立ち寄る（出会いの記録）
-    await loadPlaza();
-    if (tab === 'home') render();
-    flushEvents();
-  }catch(e){
-    if (/認証/.test(e.message)){ store.del(LS_AUTH); auth = null; renderWelcome(); return; }
-    renderError('つながりませんでした。電波のよい場所でもう一度ためしてください。');
-  }
-}
-boot();
+$('today').textContent = wareki(TODAY);
+renderKoyomi();
+if (birth) showMain(); else showSetup(false);
 </script>
 </body>
 </html>
