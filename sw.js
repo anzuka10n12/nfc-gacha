@@ -1,5 +1,5 @@
 // オフライン対応：ページは「ネット優先・つながらなければ保存分」、フォントや画像は「保存分優先」
-const CACHE = 'koyomi-v4';
+const CACHE = 'koyomi-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', e => {
