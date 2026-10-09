@@ -499,7 +499,7 @@ function streakState(){
     while (d < TODAY && !set.has(d)){ gap.push(d); d = addDays(d, 1); }
     if (!gap.length){ d = addDays(d, 1); continue; } // 今日だけ未訪問
     if (gap.length <= st.guards){ st.guards -= gap.length; st.used.push(...gap); } // 守りで足りるときだけ使う
-    else { st.cur = 0; since = 0; }
+    else { st.cur = 0; since = 0; st.guards = 0; } // 守りが足りず途切れたら、守りもなくなる
   }
   st.toNext = GUARD_EVERY - since;
   return st;
@@ -861,7 +861,7 @@ function renderRecord(newly){
     <h2>札の記録</h2>
     <p class="note" style="margin-top:-4px">これまで ${s.total}日 引きました（最長 ${s.streak}日連続）</p>
     <div class="ranks">${RANKS.map(k => `<div><b>${k}</b><span>${s.count[k]}</span></div>`).join('')}</div>
-    <p class="note">🧿 身代わり守り：${ss.guards}/${GUARD_MAX}つ　次の守りまであと${ss.toNext}日<br>7日続けて引くごとに1つもらえます。引き忘れた日があっても、守りが1日分の連続を守ります。${ss.used.length ? `<br>これまでに守られた日：${ss.used.slice(-3).map(d => d.slice(5).replace('-', '/')).join('、')}` : ''}</p>
+    <p class="note">🧿 身代わり守り：${ss.guards}/${GUARD_MAX}つ　次の守りまであと${ss.toNext}日<br>7日続けて引くごとに1つもらえます。引き忘れた日があっても、守りが1日分の連続を守ります。守りが足りずに途切れると、持っていた守りもなくなります。${ss.used.length ? `<br>これまでに守られた日：${ss.used.slice(-3).map(d => d.slice(5).replace('-', '/')).join('、')}` : ''}</p>
     <h2 style="font-size:15px;margin-top:14px">季節の札図鑑 ${zk.size}/${SEASONS.length * RANKS.length}</h2>
     <p class="note" style="margin-top:-6px">二十四節気ごとに絵柄が変わります。季節が過ぎると、その季節の札は1年後まで引けません。</p>
     <div class="zukan">${SEASONS.map(([n, e]) => {
