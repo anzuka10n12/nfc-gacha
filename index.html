@@ -174,6 +174,36 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .zk.done{background:rgba(242,211,138,.12)}
 .zk.empty .e{filter:grayscale(1);opacity:.3}
 
+/* 便利ツール */
+.tool{border-top:1px solid var(--line);padding:12px 0 4px}
+.tool:first-of-type{border-top:0;padding-top:4px}
+.tool summary{cursor:pointer;font-weight:700;color:var(--gold);list-style:none;display:flex;justify-content:space-between;align-items:center}
+.tool summary::-webkit-details-marker{display:none}
+.tool summary::after{content:"＋";color:var(--sub);font-weight:400}
+.tool[open] summary::after{content:"－"}
+.tool input{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);font:inherit;font-size:17px;padding:0 12px;margin-top:8px}
+.tool input::placeholder{color:rgba(183,170,205,.5);font-size:14px}
+.conv{margin-top:8px;font-size:14px}
+.conv .row{display:grid;grid-template-columns:5.5em 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+.conv .row span{color:var(--sub);font-size:12px}
+.conv .row b{font-weight:700}
+.conv .row button{background:transparent;border:1px solid var(--line);color:var(--gold);border-radius:8px;font:inherit;font-size:11px;padding:3px 8px;cursor:pointer}
+.conv .err{color:var(--bad)}
+.conv .hint{color:var(--sub);font-size:12px;margin-top:6px}
+.agewrap{max-height:420px;overflow:auto;margin-top:8px;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+.agetbl{width:100%;border-collapse:collapse;font-size:12px}
+.agetbl th{position:sticky;top:0;background:#1d1240;color:var(--gold);font-weight:700;padding:6px 4px;text-align:left;z-index:1;white-space:nowrap}
+.agetbl{table-layout:fixed}
+.agetbl th:nth-child(1){width:31%} .agetbl th:nth-child(2){width:17%} .agetbl th:nth-child(3){width:19%}
+.agetbl td:nth-child(2),.agetbl td:nth-child(3){white-space:nowrap}
+.agetbl td{overflow-wrap:anywhere}
+.agetbl td{padding:5px 4px;border-top:1px solid rgba(255,255,255,.06);vertical-align:top}
+.agetbl td.n{text-align:right;font-weight:700;white-space:nowrap}
+.agetbl td small{display:block;color:var(--sub);font-size:10px;font-weight:400}
+.agetbl tr.me td{background:rgba(242,211,138,.14)}
+.agetbl tr.hit td{background:rgba(205,179,245,.22)}
+.agetbl .tag{display:inline-block;font-size:10px;border:1px solid var(--line);border-radius:6px;padding:0 4px;margin:1px 2px 1px 0;color:var(--gold)}
+
 /* 明日の暦 */
 .tomorrow{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
 .tomorrow b{color:var(--gold)}
@@ -271,6 +301,21 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
   <section class="panel fade" id="koyomi"></section>
   <!-- 吉日カレンダー -->
   <section class="panel fade" id="calPanel"></section>
+  <!-- 便利ツール -->
+  <section class="panel fade" id="toolPanel">
+    <h2>便利ツール</h2>
+    <details class="tool" id="convTool" open>
+      <summary>西暦・和暦の変換</summary>
+      <input type="text" id="convIn" inputmode="text" autocomplete="off" placeholder="例：2026 / 令和8 / H1.1.8 / 19900501">
+      <div class="conv" id="convOut"><p class="hint">年だけ、または年月日を入れてください。「令和」「R」「平成」「H」「昭和」「S」「大正」「T」「明治」「M」、「元年」も使えます。</p></div>
+    </details>
+    <details class="tool" id="ageTool">
+      <summary>年齢早見表</summary>
+      <input type="text" id="ageFind" inputmode="text" autocomplete="off" placeholder="生まれ年で探す（例：1985 / 昭和60）">
+      <div class="agewrap" id="ageWrap"></div>
+      <p class="note">年齢は今年の誕生日を迎えた後の満年齢です（誕生日前は1歳引きます）。学年は4月2日〜12月31日生まれの場合で、1月1日〜4月1日生まれ（早生まれ）は1学年上です。長寿祝いと厄年は数え年で示しています（地域や寺社により満年齢の場合もあります）。</p>
+    </details>
+  </section>
 
   <div class="panel hidden" id="others">
     <button class="btn ghost hidden" id="backSelf" style="margin-top:0">自分の運勢にもどる</button>
@@ -602,10 +647,35 @@ const INFO = dayInfo(TODAY);
 let birth = store.get(LS_BIRTH);
 let tempBirth = null;
 
+/* ===== 和暦 ===== */
+// [元号, 略号, 始まりの日]（明治は改元の日。明治5年までは旧暦だったため、日付の変換は明治6年以降のみ）
+const ERAS = [['令和','R','2019-05-01'], ['平成','H','1989-01-08'], ['昭和','S','1926-12-25'], ['大正','T','1912-07-30'], ['明治','M','1868-10-23']];
+const eraYearText = n => n === 1 ? '元' : String(n);
+// 日付 → 和暦 [元号, 年]
+function eraOfDate(s){
+  for (const [name, , start] of ERAS) if (s >= start) return [name, +s.slice(0, 4) - +start.slice(0, 4) + 1];
+  return null;
+}
+// 西暦の年 → その年にかかる元号（改元の年は2つ）
+function erasOfYear(y){
+  const out = [];
+  ERAS.forEach(([name, , start], i) => {
+    const sy = +start.slice(0, 4), ey = i ? +ERAS[i - 1][2].slice(0, 4) : 9999;
+    if (y >= sy && y <= ey) out.push({ name, n: y - sy + 1, from: y === sy && name !== '明治' ? start : null, to: y === ey ? addDays(ERAS[i - 1][2], -1) : null });
+  });
+  return out.reverse();
+}
+function warekiYearText(y){
+  return erasOfYear(y).map(e => `${e.name}${eraYearText(e.n)}年${e.from ? `（${+e.from.slice(5, 7)}/${+e.from.slice(8)}から）` : e.to ? `（${+e.to.slice(5, 7)}/${+e.to.slice(8)}まで）` : ''}`).join('／');
+}
+function yearEto(y){ const g = ((y - 4) % 60 + 60) % 60; return KAN[g % 10] + SHI[g % 12]; }
+const ETO_ANIMAL = { '子':'ねずみ','丑':'うし','寅':'とら','卯':'うさぎ','辰':'たつ','巳':'へび','午':'うま','未':'ひつじ','申':'さる','酉':'とり','戌':'いぬ','亥':'いのしし' };
+
 function wareki(s){
   const [y, m, d] = s.split('-').map(Number);
   const wd = '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
-  return `${y}年${m}月${d}日（${wd}）・令和${y - 2018}年`;
+  const e = eraOfDate(s);
+  return `${y}年${m}月${d}日（${wd}）${e ? `・${e[0]}${eraYearText(e[1])}年` : ''}`;
 }
 
 function chipsHtml(kichi){
@@ -958,6 +1028,124 @@ function burst(n, kind){
     setTimeout(() => p.remove(), 1500);
   }
 }
+
+/* ===== 便利ツール：西暦・和暦の変換 ===== */
+const ERA_KEYS = { '令和':'令和','R':'令和','平成':'平成','H':'平成','昭和':'昭和','S':'昭和','大正':'大正','T':'大正','明治':'明治','M':'明治' };
+// 入力を読み取る → { y, m, d, era, eraN }（m・d は年だけのとき null）
+function parseWhen(raw){
+  let s = String(raw || '').trim().replace(/[０-９Ａ-Ｚａ-ｚ．／－]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[ー―‐]/g, '-').toUpperCase().replace(/\s+/g, '');
+  if (!s) return null;
+  const em = s.match(/^(令和|平成|昭和|大正|明治|[RHSTM])\.?(元|\d{1,2})(.*)$/);
+  let era = null, eraN = null, y, rest;
+  if (em){
+    era = ERA_KEYS[em[1]]; eraN = em[2] === '元' ? 1 : +em[2]; rest = em[3];
+    y = +ERAS.find(e => e[0] === era)[2].slice(0, 4) + eraN - 1;
+  } else {
+    const dm = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (dm) return checkYMD(+dm[1], +dm[2], +dm[3], null, null);
+    const ym = s.match(/^(\d{4})(.*)$/);
+    if (!ym) return { err: '読み取れませんでした。例：2026、令和8、H1.1.8、19900501' };
+    y = +ym[1]; rest = ym[2];
+  }
+  rest = rest.replace(/^年/, '').replace(/日$/, '');
+  if (!rest) return { y, m: null, d: null, era, eraN };
+  const md = rest.match(/^[.\/\-]?(\d{1,2})[月.\/\-](\d{1,2})$/);
+  if (!md) return { err: '月日が読み取れませんでした。例：令和8年10月9日、R8.10.9' };
+  return checkYMD(y, +md[1], +md[2], era, eraN);
+}
+function checkYMD(y, m, d, era, eraN){
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return { err: 'その日付は存在しません' };
+  return { y, m, d, era, eraN };
+}
+function ageOn(birth, on){ // 満年齢
+  const [by, bm, bd] = birth.split('-').map(Number), [oy, om, od] = on.split('-').map(Number);
+  return oy - by - ((om < bm || (om === bm && od < bd)) ? 1 : 0);
+}
+function convRender(){
+  const out = $('convOut'), v = $('convIn').value;
+  const r = parseWhen(v);
+  if (!r){ out.innerHTML = '<p class="hint">年だけ、または年月日を入れてください。「令和」「R」「平成」「H」「昭和」「S」「大正」「T」「明治」「M」、「元年」も使えます。</p>'; return; }
+  if (r.err){ out.innerHTML = `<p class="err">${r.err}</p>`; return; }
+  const thisY = +TODAY.slice(0, 4), rows = [], notes = [];
+  const row = (k, val, copy) => rows.push(`<div class="row"><span>${k}</span><b>${val}</b>${copy ? `<button data-copy="${copy}">コピー</button>` : '<i></i>'}</div>`);
+  if (r.y < 1868 || r.y > 2200){ out.innerHTML = '<p class="err">1868年（明治元年）〜2200年の範囲で入れてください</p>'; return; }
+  const eto = yearEto(r.y);
+  if (r.m === null){
+    row('西暦', `${r.y}年`, `${r.y}年`);
+    row('和暦', warekiYearText(r.y), erasOfYear(r.y).map(e => `${e.name}${eraYearText(e.n)}年`).join('／'));
+    row('干支', `${eto}（${ETO_ANIMAL[eto[1]]}年）`);
+    if (r.y < thisY) row('今年の年齢', `${thisY - r.y}歳<small style="color:var(--sub);font-weight:400">（誕生日前は${thisY - r.y - 1}歳）</small>・数え${thisY - r.y + 1}歳`);
+    else if (r.y === thisY) row('今年の年齢', '0歳・数え1歳');
+    if (r.era){
+      const ok = erasOfYear(r.y).some(e => e.name === r.era);
+      if (!ok) notes.push(`${r.era}${eraYearText(r.eraN)}年という年は実際にはありません（${warekiYearText(r.y)}に当たります）`);
+    }
+  } else {
+    const s = `${r.y}-${String(r.m).padStart(2, '0')}-${String(r.d).padStart(2, '0')}`;
+    const wd = '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
+    const e = eraOfDate(s);
+    row('西暦', `${r.y}年${r.m}月${r.d}日（${wd}）`, `${r.y}年${r.m}月${r.d}日`);
+    if (s < '1873-01-01') notes.push('明治5年（1872年）までは旧暦のため、和暦の日付は目安です');
+    if (e) row('和暦', `${e[0]}${eraYearText(e[1])}年${r.m}月${r.d}日`, `${e[0]}${eraYearText(e[1])}年${r.m}月${r.d}日`);
+    row('干支（年）', `${eto}（${ETO_ANIMAL[eto[1]]}年）`);
+    if (s <= TODAY){
+      row('今日の年齢', `満${ageOn(s, TODAY)}歳・数え${thisY - r.y + 1}歳`);
+      row('今日まで', `${diffDays(s, TODAY).toLocaleString()}日目`);
+    } else {
+      row('今日から', `あと${diffDays(TODAY, s).toLocaleString()}日`);
+    }
+    if (r.era && e && e[0] !== r.era) notes.push(`入力の「${r.era}${eraYearText(r.eraN)}年${r.m}月${r.d}日」は、正しくは「${e[0]}${eraYearText(e[1])}年${r.m}月${r.d}日」です`);
+  }
+  out.innerHTML = rows.join('') + notes.map(n => `<p class="hint">※${n}</p>`).join('');
+  out.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+    try{ await navigator.clipboard.writeText(b.dataset.copy); toast(`コピーしました：${b.dataset.copy}`); }catch(err){ toast('コピーできませんでした'); }
+  });
+}
+
+/* ===== 便利ツール：年齢早見表 ===== */
+// 長寿祝い（数え年）と厄年の本厄（数え年）
+const CHOJU = { 61:'還暦（満60歳）', 70:'古希', 77:'喜寿', 80:'傘寿', 88:'米寿', 90:'卒寿', 99:'白寿', 100:'百寿' };
+const YAKU = { 19:'女', 25:'男', 33:'女', 37:'女', 42:'男', 61:'男女' };
+const GRADES = ['小1','小2','小3','小4','小5','小6','中1','中2','中3','高1','高2','高3','大1','大2','大3','大4'];
+function renderAgeTable(){
+  const thisY = +TODAY.slice(0, 4), m = +TODAY.slice(5, 7), d = +TODAY.slice(8, 10);
+  const fy = (m > 4 || (m === 4 && d >= 1)) ? thisY : thisY - 1; // 今の年度（4月から）
+  const myY = birth ? +birth.slice(0, 4) : null;
+  const rows = [];
+  for (let y = thisY; y >= 1920; y--){
+    const man = thisY - y, kazoe = man + 1, eto = yearEto(y), tags = [];
+    const g = fy - y - 7; // 4/2〜12/31生まれの学年（0＝小1）
+    if (g >= 0 && g < GRADES.length) tags.push(`${GRADES[g]}${g + 1 < GRADES.length ? `<small style="display:inline;color:var(--sub)">（早生まれ${GRADES[g + 1]}）</small>` : ''}`);
+    else if (g === -1) tags.push(`<small style="display:inline;color:var(--sub)">早生まれは小1</small>`);
+    if (man === 18) tags.push('成人（18歳）');
+    if (man === 20) tags.push('二十歳');
+    if (CHOJU[kazoe]) tags.push(CHOJU[kazoe]);
+    if (YAKU[kazoe]) tags.push(`本厄（${YAKU[kazoe]}）`);
+    rows.push(`<tr class="${y === myY ? 'me' : ''}" data-y="${y}"><td>${y}<small>${warekiYearText(y)}</small></td><td>${eto}<small>${ETO_ANIMAL[eto[1]]}</small></td><td class="n">${man}歳<small>数え${kazoe}</small></td><td>${tags.map(x => `<span class="tag">${x}</span>`).join('')}</td></tr>`);
+  }
+  $('ageWrap').innerHTML = `<table class="agetbl"><thead><tr><th>生まれ年</th><th>干支</th><th>年齢</th><th>学年・節目</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function ageFind(){
+  const r = parseWhen($('ageFind').value);
+  $('ageWrap').querySelectorAll('tr.hit').forEach(tr => tr.classList.remove('hit'));
+  if (!r || r.err) return;
+  const tr = $('ageWrap').querySelector(`tr[data-y="${r.y}"]`);
+  if (!tr) return;
+  tr.classList.add('hit');
+  scrollAgeTo(tr);
+}
+// 見出し行の高さ分ずらして、その行が見える位置までスクロール
+function scrollAgeTo(tr){ const th = $('ageWrap').querySelector('thead'); $('ageWrap').scrollTop = tr.offsetTop - (th ? th.offsetHeight : 0) - 4; }
+let ageReady = false;
+$('convIn').addEventListener('input', convRender);
+$('ageTool').addEventListener('toggle', () => {
+  if (!$('ageTool').open || ageReady) return;
+  ageReady = true; renderAgeTable();
+  const me = $('ageWrap').querySelector('tr.me');
+  if (me) scrollAgeTo(me);
+});
+$('ageFind').addEventListener('input', ageFind);
 
 /* ===== 次の大きな日（カウントダウン） ===== */
 function nextDay(test){
