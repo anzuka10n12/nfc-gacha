@@ -147,6 +147,33 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .card .front .sp{position:absolute;top:12px;left:0;right:0;font-size:11px;letter-spacing:.16em;color:#b2742a;font-weight:700}
 .pt.coin{width:12px;height:12px;background:radial-gradient(circle at 35% 35%,#fff6c8,#e6b85c 60%,#a8741f);box-shadow:0 0 8px #ffd36b}
 
+/* 季節の札 */
+.card .front::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;
+  background:radial-gradient(90% 60% at 50% 100%,var(--sc,transparent),transparent 70%);opacity:.35}
+.card .front .sp.season{color:#7a5a2e}
+.guard{margin-top:2px;letter-spacing:.04em}
+/* 次の大きな日 */
+.cdown{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cdown div{border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;background:rgba(255,255,255,.04)}
+.cdown div.hot{background:rgba(242,211,138,.14);border-color:rgba(242,211,138,.7)}
+.cdown small{display:block;font-size:11px;color:var(--sub)}
+.cdown b{display:block;font-family:"Shippori Mincho",serif;font-size:26px;color:var(--gold);line-height:1.25}
+.cdown b em{font-style:normal;font-size:13px;margin-left:2px}
+.cdown span{display:block;font-size:11px;color:var(--ink)}
+.cdown .wide{grid-column:1/-1}
+/* 札図鑑 */
+.zukan{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.zk{border-radius:12px;padding:6px 2px 5px;text-align:center;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);position:relative}
+.zk .e{font-size:20px;line-height:1.2}
+.zk .nm{display:block;font-size:10px;color:var(--sub)}
+.zk .rs{display:flex;justify-content:center;gap:2px;margin-top:3px}
+.zk .rs i{font-style:normal;font-size:8px;width:13px;height:13px;line-height:13px;border-radius:3px;background:rgba(255,255,255,.06);color:rgba(183,170,205,.35)}
+.zk .rs i.on{background:var(--gold);color:#2a1a05;font-weight:700}
+.zk.now{border-color:var(--gold);box-shadow:0 0 12px -2px rgba(242,211,138,.6)}
+.zk.now::after{content:"今";position:absolute;top:2px;right:4px;font-size:9px;color:var(--gold)}
+.zk.done{background:rgba(242,211,138,.12)}
+.zk.empty .e{filter:grayscale(1);opacity:.3}
+
 /* 明日の暦 */
 .tomorrow{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
 .tomorrow b{color:var(--gold)}
@@ -228,6 +255,8 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
     <p class="note" style="text-align:center">同じ日・同じ生まれなら、何度引いても同じ結果です（暦で決まるため）。</p>
   </section>
 
+  <!-- 次の大きな日 -->
+  <section class="panel fade" id="countPanel"></section>
   <!-- 個人の運勢 -->
   <section class="panel hidden fade" id="personal"></section>
   <!-- 今日のいい時間 -->
@@ -441,16 +470,39 @@ function readVisits(){
 }
 function recordVisit(){
   const a = Array.from(new Set(readVisits().concat(TODAY))).sort();
-  store.set(LS_VISITS, JSON.stringify(a.slice(-120)));
+  store.set(LS_VISITS, JSON.stringify(a.slice(-400)));
 }
-function visitStreak(){
-  const set = new Set(readVisits());
-  let n = 0;
-  for (let i = 0; i < 120; i++){
-    if (!set.has(addDays(TODAY, -i))) break;
-    n++;
+/* ===== 連続日数と身代わり守り =====
+   7日続けて引くごとに「身代わり守り」を1つ（最大2つまで）。
+   引き忘れた日があると守りを1つ使って、連続日数を途切れさせない（その日は日数に数えない）。
+   今日まだ引いていないだけなら、途切れたことにしない。 */
+const GUARD_EVERY = 7, GUARD_MAX = 2;
+function streakState(){
+  const days = readVisits().sort();
+  const st = { cur: 0, best: 0, guards: 0, toNext: GUARD_EVERY, used: [], earned: [] };
+  if (!days.length) return st;
+  const set = new Set(days);
+  let since = 0, d = days[0];
+  while (d <= TODAY){
+    if (set.has(d)){
+      st.cur++; since++;
+      if (since >= GUARD_EVERY){
+        since = 0;
+        if (st.guards < GUARD_MAX){ st.guards++; st.earned.push(d); }
+      }
+      st.best = Math.max(st.best, st.cur);
+      d = addDays(d, 1);
+      continue;
+    }
+    // 引かなかった日が何日続いたか（今日はまだ引いていないだけなので数えない）
+    const gap = [];
+    while (d < TODAY && !set.has(d)){ gap.push(d); d = addDays(d, 1); }
+    if (!gap.length){ d = addDays(d, 1); continue; } // 今日だけ未訪問
+    if (gap.length <= st.guards){ st.guards -= gap.length; st.used.push(...gap); } // 守りで足りるときだけ使う
+    else { st.cur = 0; since = 0; st.guards = 0; } // 守りが足りず途切れたら、守りもなくなる
   }
-  return n;
+  st.toNext = GUARD_EVERY - since;
+  return st;
 }
 /* ===== 今日の御守り言葉 =====
    昔から言い伝えられてきたことわざ・古典の言葉と、今日の過ごし方のひと言。
@@ -700,11 +752,9 @@ function renderWeek(b){
   if (!rows.length){ $('weekPanel').innerHTML = '<h2>最近の運勢</h2><p class="note">表示できる履歴がありません。</p>'; return; }
 
   const bestScore = Math.max(...rows.map(o => o.r.score));
-  const next = name => { for (let i = 0; i < 400; i++){ const x = dayInfo(addDays(TODAY, i)); if (!x) return null; if (x.kichi.some(k => k[0] === name)) return i; } return null; };
   const wdName = s => '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
-  const cd = [['天赦日', next('天赦日')], ['一粒万倍日', next('一粒万倍日')]].filter(([, n]) => n !== null);
   const own = !tempBirth && birth && b === birth;
-  const streak = own ? visitStreak() : 0;
+  const ss = own ? streakState() : null;
 
   const first = rows.slice(0, 3).reduce((a,o) => a + o.r.score, 0) / Math.min(3, rows.length);
   const last = rows.slice(-3).reduce((a,o) => a + o.r.score, 0) / Math.min(3, rows.length);
@@ -719,7 +769,7 @@ function renderWeek(b){
   $('weekPanel').innerHTML = `
     <div class="history-head">
       <div><h2 style="margin-bottom:2px">最近の運勢</h2><p class="note" style="margin:0">過去6日＋今日。明日の運勢は明日のお楽しみです。</p></div>
-      ${own ? `<div class="streak"><b>${streak}日</b><small>連続で札を引いた日</small></div>` : ''}
+      ${own ? `<div class="streak"><b>${ss.cur}日</b><small>連続で札を引いた日</small><small class="guard">${'🧿'.repeat(ss.guards) || '―'}　身代わり守り</small></div>` : ''}
     </div>
     <div class="trend">${rows.map(({r,offset}) => {
       const hgt = 18 + Math.round(((r.score - minSc) / span) * 36);
@@ -738,11 +788,34 @@ function renderWeek(b){
         <div><small>${tags.join('・')}</small></div></div>`;
     }).join('')}</div>
     <p class="note" style="margin-top:10px"><b style="color:var(--gold)">7日間の流れ：${flow}</b>　${flowMsg}</p>
-    ${cd.length ? `<div class="count">${cd.map(([n, k]) => `<span>次の${n}：${k === 0 ? '<b>今日</b>' : `あと${k}日（${addDays(TODAY, k).slice(5).replace('-', '/')}）`}</span>`).join('')}</div>` : ''}
     <p class="note">金色の日は、この7日間の中で運勢スコアが最も高かった日です。未来の個人運勢は表示しません。</p>`;
 }
 
+/* ===== 季節の札（二十四節気ごとに絵柄が変わる） =====
+   [節気, 絵, 色, 季節のもの] 立春から順に */
+const SEASONS = [
+  ['立春','🌱','#a8d08d','芽吹き'], ['雨水','💧','#9cc9e8','雪どけ'], ['啓蟄','🐞','#e8a07a','虫の目覚め'], ['春分','🌸','#f3a6b8','桜'],
+  ['清明','🌿','#8fd1a0','若葉'], ['穀雨','🌧️','#9fb4d8','春の雨'], ['立夏','🎏','#7fb3e8','鯉のぼり'], ['小満','🌾','#d8c46a','麦'],
+  ['芒種','🐸','#7fc29b','田植え'], ['夏至','☀️','#f6c453','太陽'], ['小暑','🎐','#8ec5ff','風鈴'], ['大暑','🍉','#f08a8a','西瓜'],
+  ['立秋','🌻','#f2c14e','向日葵'], ['処暑','🦗','#b8c97a','虫の声'], ['白露','🍇','#a98bd6','葡萄'], ['秋分','🎑','#e8c87a','月見'],
+  ['寒露','🌰','#c49a6c','栗'], ['霜降','🍁','#e0785a','紅葉'], ['立冬','🍂','#c98b55','落ち葉'], ['小雪','❄️','#c9e1f5','初雪'],
+  ['大雪','⛄','#dfe9f3','雪'], ['冬至','🍊','#f3b04a','柚子'], ['小寒','🎍','#8fc79a','松'], ['大寒','🌨️','#b9c9e6','寒の雪']
+];
+const SEASON_OF = Object.fromEntries(SEASONS.map((s, i) => [s[0], i]));
+// その日がどの節気の期間か（データ範囲外は null）
+function seasonOf(s){ const n = termNear(s); return n ? SEASONS[SEASON_OF[n.name]] : null; }
+
 /* ===== 札の記録・称号（自分の札だけ、このスマホに保存） ===== */
+// 札図鑑：「節気|札」の組を集める（24節気×5札＝120枚）。記録の古い日が消えても図鑑は残す
+const LS_ZUKAN = 'koyomi.zukan';
+function readZukan(){
+  let a = [];
+  try{ a = JSON.parse(store.get(LS_ZUKAN) || '[]'); if (!Array.isArray(a)) a = []; }catch(e){ a = []; }
+  const set = new Set(a.filter(k => typeof k === 'string'));
+  Object.entries(readDraws()).forEach(([d, r]) => { const se = seasonOf(d); if (se) set.add(`${se[0]}|${r}`); });
+  return set;
+}
+function addZukan(key){ const s = readZukan(); s.add(key); store.set(LS_ZUKAN, JSON.stringify([...s])); }
 const LS_DRAWS = 'koyomi.draws';
 const RANKS = ['大吉','吉','中吉','小吉','末吉'];
 function readDraws(){
@@ -751,14 +824,10 @@ function readDraws(){
 function recordDraw(rank){
   const o = readDraws();
   o[TODAY] = rank;
+  const se = seasonOf(TODAY);
+  if (se) addZukan(`${se[0]}|${rank}`);
   const keys = Object.keys(o).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k) && RANKS.includes(o[k])).sort().slice(-400);
   store.set(LS_DRAWS, JSON.stringify(Object.fromEntries(keys.map(k => [k, o[k]]))));
-}
-function maxStreak(){
-  const days = readVisits().sort();
-  let best = 0, cur = 0, prev = null;
-  days.forEach(d => { cur = prev && addDays(prev, 1) === d ? cur + 1 : 1; best = Math.max(best, cur); prev = d; });
-  return best;
 }
 // 称号：[絵, 名前, 条件の説明, 判定]
 const BADGES = [
@@ -773,30 +842,49 @@ const BADGES = [
   ['🐯', '寅の札', '寅の日に引く', s => s.days.some(x => x.kichi.some(k => k[0] === '寅の日'))],
   ['🌑', '新月の札', '旧暦1日（新月）に引く', s => s.days.some(x => x.ld === 1)],
   ['🎑', '十五夜の札', '旧暦15日に引く', s => s.days.some(x => x.ld === 15)],
-  ['🍃', '節気の札', '二十四節気の日に引く', s => s.days.some(x => x.term)]
+  ['🍃', '節気の札', '二十四節気の日に引く', s => s.days.some(x => x.term)],
+  ['🧿', '守られた日', '身代わり守りを使う', s => s.guardUsed > 0],
+  ['🗾', '四季めぐり', '春夏秋冬すべての季節で引く', s => [0,6,12,18].every(i => SEASONS.slice(i, i + 6).some(se => [...s.zukan].some(k => k.startsWith(se[0] + '|'))))],
+  ['🏆', '季節の大吉', 'どこかの季節で5札そろえる', s => SEASONS.some(([n]) => RANKS.every(k => s.zukan.has(`${n}|${k}`)))]
 ];
 function drawStats(){
   const o = readDraws(), dates = Object.keys(o).sort();
   const count = Object.fromEntries(RANKS.map(k => [k, 0]));
   dates.forEach(d => { count[o[d]]++; });
-  return { total: dates.length, count, streak: maxStreak(), days: dates.map(dayInfo).filter(Boolean) };
+  const ss = streakState();
+  return { total: dates.length, count, streak: ss.best, guardUsed: ss.used.length, zukan: readZukan(), days: dates.map(dayInfo).filter(Boolean) };
 }
 function renderRecord(newly){
-  const s = drawStats();
+  const s = drawStats(), ss = streakState(), zk = readZukan(), nowSe = seasonOf(TODAY);
   const got = BADGES.filter(b => b[3](s)).length;
   $('recordPanel').innerHTML = `
     <h2>札の記録</h2>
     <p class="note" style="margin-top:-4px">これまで ${s.total}日 引きました（最長 ${s.streak}日連続）</p>
     <div class="ranks">${RANKS.map(k => `<div><b>${k}</b><span>${s.count[k]}</span></div>`).join('')}</div>
-    <h2 style="font-size:15px">称号 ${got}/${BADGES.length}</h2>
+    <p class="note">🧿 身代わり守り：${ss.guards}/${GUARD_MAX}つ　次の守りまであと${ss.toNext}日<br>7日続けて引くごとに1つもらえます。引き忘れた日があっても、守りが1日分の連続を守ります。守りが足りずに途切れると、持っていた守りもなくなります。${ss.used.length ? `<br>これまでに守られた日：${ss.used.slice(-3).map(d => d.slice(5).replace('-', '/')).join('、')}` : ''}</p>
+    <h2 style="font-size:15px;margin-top:14px">季節の札図鑑 ${zk.size}/${SEASONS.length * RANKS.length}</h2>
+    <p class="note" style="margin-top:-6px">二十四節気ごとに絵柄が変わります。季節が過ぎると、その季節の札は1年後まで引けません。</p>
+    <div class="zukan">${SEASONS.map(([n, e]) => {
+      const have = RANKS.filter(k => zk.has(`${n}|${k}`));
+      const cls = [nowSe && nowSe[0] === n ? 'now' : '', have.length === RANKS.length ? 'done' : '', have.length ? '' : 'empty'].join(' ');
+      return `<div class="zk ${cls}"><div class="e">${e}</div><span class="nm">${n}</span><div class="rs">${RANKS.map(k => `<i class="${zk.has(`${n}|${k}`) ? 'on' : ''}">${k[0]}</i>`).join('')}</div></div>`;
+    }).join('')}</div>
+    <h2 style="font-size:15px;margin-top:14px">称号 ${got}/${BADGES.length}</h2>
     <div class="badges">${BADGES.map(([ic, name, cond, ok]) => `<div class="badge ${ok(s) ? 'on' : ''}"><b>${ic}</b>${name}<small>${cond}</small></div>`).join('')}</div>`;
-  if (newly && newly.length) toast(`称号を手に入れました：${newly.join('・')}`);
+  (newly || []).forEach(m => toast(m));
 }
+// お知らせは重ならないよう順番に出す
+const toastQ = [];
 function toast(msg){
+  toastQ.push(msg);
+  if (toastQ.length === 1) showToast();
+}
+function showToast(){
+  if (!toastQ.length) return;
   const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
+  el.className = 'toast'; el.textContent = toastQ[0];
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3200);
+  setTimeout(() => { el.remove(); toastQ.shift(); showToast(); }, 3000);
 }
 
 /* ===== ガチャ演出 ===== */
@@ -814,13 +902,17 @@ function draw(){
   const r = personal(INFO, honmeiOf(b), getsumeiOf(b));
   // 称号は「引く前」と「引いた後」を比べて、新しく取れたものを知らせる
   const before = own ? BADGES.filter(x => x[3](drawStats())).map(x => x[1]) : [];
+  const ssBefore = own ? streakState() : null, zkBefore = own ? readZukan() : null;
+  const firstToday = own && !readVisits().includes(TODAY);
   if (own){ recordVisit(); recordDraw(r.rank); }
-  const sp = specialOf(INFO);
+  const sp = specialOf(INFO), se = seasonOf(TODAY);
   const card = $('card');
   card.classList.remove('flip');
   $('rays').classList.remove('on');
   $('cardFront').className = 'face front' + (sp ? ' ' + sp[0] : '');
-  $('cardSp').textContent = sp ? sp[1] : '';
+  $('cardFront').style.setProperty('--sc', se ? se[2] : 'transparent');
+  $('cardSp').textContent = sp ? sp[1] : se ? `${se[1]} ${se[0]}の札` : '';
+  $('cardSp').className = 'sp' + (sp ? '' : ' season');
   $('rankText').textContent = r.rank;
   $('rankStar').textContent = STAR[r.honmei];
   card.classList.add('shake');
@@ -837,7 +929,15 @@ function draw(){
       if (own){
         $('recordPanel').classList.remove('hidden');
         const after = BADGES.filter(x => x[3](drawStats())).map(x => x[1]);
-        renderRecord(after.filter(n => !before.includes(n)));
+        const ssAfter = streakState(), msgs = [];
+        // 前回引いた日から今日までの間で、守りが使われた日
+        const lastBefore = readVisits().filter(d => d < TODAY).pop();
+        const saved = firstToday ? ssAfter.used.filter(d => !lastBefore || d > lastBefore) : [];
+        if (saved.length) msgs.push(`🧿 身代わり守りが、引き忘れた${saved.length}日分の連続を守りました`);
+        if (ssAfter.earned.length > ssBefore.earned.length) msgs.push(`🧿 ${GUARD_EVERY}日連続！身代わり守りを手に入れました`);
+        if (se && !zkBefore.has(`${se[0]}|${r.rank}`)) msgs.push(`${se[1]} 新しい札「${se[0]}の${r.rank}」を図鑑に登録しました`);
+        after.filter(n => !before.includes(n)).forEach(n => msgs.push(`称号を手に入れました：${n}`));
+        renderRecord(msgs);
       }
       $('draw').textContent = 'もう一度めくる';
       $('draw').disabled = false;
@@ -857,6 +957,33 @@ function burst(n, kind){
     st.appendChild(p);
     setTimeout(() => p.remove(), 1500);
   }
+}
+
+/* ===== 次の大きな日（カウントダウン） ===== */
+function nextDay(test){
+  for (let i = 0; i < 400; i++){ const s = addDays(TODAY, i), x = dayInfo(s); if (!x) return null; if (test(x)) return { s, x, n: i }; }
+  return null;
+}
+function renderCount(){
+  if (!INFO){ $('countPanel').classList.add('hidden'); return; }
+  const has = n => x => x.kichi.some(k => k[0] === n);
+  const md = s => { const [, m, d] = s.split('-').map(Number); return `${m}/${d}（${'日月火水木金土'[new Date(toUTC(s)).getUTCDay()]}）`; };
+  const box = (label, f, note, wide) => {
+    if (!f) return '';
+    const hot = f.n === 0;
+    return `<div class="${hot ? 'hot' : ''} ${wide ? 'wide' : ''}"><small>${label}</small><b>${hot ? '今日！' : `あと${f.n}<em>日</em>`}</b><span>${md(f.s)}${note ? note(f) : ''}</span></div>`;
+  };
+  const tensha = nextDay(has('天赦日')), manbai = nextDay(has('一粒万倍日')), good = nextDay(dayGood);
+  const se = seasonOf(TODAY), nt = termNext(TODAY);
+  const nextSe = nt ? SEASONS[SEASON_OF[nt.name]] : null;
+  $('countPanel').innerHTML = `
+    <h2>次の大きな日</h2>
+    <div class="cdown">
+      ${box('🌈 天赦日（最上の吉日）', tensha, f => f.x.kichi.some(k => k[0] === '一粒万倍日') ? '<br>一粒万倍日と重なる日' : '', true)}
+      ${box('💰 一粒万倍日', manbai)}
+      ${box('✨ 開運日', good)}
+      ${se && nextSe ? `<div class="wide"><small>${se[1]} いまは「${se[0]}の札」（${se[3]}）</small><b>あと${nt.in}<em>日</em></b><span>${md(addDays(TODAY, nt.in))}から ${nextSe[1]}「${nextSe[0]}の札」に変わります</span></div>` : ''}
+    </div>`;
 }
 
 /* ===== 吉日カレンダー（暦注のみ。個人の未来の運勢は出さない） ===== */
@@ -928,7 +1055,8 @@ async function shareCard(r, charm){
   g.fillStyle = cardG; g.beginPath(); g.roundRect(cx, cy, cw, ch, 48); g.fill(); g.restore();
   g.strokeStyle = sp ? '#e6b85c' : '#fff3cf'; g.lineWidth = 8; g.beginPath(); g.roundRect(cx, cy, cw, ch, 48); g.stroke();
   g.textAlign = 'center'; g.fillStyle = '#8a6a3a';
-  g.font = `700 34px ${GO}`; g.fillText(sp ? sp[1] : '本日の運勢', W / 2, cy + 110);
+  g.font = `700 34px ${GO}`; const se = seasonOf(TODAY);
+  g.fillText(sp ? sp[1] : se ? `${se[0]}の札` : '本日の運勢', W / 2, cy + 110);
   g.fillStyle = '#3b2410'; g.font = `800 210px ${MIN}`; g.fillText(r.rank, W / 2, cy + 370);
   g.fillStyle = '#8a6a3a'; g.font = `700 40px ${GO}`; g.fillText(STAR[r.honmei], W / 2, cy + 470);
   // 長い言葉は札の幅に収まるまで小さくする
@@ -1030,6 +1158,7 @@ $('changeBtn').onclick = () => { tempBirth = null; showSetup(false); };
 
 $('today').textContent = wareki(TODAY);
 renderKoyomi();
+renderCount();
 renderCal();
 // 開いたまま日付が変わったら読み直す（ホーム画面アプリやタブを開きっぱなしのとき）
 function checkDate(){ if (jstToday() !== TODAY) location.reload(); }
