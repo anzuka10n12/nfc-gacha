@@ -27,7 +27,7 @@ def find_term(target, guess):
 # 二十四節気（春分=0度 から15度刻み）
 terms = {}
 names = ['春分','清明','穀雨','立夏','小満','芒種','夏至','小暑','大暑','立秋','処暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至','小寒','大寒','立春','雨水','啓蟄']
-for y in range(2024, 2030):
+for y in range(2024, 2034):
     for i in range(24):
         deg = i * 15
         # おおよその日付: 春分≒3/20
@@ -38,7 +38,7 @@ for y in range(2024, 2030):
 # 朔（新月）
 nm = []
 d = ephem.Date(dt.datetime(2024,10,1))
-while d < ephem.Date(dt.datetime(2030,3,1)):
+while d < ephem.Date(dt.datetime(2033,3,1)):
     d = ephem.next_new_moon(d); nm.append(jst_date(d)); d = ephem.Date(d + 1)
 
 # 旧暦（天保暦の規則：中気を含まない月を閏月。冬至を含む月を11月）
@@ -110,7 +110,10 @@ print('--- 日家九星の切替点（遁の向きが変わる日） ---')
 prevstep = None
 for (d0,s0,g0),(d1,s1,g1) in zip(stars, stars[1:]):
     step = (s1 - s0) % 9
-    if step not in (1,8): print('遁の切替（同じ星が2日続く）', d0, s0, s1)
+    if step not in (1,8):
+        print('遁の切替（同じ星が2日続く）', d0, s0, s1)
+        # 切替の日（2日目）は甲子日で、陽遁は一白・陰遁は九紫から始まるはず
+        if not (step == 0 and g1 == 0 and s1 in (1, 9)): errs['kyusei'] = errs.get('kyusei', 0) + 1; print('  ↑切替の規則と合いません')
     if prevstep is not None and step != prevstep:
         print(d1, '星', s1, '干支番号', g1, '(甲子=0/甲午=30)', '陽遁' if step==1 else '陰遁')
     prevstep = step
@@ -140,6 +143,7 @@ s = ''.join(out)
 embedded = re.search(r"const SETSU = '(\d+)'", html).group(1)
 diff = [(1900 + i // 12, i % 12 + 1) for i, (p, q) in enumerate(zip(s, embedded)) if p != q]
 print('節入り日表', len(embedded), '桁', '不一致', len(diff), diff[:10])
+print('日家九星の切替', '不一致', errs.get('kyusei', 0))
 ok = not any(errs.values()) and not diff and len(s) == len(embedded)
 print('結果:', 'すべて一致' if ok else '不一致あり')
 sys.exit(0 if ok else 1)
