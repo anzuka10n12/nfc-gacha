@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#120b26">
 <title>NFC 暦占い</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="暦占い">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -131,6 +136,62 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .charm small{display:block;color:var(--sub);font-size:10px;letter-spacing:.14em}
 .charm b{display:block;color:var(--gold);font-family:"Shippori Mincho",serif;font-size:18px;margin-top:2px}
 
+.charm .tip{display:block;font-size:12px;color:var(--ink);margin-top:4px}
+.charm .src{display:block;font-size:10px;color:var(--sub);margin-top:2px;letter-spacing:.06em}
+
+/* 特別札（天赦日・一粒万倍日） */
+.card .front.tensha{border-color:#ffe08a;box-shadow:0 0 0 3px rgba(255,255,255,.6),0 0 80px 0 rgba(255,200,120,1)}
+.card .front.tensha::before{content:"";position:absolute;inset:6px;border-radius:13px;pointer-events:none;
+  background:conic-gradient(from 0deg,#ff9aa8,#ffe08a,#8fe3b5,#8ec5ff,#cdb3f5,#ff9aa8);opacity:.22}
+.card .front.manbai{border-color:#e6b85c;box-shadow:0 0 70px -6px rgba(255,214,107,1)}
+.card .front .sp{position:absolute;top:12px;left:0;right:0;font-size:11px;letter-spacing:.16em;color:#b2742a;font-weight:700}
+.pt.coin{width:12px;height:12px;background:radial-gradient(circle at 35% 35%,#fff6c8,#e6b85c 60%,#a8741f);box-shadow:0 0 8px #ffd36b}
+
+/* 明日の暦 */
+.tomorrow{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
+.tomorrow b{color:var(--gold)}
+
+/* 吉日カレンダー */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-nav button{background:transparent;border:1px solid var(--line);color:var(--gold);border-radius:10px;width:40px;height:34px;font:inherit;font-size:16px;cursor:pointer}
+.cal-nav button:disabled{opacity:.3;cursor:default}
+.cal-nav b{font-family:"Shippori Mincho",serif;font-size:18px;color:var(--gold)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .wh{text-align:center;font-size:10px;color:var(--sub)}
+.cal .wh.su{color:var(--bad)} .cal .wh.sa{color:#8ec5ff}
+.cd{position:relative;min-height:54px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);padding:3px 1px 2px;text-align:center;cursor:pointer;font:inherit;color:var(--ink);min-width:0}
+.cd .n{display:block;font-size:13px;font-weight:700;line-height:1.2}
+.cd .rk{display:block;font-size:9px;color:var(--sub);line-height:1.2}
+.cd .bd{display:flex;justify-content:center;gap:2px;margin-top:2px;flex-wrap:wrap}
+.cd .bd i{font-style:normal;font-size:8px;line-height:1;padding:2px;border-radius:4px;background:rgba(242,211,138,.22);color:var(--gold)}
+.cd .bd i.g{background:rgba(143,227,181,.2);color:var(--good)}
+.cd .bd i.x{background:rgba(255,154,168,.18);color:var(--bad)}
+.cd.top{background:rgba(242,211,138,.15);border-color:rgba(242,211,138,.6)}
+.cd.today{outline:2px solid #fff;outline-offset:-1px}
+.cd.sel{background:rgba(205,179,245,.2);border-color:#cdb3f5}
+.cd.empty{visibility:hidden}
+.cal-detail{margin-top:10px;font-size:13px;min-height:2.6em}
+
+/* 記録・称号 */
+.ranks{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0 10px}
+.ranks div{text-align:center;border:1px solid var(--line);border-radius:12px;padding:6px 0}
+.ranks b{display:block;font-family:"Shippori Mincho",serif;font-size:15px;color:var(--gold)}
+.ranks span{font-size:16px;font-weight:700}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.badge{border-radius:12px;padding:8px 4px;text-align:center;font-size:11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(183,170,205,.5)}
+.badge b{display:block;font-size:20px;line-height:1.3;filter:grayscale(1);opacity:.35}
+.badge.on{color:var(--ink);border-color:var(--line);background:rgba(242,211,138,.1)}
+.badge.on b{filter:none;opacity:1}
+.badge small{display:block;font-size:9px;color:var(--sub)}
+
+/* 相性 */
+.aisho{margin:12px 0 4px;padding:12px 14px;border-radius:14px;border:1px solid rgba(205,179,245,.45);background:rgba(205,179,245,.1)}
+.aisho b{color:#e2d2ff;font-family:"Shippori Mincho",serif;font-size:17px}
+
+/* トースト */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(20,12,40,.95);border:1px solid var(--line);color:var(--ink);
+  padding:10px 16px;border-radius:12px;font-size:13px;z-index:10;max-width:90vw;text-align:center}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -160,7 +221,7 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
       <div class="rays" id="rays"></div>
       <div class="card" id="card">
         <div class="face back"><div class="sigil">暦</div></div>
-        <div class="face front"><div><div class="rank-sub" id="rankSub">本日の運勢</div><div class="rank" id="rankText">大吉</div><div class="rank-sub" id="rankStar"></div></div></div>
+        <div class="face front" id="cardFront"><span class="sp" id="cardSp"></span><div><div class="rank-sub" id="rankSub">本日の運勢</div><div class="rank" id="rankText">大吉</div><div class="rank-sub" id="rankStar"></div></div></div>
       </div>
     </div>
     <button class="btn" id="draw">今日の札を引く</button>
@@ -175,8 +236,12 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
   <section class="panel hidden fade" id="weekPanel"></section>
   <!-- 九星盤 -->
   <section class="panel hidden fade" id="boardPanel"></section>
+  <!-- 札の記録・称号 -->
+  <section class="panel hidden fade" id="recordPanel"></section>
   <!-- 今日の暦 -->
   <section class="panel fade" id="koyomi"></section>
+  <!-- 吉日カレンダー -->
+  <section class="panel fade" id="calPanel"></section>
 
   <div class="panel hidden" id="others">
     <button class="btn ghost hidden" id="backSelf" style="margin-top:0">自分の運勢にもどる</button>
@@ -185,7 +250,8 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
   </div>
 
   <p class="foot">
-    六曜・干支・日家九星・十二直・選日・二十四節気は、太陽と月の位置の天文計算と、伝統的な暦注の規則から求めています（公開されている暦と照合済み）。<br>
+    六曜・干支・日家九星・十二直・選日・二十四節気は、太陽と月の位置の天文計算と、伝統的な暦注の規則から求めています（天文計算による再計算と、公開されている吉日一覧で照合済み）。<br>
+    本命星・月命星は、生まれた年・月の節入り日（立春・啓蟄など。1900〜2100年を天文計算）で区切って求めています。<br>
     暦注や九星気学は昔からの習わしで、科学的な根拠があるものではありません。参考としてお楽しみください。
   </p>
 </main>
@@ -245,6 +311,9 @@ const PALACE = {
 // 一粒万倍日（節月の地支 → その日の地支）
 const MANBAI = {2:'丑午',3:'酉寅',4:'子卯',5:'卯辰',6:'巳午',7:'酉午',8:'子未',9:'卯申',10:'酉午',11:'酉戌',0:'亥子',1:'卯子'};
 const FUJOJU = {1:[3,11,19,27],7:[3,11,19,27],2:[2,10,18,26],8:[2,10,18,26],3:[1,9,17,25],9:[1,9,17,25],4:[4,12,20,28],10:[4,12,20,28],5:[5,13,21,29],11:[5,13,21,29],6:[6,14,22,30],12:[6,14,22,30]};
+// 節入り日（1900〜2100年。1年12桁＝1月小寒・2月立春・3月啓蟄…12月大雪のJSTでの日。tools/verify.py の天文計算で作成）
+const SETSU_FROM = 1900;
+const SETSU = '646566888987646566888988656667888988657677899988756566788987646566888988656667888988657677899988756566788987646566888988656666888988657677899988756566788987646566888988656666888988657667899988756566788987646566888988646566888988657667889988656566788887646566888988646566888988656667889988656566788887646566888987646566888988656667889988656566788887646566888987646566888988656667889988656566788877646566788987646566888988656667888988656566788877646566788987646566888988656666888988656566788877646566788987646566888988656666888988656566788877646566788987646566888988656666888988656556788877646566788987646566888988656566888988656556778877546566788887646566888988646566888988655556778877546566788887646566888987646566888988655556778877546566788887646566788987646566888988655556777877546566788877646566788987646566888988655556777877546566788877646566788987646566888988655555777877546566788877646566788987646566888988655555777877546566788877646566788987646566888988655555777877546556778877646566788887646566888988655455777877546556778877646566788887646566888988645455777877545556778877546566788887646566788987645455777877545556778877546566788887646566788987645455777877545556777877546566788877646566788987645455777877545555777877546566788877646566788987645455777877545555777877546566788877646566788987645455777877545555777877546556778877646566788987645455777877545455777877546556778877646566788887645455777877545455777877546556778877646566788887645455677877535455777877545556778877546566788887645455677877535455777877545556777877546566788887645455677876535455777877545555777877546566788887645455677876535455777877545555777877546566788877645455677876535455777877545555777877546566788877645455677876535455777877545555777877546556778877645455677876535455777877545455777877546556778877645455677776535455777877545455777877546556778877645455677776535455677877535455777877545556778877645455677776535455677877535455777877545555777877545455677776535455677876535455777877545555777877545455677766535455677876535455777877545555777877545455677766535455677876535455777877545555777877545445667766535455677876535455777877545555777877545445667766535455677776535455777877545455777877545445667766535455677776535455677877545455777877545445667766535455677776535455677877545455777877544445666766535455677776535455677877535455777877544444666766435455677776535455677876535455777877544444666766435455677766535455677876535455777877545555777877';
 
 /* ===== 日付 ===== */
 function jstToday(){ return new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Tokyo' }).format(new Date()); }
@@ -301,15 +370,33 @@ function relation(s, honmei){
   if (GEN[b] === a) return '退気';   // あなたがsを生む
   return '剋';
 }
-// 本命星（立春前の生まれは前年扱い）
+// その年・月の節入り日（表の範囲外は平均的な日で代用）
+function setsuDay(y, m){
+  const i = (y - SETSU_FROM) * 12 + (m - 1);
+  return i >= 0 && i < SETSU.length ? +SETSU[i] : [6,4,6,5,6,6,7,8,8,8,7,7][m - 1];
+}
+// 本命星（立春前の生まれは前年扱い。立春は年により2月3〜5日）
 function honmeiOf(birth){
   let [y, m, d] = birth.split('-').map(Number);
-  if (m === 1 || (m === 2 && d < 4)) y--;
+  if (m === 1 || (m === 2 && d < setsuDay(y, 2))) y--;
   const n = (11 - (y % 9)) % 9;
   return n === 0 ? 9 : n;
 }
+// 月命星（生まれた節月の星。寅月＝2月節から数える）
+// 一白・四緑・七赤年は寅月が八白、二黒・五黄・八白年は二黒、三碧・六白・九紫年は五黄から逆行
+function getsumeiOf(birth){
+  const [y, m, d] = birth.split('-').map(Number);
+  let mm = d >= setsuDay(y, m) ? m : m - 1;
+  if (mm === 0) mm = 12;
+  const idx = (mm - 2 + 12) % 12;
+  const h = honmeiOf(birth);
+  const start = [1,4,7].includes(h) ? 8 : [2,5,8].includes(h) ? 2 : 5;
+  return ((start - 1 - idx) % 9 + 9) % 9 + 1;
+}
+// 五行の相剋（aがbを剋す）
+const KOKU_REL = { '木':'土', '土':'水', '水':'火', '火':'金', '金':'木' };
 
-function personal(info, honmei){
+function personal(info, honmei, getsumei){
   const c = info.star;
   const myDir = dirOf(c, honmei);
   const goDir = dirOf(c, 5);
@@ -321,8 +408,9 @@ function personal(info, honmei){
   const order = { '生気':0, '比和':1, '退気':2 };
   const good = Object.keys(OPP).map(dir => ({ dir, s: starAt(c, dir) }))
     .filter(x => !bad[x.dir] && x.s !== 5 && x.s !== honmei && order[relation(x.s, honmei)] !== undefined)
-    .map(x => ({ ...x, rel: relation(x.s, honmei) }))
-    .sort((a, b) => order[a.rel] - order[b.rel]);
+    .map(x => ({ ...x, rel: relation(x.s, honmei), both: !!getsumei && x.s !== getsumei && order[relation(x.s, getsumei)] !== undefined }))
+    // 本命星・月命星の両方に吉（最大吉方）を優先し、次に本命星との相性順
+    .sort((a, b) => (b.both - a.both) || (order[a.rel] - order[b.rel]));
   // 点数：自分のいる宮＋中宮星との相性＋その日の暦注
   const P = PALACE[myDir];
   let score = P.score;
@@ -364,14 +452,97 @@ function visitStreak(){
   }
   return n;
 }
-const CHARM_WORDS = [
-  '急がず、ひとつずつ整える', '迷ったら、丁寧な方を選ぶ', '小さな一歩を先に出す',
-  '人の話を最後まで聞く', '今日は余白を残して動く', '決める前に一度だけ確認する',
-  'できたことを一つ数える', '言葉を少しやわらかくする', '後回しを一つだけ終わらせる',
-  '身近な人への感謝を言葉にする', '整えてから始める', '無理に答えを急がない'
+/* ===== 今日の御守り言葉 =====
+   昔から言い伝えられてきたことわざ・古典の言葉と、今日の過ごし方のひと言。
+   [言葉, ひと言, 出典] */
+const CHARMS = [
+  ['急がば回れ', '近道より、確かな道を選ぶ', 'ことわざ'],
+  ['石の上にも三年', '続けていることを、今日も少しだけ', 'ことわざ'],
+  ['塵も積もれば山となる', '小さな作業を一つ片付ける', 'ことわざ'],
+  ['七転び八起き', 'うまくいかなくても、もう一度だけ', 'ことわざ'],
+  ['笑う門には福来たる', '最初のあいさつを笑顔で', 'ことわざ'],
+  ['案ずるより産むが易し', '迷っていることに手をつける', 'ことわざ'],
+  ['雨降って地固まる', 'こじれた話こそ、丁寧に向き合う', 'ことわざ'],
+  ['果報は寝て待て', 'やることをやったら、焦らず待つ', 'ことわざ'],
+  ['千里の行も足下に始まる', '大きな目標の最初の一歩を', '老子'],
+  ['百聞は一見に如かず', '自分の目で確かめてから決める', 'ことわざ'],
+  ['情けは人の為ならず', '親切は、めぐって自分に返る', 'ことわざ'],
+  ['能ある鷹は爪を隠す', '実力は、静かに仕事で見せる', 'ことわざ'],
+  ['早起きは三文の徳', 'いつもより少し早く動き出す', 'ことわざ'],
+  ['備えあれば憂いなし', '明日の準備を今日のうちに', 'ことわざ'],
+  ['二兎を追う者は一兎をも得ず', '今日はひとつに絞る', 'ことわざ'],
+  ['初心忘るべからず', '始めたころの気持ちを思い出す', '世阿弥『花鏡』'],
+  ['一期一会', '今日会う人との時間を大切に', '茶道の心得'],
+  ['和を以て貴しと為す', '意見の違いは、話し合いで', '十七条憲法'],
+  ['為せば成る', 'できない理由より、できる方法を', '上杉鷹山'],
+  ['残り物には福がある', '譲ったほうに、思わぬ良いことが', 'ことわざ'],
+  ['好きこそ物の上手なれ', '好きなことに少し時間を使う', 'ことわざ'],
+  ['実るほど頭を垂れる稲穂かな', 'うまくいった日ほど、謙虚に', 'ことわざ'],
+  ['聞くは一時の恥、聞かぬは一生の恥', 'わからないことは、今日聞く', 'ことわざ'],
+  ['人事を尽くして天命を待つ', 'できることをやり切ったら、任せる', '故事'],
+  ['失敗は成功のもと', 'うまくいかなかった理由を一つ書き出す', 'ことわざ'],
+  ['灯台下暗し', '答えは、案外身近なところに', 'ことわざ'],
+  ['損して得取れ', '目先より、長い目で選ぶ', 'ことわざ'],
+  ['思い立ったが吉日', '気になっていた連絡を今日する', 'ことわざ'],
+  ['一日の計は朝にあり', '朝のうちに、今日の段取りを', 'ことわざ'],
+  ['腹八分目に医者いらず', '食事は少し控えめに', 'ことわざ'],
+  ['転ばぬ先の杖', '出す前に、もう一度だけ確認', 'ことわざ'],
+  ['三人寄れば文殊の知恵', '一人で抱えず、相談してみる', 'ことわざ'],
+  ['急いては事を仕損じる', '慌てたときこそ、深呼吸を一つ', 'ことわざ'],
+  ['待てば海路の日和あり', '今は流れが来るのを待つとき', 'ことわざ'],
+  ['勝って兜の緒を締めよ', 'うまくいった後こそ見直しを', 'ことわざ'],
+  ['習うより慣れよ', 'まずは一度、手を動かしてみる', 'ことわざ'],
+  ['渡る世間に鬼はなし', '困ったら、素直に頼ってみる', 'ことわざ'],
+  ['温故知新', '昔のやり方に、新しいヒントがある', '論語'],
+  ['過ぎたるは猶及ばざるが如し', '今日は「ほどほど」を意識する', '論語'],
+  ['己の欲せざる所は人に施す勿れ', '自分がされて嫌なことはしない', '論語'],
+  ['学びて時に之を習う、亦説ばしからずや', '覚えたことを一度おさらいする', '論語'],
+  ['徳は孤ならず、必ず隣あり', '誠実さは、必ず誰かが見ている', '論語'],
+  ['足るを知る者は富む', 'すでにあるものを数えてみる', '老子'],
+  ['上善は水の若し', '逆らわず、しなやかに', '老子'],
+  ['天は自ら助くる者を助く', 'まず自分から動く', '西洋のことわざ'],
+  ['明日は明日の風が吹く', '済んだことは、くよくよしない', 'ことわざ'],
+  ['終わりよければすべてよし', '今日の締めくくりを丁寧に', 'ことわざ'],
+  ['蒔かぬ種は生えぬ', '小さな種まきを一つしておく', 'ことわざ'],
+  ['桃栗三年柿八年', '実りには時間がかかるもの', 'ことわざ'],
+  ['口は災いの元', '言う前に、ひと呼吸おく', 'ことわざ'],
+  ['捨てる神あれば拾う神あり', 'だめでも、別の道がきっとある', 'ことわざ'],
+  ['鉄は熱いうちに打て', 'やる気のあるうちに始める', 'ことわざ'],
+  ['住めば都', '今いる場所の良さを見つける', 'ことわざ'],
+  ['日日是好日', 'どんな日も、かけがえのない一日', '禅語（雲門）'],
+  ['行雲流水', '流れにまかせて、こだわらない', '禅語'],
+  ['和顔愛語', 'やわらかい表情と、やさしい言葉で', '仏教の言葉'],
+  ['知足', '「もう十分」と思える心を持つ', '仏教の言葉'],
+  ['一意専心', '一つのことに心を込める', '四字熟語'],
+  ['有言実行', '口にしたことを一つやり遂げる', '四字熟語'],
+  ['油断大敵', '慣れた作業ほど、気をつけて', '四字熟語'],
+  ['以心伝心', '言葉にしなくても伝わる思いがある', '禅語'],
+  ['晴耕雨読', '天気に合わせて、無理なく過ごす', '四字熟語'],
+  ['春風駘蕩', 'のんびり、おおらかに', '四字熟語'],
+  ['雲外蒼天', '雲の向こうには、青空がある', '四字熟語']
 ];
-function charmWord(honmei, info){
-  return CHARM_WORDS[(info.g + honmei * 3 + info.star) % CHARM_WORDS.length];
+// 文字列から決まった数を作る（FNV-1a）
+function hashStr(s){ let h = 2166136261; for (const ch of s){ h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+// 種から並べ替え（同じ種なら同じ順番）
+function shuffled(n, seed){
+  const a = Array.from({ length: n }, (_, i) => i);
+  let x = seed >>> 0;
+  const rnd = () => { x = (x + 0x6D2B79F5) >>> 0; let t = Math.imul(x ^ (x >>> 15), 1 | x); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  for (let i = n - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+// 本命星ごとに全部の言葉を一巡させる（巡回中は同じ言葉が出ない。巡の変わり目も前日と重ならないようにする）
+function charmOf(date, honmei){
+  const n = CHARMS.length;
+  const day = Math.floor(toUTC(date) / 86400000) + honmei * 7;
+  const round = Math.floor(day / n), pos = day % n;
+  const order = r => {
+    const a = shuffled(n, hashStr(`charm#${honmei}#${r}`));
+    const prevLast = shuffled(n, hashStr(`charm#${honmei}#${r - 1}`))[n - 1];
+    if (a[0] === prevLast) [a[0], a[1]] = [a[1], a[0]];
+    return a;
+  };
+  return CHARMS[order(round)[pos]];
 }
 
 const TODAY = jstToday();
@@ -385,46 +556,72 @@ function wareki(s){
   return `${y}年${m}月${d}日（${wd}）・令和${y - 2018}年`;
 }
 
+function chipsHtml(kichi){
+  return kichi.map(([n, g]) => `<span class="chip ${g ? '' : 'bad'}">${n}</span>`).join('');
+}
 function renderKoyomi(){
   const x = INFO;
   if (!x){ $('koyomi').innerHTML = '<h2>今日の暦</h2><p>暦データの期間外です（2028年末まで）。</p>'; return; }
   const near = termNear(TODAY), next = termNext(TODAY);
   const termText = x.term ? `今日は「${x.term}」` : near ? `${near.name}（${near.ago}日前から）` : '';
+  // 明日の暦（個人の運勢は明日のお楽しみ。暦注だけ先に見せる）
+  const t = dayInfo(addDays(TODAY, 1));
+  const tomorrow = t ? `<div class="tomorrow">明日の暦：<b>${t.rokuyo}</b>・${t.kan}${t.shi}・${t.choku}${t.term ? `・<b>${t.term}</b>` : ''}
+      ${t.kichi.length ? `<div class="chips">${chipsHtml(t.kichi)}</div>` : ''}
+      ${t.kichi.some(k => k[0] === '天赦日') ? '<p class="note" style="margin-top:4px">明日は最上の吉日「天赦日」。特別な札が出ます。</p>' : ''}</div>` : '';
   $('koyomi').innerHTML = `
     <h2>今日の暦</h2>
     <dl class="kv">
-      <dt>旧暦</dt><dd>${x.leap ? '閏' : ''}${x.lm}月${x.ld}日</dd>
+      <dt>旧暦</dt><dd>${x.leap ? '閏' : ''}${x.lm}月${x.ld}日${x.ld === 1 ? '（新月）' : x.ld === 15 ? '（十五夜）' : ''}</dd>
       <dt>六曜</dt><dd><span class="big" style="font-size:17px">${x.rokuyo}</span>　${ROKUYO_DESC[x.rokuyo]}</dd>
       <dt>干支</dt><dd>${x.kan}${x.shi}（${'きのえ,きのと,ひのえ,ひのと,つちのえ,つちのと,かのえ,かのと,みずのえ,みずのと'.split(',')[x.g % 10]}・${'ね,うし,とら,う,たつ,み,うま,ひつじ,さる,とり,いぬ,い'.split(',')[x.branch]}）</dd>
       <dt>九星</dt><dd>${STAR[x.star]}（今日の中宮）</dd>
       <dt>十二直</dt><dd>${x.choku}　${CHOKU_DESC[x.choku]}</dd>
       <dt>節気</dt><dd>${termText}${next ? `／${next.name}まであと${next.in}日` : ''}</dd>
     </dl>
-    ${x.kichi.length ? `<div class="chips" style="margin-top:10px">${x.kichi.map(([n, g]) => `<span class="chip ${g ? '' : 'bad'}">${n}</span>`).join('')}</div>` : ''}
+    ${x.kichi.length ? `<div class="chips" style="margin-top:10px">${chipsHtml(x.kichi)}</div>` : ''}
+    ${tomorrow}
   `;
 }
 
+// 二人の本命星の相性（五行の相生・相剋）
+function aishoText(me, other){
+  const a = ELEM[other], b = ELEM[me];
+  if (a === b) return ['比和', '似た者どうし', '考え方や歩調が合いやすい間柄。気楽に付き合えますが、なれ合いには注意。'];
+  if (GEN[a] === b) return ['相生', 'あなたを支えてくれる人', 'この人はあなたの力を引き出してくれます。素直に頼ると、うまく回ります。'];
+  if (GEN[b] === a) return ['相生', 'あなたが支える人', 'あなたがこの人を伸ばす役回り。世話を焼くほど、信頼で返ってきます。'];
+  if (KOKU_REL[b] === a) return ['相剋', 'あなたが引っぱる人', 'あなたの言葉が強く響きやすい相手。言い方をやわらかくすると好相性に。'];
+  return ['相剋', '刺激をくれる人', '考え方の違いから学べる相手。ぶつかったら一度引いて、相手の立場で考えて。'];
+}
+
 function renderPersonal(b){
-  const h = honmeiOf(b);
-  const r = personal(INFO, h);
+  const h = honmeiOf(b), gm = getsumeiOf(b);
+  const r = personal(INFO, h, gm);
   const col = STAR_COLOR[r.luckyStar];
+  const charm = charmOf(TODAY, h);
   const badDirs = Object.entries(r.bad).filter(([, n]) => n.some(v => v === '五黄殺' || v === '暗剣殺'));
+  const other = tempBirth && birth;
+  const ai = other ? aishoText(honmeiOf(birth), h) : null;
   $('personal').innerHTML = `
-    <h2>${STAR[h]}のあなた</h2>
+    <h2>${STAR[h]}の${tempBirth ? 'この人' : 'あなた'}</h2>
+    <p class="note" style="margin:-6px 0 8px">本命星 ${STAR_S[h]}・月命星 ${STAR_S[gm]}</p>
     <p class="lead"><span class="big">${r.P.title}</span></p>
     <p class="lead">${r.P.msg}</p>
-    <div class="charm"><small>今日の御守り言葉</small><b>${charmWord(h, INFO)}</b></div>
-    <dl class="kv">
+    <div class="charm"><small>今日の御守り言葉</small><b>${charm[0]}</b><span class="tip">${charm[1]}</span><span class="src">― ${charm[2]}</span></div>
+    ${ai ? `<div class="aisho"><small style="color:var(--sub)">あなた（${STAR_S[honmeiOf(birth)]}）との相性：${ai[0]}</small><br><b>${ai[1]}</b><p class="note" style="margin-top:4px;color:var(--ink)">${ai[2]}</p></div>` : ''}
+    <dl class="kv" style="margin-top:12px">
       <dt>仕事</dt><dd>${r.P.work}</dd>
       <dt>人間関係</dt><dd>${r.P.love}</dd>
       <dt>今日の一手</dt><dd>${CHOKU_ACT[INFO.choku]}</dd>
       <dt>ラッキー色</dt><dd><span class="swatch" style="background:${col[1]}"></span>${col[0]}（${STAR_S[r.luckyStar]}の色）</dd>
     </dl>
     <h2 style="margin-top:16px;font-size:15px">今日の吉方位</h2>
-    <div class="dir-row">${r.good.length ? r.good.map(g => `<div class="dir"><b>${g.dir}</b><small>${STAR_S[g.s]}・${g.rel === '生気' ? '最大吉' : '吉'}</small></div>`).join('') : '<div class="dir"><b>なし</b><small>動くより留まる日</small></div>'}</div>
+    <div class="dir-row">${r.good.length ? r.good.map(g => `<div class="dir"><b>${g.dir}</b><small>${STAR_S[g.s]}・${g.both ? '最大吉方' : '吉方'}</small></div>`).join('') : '<div class="dir"><b>なし</b><small>動くより留まる日</small></div>'}</div>
     ${badDirs.length ? `<div class="dir-row">${badDirs.map(([d, n]) => `<div class="dir bad"><b>${d}</b><small>${n.filter(v => v === '五黄殺' || v === '暗剣殺').join('・')}（避けたい）</small></div>`).join('')}</div>` : ''}
-    <p class="note">${r.myDir === '中央' ? '本命星が中宮に入る日（八方ふさがり）。遠出や大きな決断は控えめに。' : `今日、${STAR_S[h]}は九星盤の「${r.myDir}」に回っています。`}</p>
+    <p class="note">${r.myDir === '中央' ? '本命星が中宮に入る日（八方ふさがり）。遠出や大きな決断は控えめに。' : `今日、${STAR_S[h]}は九星盤の「${r.myDir}」に回っています。`}最大吉方は、本命星と月命星の両方に吉の方位です。</p>
+    <button class="btn" id="shareBtn">今日の札を画像でシェア</button>
   `;
+  $('shareBtn').onclick = () => shareCard(r, charm);
   renderBoard(r);
   renderHours(h);
   renderWeek(b);
@@ -545,17 +742,85 @@ function renderWeek(b){
     <p class="note">金色の日は、この7日間の中で運勢スコアが最も高かった日です。未来の個人運勢は表示しません。</p>`;
 }
 
+/* ===== 札の記録・称号（自分の札だけ、このスマホに保存） ===== */
+const LS_DRAWS = 'koyomi.draws';
+const RANKS = ['大吉','吉','中吉','小吉','末吉'];
+function readDraws(){
+  try{ const o = JSON.parse(store.get(LS_DRAWS) || '{}'); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; }catch(e){ return {}; }
+}
+function recordDraw(rank){
+  const o = readDraws();
+  o[TODAY] = rank;
+  const keys = Object.keys(o).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k) && RANKS.includes(o[k])).sort().slice(-400);
+  store.set(LS_DRAWS, JSON.stringify(Object.fromEntries(keys.map(k => [k, o[k]]))));
+}
+function maxStreak(){
+  const days = readVisits().sort();
+  let best = 0, cur = 0, prev = null;
+  days.forEach(d => { cur = prev && addDays(prev, 1) === d ? cur + 1 : 1; best = Math.max(best, cur); prev = d; });
+  return best;
+}
+// 称号：[絵, 名前, 条件の説明, 判定]
+const BADGES = [
+  ['🎴', 'はじめの一枚', '札を1回引く', s => s.total >= 1],
+  ['🔥', '三日坊主卒業', '3日連続で引く', s => s.streak >= 3],
+  ['📅', '七日皆勤', '7日連続で引く', s => s.streak >= 7],
+  ['🌕', 'ひと月の満ち欠け', '30日連続で引く', s => s.streak >= 30],
+  ['🌟', '大吉を引く', '大吉が出る', s => s.count['大吉'] > 0],
+  ['🀄', '五札そろい', '5種類すべての札', s => RANKS.every(k => s.count[k] > 0)],
+  ['🌈', '天赦日の札', '天赦日に引く', s => s.days.some(x => x.kichi.some(k => k[0] === '天赦日'))],
+  ['💰', '万倍の札', '一粒万倍日に引く', s => s.days.some(x => x.kichi.some(k => k[0] === '一粒万倍日'))],
+  ['🐯', '寅の札', '寅の日に引く', s => s.days.some(x => x.kichi.some(k => k[0] === '寅の日'))],
+  ['🌑', '新月の札', '旧暦1日（新月）に引く', s => s.days.some(x => x.ld === 1)],
+  ['🎑', '十五夜の札', '旧暦15日に引く', s => s.days.some(x => x.ld === 15)],
+  ['🍃', '節気の札', '二十四節気の日に引く', s => s.days.some(x => x.term)]
+];
+function drawStats(){
+  const o = readDraws(), dates = Object.keys(o).sort();
+  const count = Object.fromEntries(RANKS.map(k => [k, 0]));
+  dates.forEach(d => { count[o[d]]++; });
+  return { total: dates.length, count, streak: maxStreak(), days: dates.map(dayInfo).filter(Boolean) };
+}
+function renderRecord(newly){
+  const s = drawStats();
+  const got = BADGES.filter(b => b[3](s)).length;
+  $('recordPanel').innerHTML = `
+    <h2>札の記録</h2>
+    <p class="note" style="margin-top:-4px">これまで ${s.total}日 引きました（最長 ${s.streak}日連続）</p>
+    <div class="ranks">${RANKS.map(k => `<div><b>${k}</b><span>${s.count[k]}</span></div>`).join('')}</div>
+    <h2 style="font-size:15px">称号 ${got}/${BADGES.length}</h2>
+    <div class="badges">${BADGES.map(([ic, name, cond, ok]) => `<div class="badge ${ok(s) ? 'on' : ''}"><b>${ic}</b>${name}<small>${cond}</small></div>`).join('')}</div>`;
+  if (newly && newly.length) toast(`称号を手に入れました：${newly.join('・')}`);
+}
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
 /* ===== ガチャ演出 ===== */
 let drawing = false;
+function specialOf(info){
+  if (info.kichi.some(k => k[0] === '天赦日')) return ['tensha', '天赦日の特別札'];
+  if (info.kichi.some(k => k[0] === '一粒万倍日')) return ['manbai', '一粒万倍日の札'];
+  return null;
+}
 function draw(){
   if (drawing || !INFO) return;
   const b = tempBirth || birth;
-  if (!tempBirth && birth && b === birth) recordVisit();
+  const own = !tempBirth && birth && b === birth;
   drawing = true;
-  const r = personal(INFO, honmeiOf(b));
+  const r = personal(INFO, honmeiOf(b), getsumeiOf(b));
+  // 称号は「引く前」と「引いた後」を比べて、新しく取れたものを知らせる
+  const before = own ? BADGES.filter(x => x[3](drawStats())).map(x => x[1]) : [];
+  if (own){ recordVisit(); recordDraw(r.rank); }
+  const sp = specialOf(INFO);
   const card = $('card');
   card.classList.remove('flip');
   $('rays').classList.remove('on');
+  $('cardFront').className = 'face front' + (sp ? ' ' + sp[0] : '');
+  $('cardSp').textContent = sp ? sp[1] : '';
   $('rankText').textContent = r.rank;
   $('rankStar').textContent = STAR[r.honmei];
   card.classList.add('shake');
@@ -565,26 +830,135 @@ function draw(){
     card.classList.add('flip');
     setTimeout(() => {
       $('rays').classList.add('on');
-      if (navigator.vibrate) navigator.vibrate(r.rank === '大吉' ? [40,30,70] : 45);
-      burst(r.rank === '大吉' ? 34 : 18);
+      if (navigator.vibrate) navigator.vibrate(r.rank === '大吉' || sp ? [40,30,70] : 45);
+      burst(sp && sp[0] === 'tensha' ? 48 : r.rank === '大吉' ? 34 : 18, sp && sp[0]);
       ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
       renderPersonal(b);
+      if (own){
+        $('recordPanel').classList.remove('hidden');
+        const after = BADGES.filter(x => x[3](drawStats())).map(x => x[1]);
+        renderRecord(after.filter(n => !before.includes(n)));
+      }
       $('draw').textContent = 'もう一度めくる';
       $('draw').disabled = false;
       drawing = false;
     }, 700);
   }, 1300);
 }
-function burst(n){
+const RAINBOW = ['#ff9aa8','#ffe08a','#8fe3b5','#8ec5ff','#cdb3f5'];
+function burst(n, kind){
   const st = $('stage');
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2, d = 90 + Math.random() * 90;
     const p = document.createElement('i');
-    p.className = 'pt';
+    p.className = 'pt' + (kind === 'manbai' && i % 2 ? ' coin' : '');
+    if (kind === 'tensha'){ const c = RAINBOW[i % RAINBOW.length]; p.style.background = c; p.style.boxShadow = `0 0 10px ${c}`; }
     p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
     st.appendChild(p);
     setTimeout(() => p.remove(), 1500);
   }
+}
+
+/* ===== 吉日カレンダー（暦注のみ。個人の未来の運勢は出さない） ===== */
+const ROKU_SHORT = { '大安':'大安', '赤口':'赤口', '先勝':'先勝', '友引':'友引', '先負':'先負', '仏滅':'仏滅' };
+const DATA_END = addDays(DATA_START, DATA.length / 8 - 1);
+let calMonth = TODAY.slice(0, 7), calSel = TODAY;
+function dayGood(x){
+  // 開運日の目安：天赦日、または一粒万倍日と大安・天赦日が重なる日
+  const has = n => x.kichi.some(k => k[0] === n);
+  return has('天赦日') || (has('一粒万倍日') && (x.rokuyo === '大安' || has('寅の日') || has('己巳の日')));
+}
+function describeDay(s){
+  const x = dayInfo(s);
+  if (!x) return '';
+  const [y, m, d] = s.split('-').map(Number);
+  const wd = '日月火水木金土'[new Date(toUTC(s)).getUTCDay()];
+  const tags = x.kichi.map(k => k[1] ? `<b style="color:var(--gold)">${k[0]}</b>` : `<span style="color:var(--bad)">${k[0]}</span>`);
+  return `<b>${m}月${d}日（${wd}）</b>　${x.rokuyo}・${x.kan}${x.shi}・${x.choku}・${STAR_S[x.star]}${x.term ? `・${x.term}` : ''}<br>
+    ${tags.length ? tags.join('・') : '特別な暦注はありません'}${dayGood(x) ? '　<span class="chip">開運日</span>' : ''}<br>
+    <small style="color:var(--sub)">${CHOKU_DESC[x.choku]}</small>`;
+}
+function renderCal(){
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = `${calMonth}-01`;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = new Date(toUTC(first)).getUTCDay();
+  const prevM = addDays(first, -1).slice(0, 7), nextM = addDays(first, days).slice(0, 7);
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="cd empty"></div>');
+  for (let d = 1; d <= days; d++){
+    const s = `${calMonth}-${String(d).padStart(2, '0')}`, x = dayInfo(s);
+    if (!x){ cells.push(`<div class="cd empty"></div>`); continue; }
+    const has = n => x.kichi.some(k => k[0] === n);
+    const bd = [has('天赦日') ? '<i>天赦</i>' : '', has('一粒万倍日') ? '<i class="g">万倍</i>' : '', has('寅の日') ? '<i>寅</i>' : '',
+      has('己巳の日') ? '<i>己巳</i>' : has('巳の日') ? '<i>巳</i>' : '', has('不成就日') ? '<i class="x">不成</i>' : ''].join('');
+    cells.push(`<button class="cd ${dayGood(x) ? 'top' : ''} ${s === TODAY ? 'today' : ''} ${s === calSel ? 'sel' : ''}" data-d="${s}">
+      <span class="n">${d}</span><span class="rk">${ROKU_SHORT[x.rokuyo]}</span><span class="bd">${bd}</span></button>`);
+  }
+  $('calPanel').innerHTML = `
+    <h2>吉日カレンダー</h2>
+    <div class="cal-nav"><button id="calPrev" ${prevM < DATA_START.slice(0, 7) ? 'disabled' : ''} aria-label="前の月">‹</button><b>${y}年${m}月</b><button id="calNext" ${nextM > DATA_END.slice(0, 7) ? 'disabled' : ''} aria-label="次の月">›</button></div>
+    <div class="cal">${'日月火水木金土'.split('').map((w, i) => `<div class="wh ${i === 0 ? 'su' : i === 6 ? 'sa' : ''}">${w}</div>`).join('')}${cells.join('')}</div>
+    <div class="cal-detail" id="calDetail">${calSel.startsWith(calMonth) ? describeDay(calSel) : '<span class="note">日付をタップすると、その日の暦が見られます。</span>'}</div>
+    <p class="note">金色の枠は「開運日」の目安（天赦日、または一粒万倍日に大安・寅の日・己巳の日が重なる日）です。</p>`;
+  $('calPrev').onclick = () => { calMonth = prevM; renderCal(); };
+  $('calNext').onclick = () => { calMonth = nextM; renderCal(); };
+  $('calPanel').querySelectorAll('.cd[data-d]').forEach(el => el.onclick = () => { calSel = el.dataset.d; renderCal(); });
+}
+
+/* ===== シェア画像（その場で描いて、共有 or 保存。どこにも送信しない） ===== */
+async function shareCard(r, charm){
+  const W = 1080, H = 1350, cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  if (!g.roundRect) g.roundRect = function(x, y, w, h){ this.rect(x, y, w, h); }; // 古い端末向け
+  try{ await Promise.all(['800 120px "Shippori Mincho"', '700 40px "Zen Kaku Gothic New"'].map(f => document.fonts.load(f))); }catch(e){}
+  const MIN = '"Shippori Mincho","Yu Mincho","Hiragino Mincho ProN",serif', GO = '"Zen Kaku Gothic New","Hiragino Sans",sans-serif';
+  let bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#2a1a5a'); bg.addColorStop(1, '#0d0820');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // 星くず（日付で決まる配置）
+  let sd = hashStr(TODAY);
+  for (let i = 0; i < 90; i++){ sd = Math.imul(sd ^ (sd >>> 13), 1274126177) >>> 0; const x = sd % W; sd = Math.imul(sd ^ (sd >>> 11), 2246822519) >>> 0; const y = sd % H;
+    g.fillStyle = `rgba(255,240,200,${.2 + (sd % 50) / 100})`; g.beginPath(); g.arc(x, y, 1 + sd % 3, 0, 7); g.fill(); }
+  const sp = specialOf(INFO);
+  // 札
+  const cx = 190, cy = 250, cw = 700, ch = 760;
+  g.save(); g.shadowColor = 'rgba(255,220,140,.9)'; g.shadowBlur = 80;
+  const cardG = g.createLinearGradient(0, cy, 0, cy + ch); cardG.addColorStop(0, '#fffaf0'); cardG.addColorStop(1, '#f3e3bd');
+  g.fillStyle = cardG; g.beginPath(); g.roundRect(cx, cy, cw, ch, 48); g.fill(); g.restore();
+  g.strokeStyle = sp ? '#e6b85c' : '#fff3cf'; g.lineWidth = 8; g.beginPath(); g.roundRect(cx, cy, cw, ch, 48); g.stroke();
+  g.textAlign = 'center'; g.fillStyle = '#8a6a3a';
+  g.font = `700 34px ${GO}`; g.fillText(sp ? sp[1] : '本日の運勢', W / 2, cy + 110);
+  g.fillStyle = '#3b2410'; g.font = `800 210px ${MIN}`; g.fillText(r.rank, W / 2, cy + 370);
+  g.fillStyle = '#8a6a3a'; g.font = `700 40px ${GO}`; g.fillText(STAR[r.honmei], W / 2, cy + 470);
+  // 長い言葉は札の幅に収まるまで小さくする
+  let fs = 58;
+  do { g.font = `800 ${fs}px ${MIN}`; fs -= 2; } while (fs > 28 && g.measureText(charm[0]).width > cw - 80);
+  g.fillStyle = '#b2742a'; g.fillText(charm[0], W / 2, cy + 590);
+  g.fillStyle = '#5a3d1e'; g.font = `500 34px ${GO}`; g.fillText(charm[1], W / 2, cy + 655);
+  g.fillStyle = '#8a6a3a'; g.font = `500 26px ${GO}`; g.fillText('― ' + charm[2], W / 2, cy + 705);
+  // 見出しと日付
+  g.fillStyle = '#f2d38a'; g.font = `800 64px ${MIN}`; g.fillText('NFC 暦占い', W / 2, 140);
+  g.fillStyle = '#b7aacd'; g.font = `500 34px ${GO}`; g.fillText(wareki(TODAY), W / 2, 200);
+  g.fillStyle = '#f4eefc'; g.font = `500 34px ${GO}`;
+  g.fillText(`${INFO.rokuyo}・${INFO.kan}${INFO.shi}・${r.P.title}`, W / 2, 1100);
+  if (INFO.kichi.length) { g.fillStyle = '#f2d38a'; g.fillText(INFO.kichi.map(k => k[0]).join('・'), W / 2, 1160); }
+  g.fillStyle = '#b7aacd'; g.font = `400 26px ${GO}`; g.fillText('暦注・九星気学は昔からの習わしです。参考としてお楽しみください。', W / 2, 1290);
+  const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+  if (!blob){ toast('画像を作れませんでした'); return; }
+  const file = new File([blob], `koyomi-${TODAY}.png`, { type: 'image/png' });
+  try{
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: 'NFC 暦占い', text: `今日の札は「${r.rank}」でした` });
+      return;
+    }
+  }catch(e){ if (e && e.name === 'AbortError') return; }
+  // 共有できない端末は保存
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('画像を保存しました');
 }
 
 function showMain(push = true){
@@ -593,7 +967,7 @@ function showMain(push = true){
   $('setup').classList.add('hidden');
   $('gacha').classList.remove('hidden');
   $('others').classList.remove('hidden');
-  ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  ['personal','hourPanel','weekPanel','boardPanel','recordPanel'].forEach(id => $(id).classList.add('hidden'));
   $('card').classList.remove('flip');
   $('rays').classList.remove('on');
   $('draw').textContent = tempBirth ? 'この人の札を引く' : '今日の札を引く';
@@ -603,7 +977,7 @@ function showSetup(forOther, push = true){
   $('setup').classList.remove('hidden');
   $('gacha').classList.add('hidden');
   $('others').classList.add('hidden');
-  ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.add('hidden'));
+  ['personal','hourPanel','weekPanel','boardPanel','recordPanel'].forEach(id => $(id).classList.add('hidden'));
   $('setup').dataset.other = forOther ? '1' : '';
   $('setup').querySelector('h2').textContent = forOther ? 'その人の生年月日' : '生年月日を教えてください';
   $('saveBirth').textContent = forOther ? 'この生年月日で占う（保存しません）' : 'この生年月日で占う';
@@ -656,6 +1030,18 @@ $('changeBtn').onclick = () => { tempBirth = null; showSetup(false); };
 
 $('today').textContent = wareki(TODAY);
 renderKoyomi();
+renderCal();
+// 開いたまま日付が変わったら読み直す（ホーム画面アプリやタブを開きっぱなしのとき）
+function checkDate(){ if (jstToday() !== TODAY) location.reload(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDate(); });
+window.addEventListener('pageshow', checkDate);
+setInterval(() => {
+  checkDate();
+  const b = tempBirth || birth;
+  if (b && !$('hourPanel').classList.contains('hidden')) renderHours(honmeiOf(b)); // 「今の時間」の白枠を更新
+}, 60000);
+// オフラインでも開けるようにする（https のときだけ）
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 history.replaceState({ v: birth ? 'main' : 'setup', other: false }, '');
 if (birth) showMain(false); else showSetup(false, false);
 </script>
