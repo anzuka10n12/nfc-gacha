@@ -391,7 +391,7 @@ html[data-vt=calb]::view-transition-new(cal){animation:vtInL .36s cubic-bezier(.
   text-shadow:0 0 14px var(--gc),0 0 2px #000;opacity:0;transition:opacity .6s,letter-spacing 1s cubic-bezier(.2,.8,.2,1)}
 .gx-banner small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;letter-spacing:.24em;color:var(--sub);text-shadow:none;margin-top:4px}
 .gx-banner.on{opacity:1;letter-spacing:.32em}
-.gx-top{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;justify-content:space-between;z-index:2}
+.gx-top{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;justify-content:flex-end;z-index:2}
 .gx-top button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:99px;font:inherit;font-size:13px;padding:7px 14px;cursor:pointer}
 .gx-ok{position:absolute;left:50%;bottom:calc(9% + env(safe-area-inset-bottom,0px));width:min(320px,80vw);margin:0 0 0 calc(min(320px,80vw) / -2);opacity:0;pointer-events:none;transition:opacity .5s}
 .gx-ok.on{opacity:1;pointer-events:auto}
@@ -1206,27 +1206,6 @@ function burst(n, kind){
    大吉はときどき「紫→金」に昇格する。結果は暦で決まっていて、演出で変わることはない */
 const GX_TIER = { '末吉':1, '小吉':2, '中吉':3, '吉':4, '大吉':5 };
 const GX_COL = { blue:'#8fc0ff', purple:'#c49bff', gold:'#ffd166', rainbow:'#ff8fc6' };
-const LS_SOUND = 'koyomi-sound';
-let gxAudio = null;
-function gxSnd(kind){
-  if (store.get(LS_SOUND) !== '1') return;
-  try {
-    gxAudio = gxAudio || new (window.AudioContext || window.webkitAudioContext)();
-    const ac = gxAudio, t = ac.currentTime;
-    const tone = (f, at, dur, vol = .12, type = 'sine', f2) => {
-      const o = ac.createOscillator(), g = ac.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t + at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + at + dur);
-      g.gain.setValueAtTime(0, t + at); g.gain.linearRampToValueAtTime(vol, t + at + .02); g.gain.exponentialRampToValueAtTime(.0001, t + at + dur);
-      o.connect(g).connect(ac.destination); o.start(t + at); o.stop(t + at + dur + .05);
-    };
-    if (kind === 'charge') tone(220, 0, 1.2, .06, 'sine', 880);
-    if (kind === 'beam') { tone(523, 0, .5, .1); tone(784, .08, .6, .08); }
-    if (kind === 'up') { [659, 880, 1175, 1568].forEach((f, i) => tone(f, i * .07, .5, .09, 'triangle')); }
-    if (kind === 'land') tone(110, 0, .35, .25, 'sine', 55);
-    if (kind === 'open') { [523, 659, 784, 1047].forEach(f => tone(f, 0, 1.4, .07, 'triangle')); }
-    if (kind === 'star') tone(1568, 0, .25, .06, 'sine');
-  } catch (e) {}
-}
 function gacha(o){
   return new Promise(resolve => {
     const tier = GX_TIER[o.rank] || 3;
@@ -1245,7 +1224,7 @@ function gacha(o){
       <div class="gx-banner"></div>
       <div class="gx-hint">タップしてめくる</div>
       <div class="gx-flash"></div>
-      <div class="gx-top"><button class="gx-snd"></button><button class="gx-skip">スキップ</button></div>
+      <div class="gx-top"><button class="gx-skip">スキップ</button></div>
       <button class="btn gx-ok">結果を見る</button>`;
     document.body.appendChild(el);
     const q = c => el.querySelector(c);
@@ -1253,10 +1232,6 @@ function gacha(o){
     q('.rk').textContent = o.rank;
     q('.t').textContent = o.sp ? o.sp[1] : o.se ? `${o.se[1]} ${o.se[0]}の札` : '';
     q('.stars').querySelectorAll('i').forEach((x, i) => x.style.setProperty('--i', i));
-    const sndBtn = q('.gx-snd');
-    const sndLabel = () => sndBtn.textContent = store.get(LS_SOUND) === '1' ? '🔊 音あり' : '🔇 音なし';
-    sndLabel();
-    sndBtn.onclick = e => { e.stopPropagation(); store.set(LS_SOUND, store.get(LS_SOUND) === '1' ? '0' : '1'); sndLabel(); };
     document.documentElement.style.overflow = 'hidden';
 
     // --- 粒子（canvas） ---
@@ -1331,9 +1306,8 @@ function gacha(o){
       q('.gx-skip').style.visibility = 'hidden';
       setTimeout(() => {
         el.classList.add('opened'); replay('.gx-flash', tier === 5 || o.sp ? 'big' : 'go'); replay('.gx-ring');
-        spark(o.sp ? 120 : tier === 5 ? 90 : 45, 1.2); gxSnd('open'); buzz(tier >= 5 || o.sp ? [30, 40, 80] : 30);
+        spark(o.sp ? 120 : tier === 5 ? 90 : 45, 1.2); buzz(tier >= 5 || o.sp ? [30, 40, 80] : 30);
         if (tier === 5 || o.sp) confetti(o.sp ? 140 : 90);
-        for (let i = 0; i < tier; i++) setTimeout(() => gxSnd('star'), 1000 + i * 170 - 380);
         banner();
       }, 380);
       setTimeout(() => { q('.gx-ok').classList.add('on'); stage = 'done'; }, 1300 + tier * 170);
@@ -1364,17 +1338,17 @@ function gacha(o){
     // 1) 光が中心に集まる
     setCol(first);
     requestAnimationFrame(() => el.classList.add('on'));
-    later(250, () => { conv(90); orbTarget = 26; gxSnd('charge'); });
+    later(250, () => { conv(90); orbTarget = 26; });
     later(650, () => { conv(60); orbTarget = 42; });
     // 2) 光の柱が立つ（色で札の格がわかる）
     later(1350, () => {
       orbTarget = 0; el.classList.add('lit'); replay('.gx-beam'); replay('.gx-ring'); replay('.gx-flash');
-      spark(40); gxSnd('beam'); buzz(25);
+      spark(40); buzz(25);
     });
     let t = 2200;
     // 3) 昇格演出：ひびが入るように光って、上の色に変わる
     if (first !== final){
-      later(2100, () => { replay('.gx-flash', 'big'); setCol(final); replay('.gx-ring'); setTimeout(() => replay('.r2'), 120); spark(90, 1.4); gxSnd('up'); buzz([20, 30, 60]); });
+      later(2100, () => { replay('.gx-flash', 'big'); setCol(final); replay('.gx-ring'); setTimeout(() => replay('.r2'), 120); spark(90, 1.4); buzz([20, 30, 60]); });
       t = 2900;
     }
     // 4) 札が舞い降りる
@@ -1383,7 +1357,7 @@ function gacha(o){
       cardEl.addEventListener('animationend', function onEnd(ev){
         if (ev.target !== cardEl || skipped) return;
         cardEl.removeEventListener('animationend', onEnd);
-        landed(); replay('.gx-ring'); spark(24, .7); gxSnd('land'); buzz(15);
+        landed(); replay('.gx-ring'); spark(24, .7); buzz(15);
       });
     });
   });
