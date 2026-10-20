@@ -52,13 +52,14 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;font:inherit;font-weight:700;font-size:17px;cursor:pointer;margin-top:12px;
   color:#2a1a05;background:linear-gradient(180deg,#ffe6a6,#e6b85c);box-shadow:0 10px 26px -10px rgba(242,211,138,.8)}
 .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--line);box-shadow:none;font-weight:500;font-size:15px;padding:12px}
-.btn:active{transform:scale(.98)}
+.btn{transition:transform .15s ease,opacity .2s}
+.btn:active{transform:scale(.97)}
 .note{font-size:12px;color:var(--sub);margin:8px 0 0}
 .hidden{display:none!important}
 
 /* ガチャ */
 .stage{position:relative;height:300px;display:grid;place-items:center;perspective:900px}
-.card{position:relative;width:190px;height:270px;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.3,1.4,.5,1)}
+.card{position:relative;width:190px;height:270px;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.2,1)}
 .card .face{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;display:grid;place-items:center;text-align:center}
 .card .back{background:repeating-linear-gradient(45deg,rgba(242,211,138,.12) 0 8px,transparent 8px 16px),linear-gradient(160deg,#3b2475,#170d33);
   border:2px solid var(--gold2);box-shadow:0 0 0 6px rgba(242,211,138,.08), 0 20px 40px -10px rgba(0,0,0,.7)}
@@ -66,14 +67,28 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
   box-shadow:inset 0 0 20px rgba(242,211,138,.3)}
 .card .front{transform:rotateY(180deg);background:linear-gradient(170deg,#fffaf0,#f3e3bd);color:#3b2410;border:2px solid #fff3cf;
   box-shadow:0 0 60px -10px rgba(255,220,140,.9)}
-.card.flip{transform:rotateY(180deg)}
+.card.flip{transform:rotateY(180deg);animation:lift .95s cubic-bezier(.2,.8,.2,1)}
+@keyframes lift{45%{translate:0 -8px}}
 .card.shake{animation:cshake .09s linear infinite}
-@keyframes cshake{25%{transform:rotate(-2deg) translateY(-2px)}75%{transform:rotate(2deg)}}
+@keyframes cshake{0%,100%{transform:none}25%{transform:rotate(-1.5deg) translateY(-1px)}75%{transform:rotate(1.5deg)}}
+/* 引く直前：札の縁が少しずつ光をためる */
+.card.shake .back{animation:charge 1.3s ease-in forwards}
+@keyframes charge{to{box-shadow:0 0 0 6px rgba(242,211,138,.3),0 0 55px 8px rgba(255,214,107,.85)}}
+/* めくった直後：表面に光がすっと流れる */
+.card .front .shine{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:0;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.8) 50%,transparent 62%);background-size:260% 100%;background-position:130% 0}
+.card.flip .front .shine{animation:shine 1.1s .55s ease-out}
+@keyframes shine{0%{opacity:1;background-position:130% 0}100%{opacity:0;background-position:-30% 0}}
+/* めくる瞬間のやわらかい閃光 */
+.stage::after{content:"";position:absolute;inset:-20px;pointer-events:none;opacity:0;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,244,214,.75),rgba(255,244,214,0))}
+.stage.flash::after{animation:flash .7s ease-out}
+@keyframes flash{0%{opacity:0;scale:.6}25%{opacity:1}100%{opacity:0;scale:1.25}}
 .rank{font-family:"Shippori Mincho",serif;font-weight:800;font-size:54px;line-height:1.1;letter-spacing:.08em}
 .rank-sub{font-size:12px;letter-spacing:.2em;color:#8a6a3a}
 .rays{position:absolute;width:420px;height:420px;border-radius:50%;opacity:0;pointer-events:none;
   background:conic-gradient(from 0deg,transparent 0 10deg,rgba(255,226,150,.35) 10deg 14deg,transparent 14deg 30deg);animation:spin 12s linear infinite}
-.rays.on{opacity:1;transition:opacity .6s}
+.rays.on{opacity:1;transition:opacity .8s}
 @keyframes spin{to{transform:rotate(360deg)}}
 .pt{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffe39a;box-shadow:0 0 10px #ffd36b;animation:burst 1.4s ease-out forwards;pointer-events:none}
 @keyframes burst{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
@@ -107,6 +122,18 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .foot{font-size:11px;color:var(--sub);text-align:center;margin-top:18px;line-height:1.8}
 .fade{animation:fade .6s ease-out both}
 @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.js-reveal .fade{animation:none;opacity:0}
+.js-reveal .fade.in{opacity:1;animation:rise .6s cubic-bezier(.25,.1,.25,1) var(--pd,0ms) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* パネルの中身（九星盤のマス・時間・1週間など）を少しずつずらして出す */
+.play :is(.cell,.hr,.wd,.cdown>div,.ranks>div,.badge,.zk,.dir,.chip,.charm){animation:pop .45s ease-out both;
+  animation-delay:calc(var(--pd,0ms) + 180ms + var(--i,0) * 45ms)}
+@keyframes pop{from{opacity:0;translate:0 6px}}
+.play .trend i{transform-origin:50% 100%;animation:grow .55s ease-out both;animation-delay:calc(var(--pd,0ms) + 200ms + var(--i,0) * 60ms)}
+@keyframes grow{from{scale:1 0}}
+.cal-detail{animation:soft .35s ease-out}
+.tool[open]>:not(summary){animation:soft .35s ease-out}
+@keyframes soft{from{opacity:0;transform:translateY(6px)}}
 /* 時間帯 */
 .hours{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
 .hr{border-radius:10px;padding:8px 0 6px;text-align:center;font-size:10px;color:var(--sub);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
@@ -220,7 +247,10 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 /* タブ */
 .tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:0 -6px 14px;padding:6px;
   background:rgba(18,11,38,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px}
-.tabs button{background:transparent;border:0;border-radius:11px;color:var(--sub);font:inherit;font-size:12px;padding:6px 0 5px;cursor:pointer;line-height:1.3}
+.tabs .pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 24px) / 4);border-radius:11px;background:rgba(242,211,138,.16);
+  transform:translateX(calc(var(--ti,0) * (100% + 4px)));transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.tabs.has-pill button[aria-selected="true"]{background:transparent}
+.tabs button{position:relative;z-index:1;transition:color .3s;background:transparent;border:0;border-radius:11px;color:var(--sub);font:inherit;font-size:12px;padding:6px 0 5px;cursor:pointer;line-height:1.3}
 .tabs button i{display:block;font-style:normal;font-size:18px}
 .tabs button[aria-selected="true"]{background:rgba(242,211,138,.16);color:var(--gold);font-weight:700}
 .offtab{display:none!important}
@@ -268,9 +298,104 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 
 /* トースト */
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(20,12,40,.95);border:1px solid var(--line);color:var(--ink);
-  padding:10px 16px;border-radius:12px;font-size:13px;z-index:10;max-width:90vw;text-align:center}
+  padding:10px 16px;border-radius:12px;font-size:13px;z-index:10;max-width:90vw;text-align:center;animation:toastIn .35s ease-out}
+.toast.out{opacity:0;translate:0 10px;transition:opacity .3s,translate .3s}
+@keyframes toastIn{from{opacity:0;translate:0 12px}}
 
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* 画面の切り替え（View Transitions。使えない端末では今までどおり） */
+main{view-transition-name:page}
+.head{view-transition-name:head}
+.tabs{view-transition-name:tabs}
+::view-transition-old(root),::view-transition-new(root){animation:none}
+::view-transition-group(page){animation:none}
+::view-transition-old(page){animation:vtOut .2s ease-in both}
+::view-transition-new(page){animation:vtRise .38s cubic-bezier(.2,.8,.2,1) both}
+html[data-vt=tab]::view-transition-new(page){animation:vtIn .28s ease-out both}
+html[data-vt^=cal]::view-transition-old(page),html[data-vt^=cal]::view-transition-new(page){animation:none}
+.vt-cal #calPanel .cal{view-transition-name:cal}
+::view-transition-group(cal){animation:none}
+html[data-vt=calf]::view-transition-old(cal){animation:vtOutL .26s ease-in both}
+html[data-vt=calf]::view-transition-new(cal){animation:vtInR .36s cubic-bezier(.2,.8,.2,1) both}
+html[data-vt=calb]::view-transition-old(cal){animation:vtOutR .26s ease-in both}
+html[data-vt=calb]::view-transition-new(cal){animation:vtInL .36s cubic-bezier(.2,.8,.2,1) both}
+@keyframes vtOut{to{opacity:0}}
+@keyframes vtIn{from{opacity:0}}
+@keyframes vtRise{from{opacity:0;transform:translateY(16px)}}
+@keyframes vtOutL{to{opacity:0;transform:translateX(-36px)}}
+@keyframes vtOutR{to{opacity:0;transform:translateX(36px)}}
+@keyframes vtInR{from{opacity:0;transform:translateX(36px)}}
+@keyframes vtInL{from{opacity:0;transform:translateX(-36px)}}
+
+/* ===== ガチャ演出（全画面） ===== */
+.card.noanim,.card.noanim *{transition:none!important;animation:none!important}
+.gx{position:fixed;inset:0;z-index:50;overflow:hidden;opacity:0;transition:opacity .35s;touch-action:none;-webkit-user-select:none;user-select:none;
+  background:radial-gradient(110% 70% at 50% 45%,#1d1145 0,#090514 72%);color:var(--ink);--gc:#9fc3ff}
+.gx.on{opacity:1}
+.gx canvas{position:absolute;inset:0;width:100%;height:100%}
+.gx-hue{position:absolute;inset:0;pointer-events:none}
+.gx.rainbow .gx-hue{animation:hue 1.8s linear infinite}
+.gx.rainbow .gx-front{border-color:transparent;box-shadow:0 0 90px -4px #ffd166}
+.gx.rainbow .gx-front::before{content:"";position:absolute;inset:-3px;border-radius:18px;padding:5px;pointer-events:none;
+  background:conic-gradient(from var(--ra,0deg),#ff9aa8,#ffe08a,#8fe3b5,#8ec5ff,#cdb3f5,#ff9aa8);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+.gx-tint{position:absolute;inset:0;opacity:0;transition:opacity .6s;background:radial-gradient(55% 45% at 50% 50%,var(--gc),transparent 72%)}
+.gx.lit .gx-tint{opacity:.32}
+.gx-beam{position:absolute;left:50%;bottom:46%;width:120px;height:140vh;margin-left:-60px;transform-origin:50% 100%;transform:scaleY(0);opacity:0;
+  background:linear-gradient(to right,transparent,var(--gc) 32%,#fff 50%,var(--gc) 68%,transparent);
+  -webkit-mask:linear-gradient(to top,#000 0,#000 35%,transparent 92%);mask:linear-gradient(to top,#000 0,#000 35%,transparent 92%)}
+.gx-beam.go{animation:beam 1.2s cubic-bezier(.25,0,.2,1) forwards}
+@keyframes beam{0%{transform:scaleY(0) scaleX(.3);opacity:1}35%{transform:scaleY(1) scaleX(1);opacity:1}100%{transform:scaleY(1) scaleX(1.6);opacity:0}}
+.gx-ring{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:3px solid var(--gc);opacity:0;box-shadow:0 0 18px var(--gc)}
+.gx-ring.go{animation:ring .9s ease-out}
+@keyframes ring{from{opacity:1;transform:scale(.3)}to{opacity:0;transform:scale(9)}}
+.gx-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,#fff 0,rgba(255,255,255,.7) 30%,rgba(255,255,255,0) 72%)}
+.gx-flash.go{animation:gflash .6s ease-out}
+.gx-flash.big{animation:gflashBig 1s ease-out}
+@keyframes gflash{0%{opacity:0}12%{opacity:.5}100%{opacity:0}}
+@keyframes gflashBig{0%{opacity:0}10%{opacity:.92}100%{opacity:0}}
+.gx-center{position:absolute;inset:0;display:grid;place-items:center;perspective:1100px}
+.gx-rays{position:absolute;width:640px;height:640px;left:50%;top:50%;margin:-320px 0 0 -320px;border-radius:50%;opacity:0;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 8deg,var(--gc) 8deg 12deg,transparent 12deg 24deg);
+  -webkit-mask:radial-gradient(closest-side,#000 20%,transparent 100%);mask:radial-gradient(closest-side,#000 20%,transparent 100%);transition:opacity .8s;animation:spin 14s linear infinite}
+.gx.opened .gx-rays{opacity:.55}
+.gx-card{position:relative;width:212px;height:300px;transform-style:preserve-3d;opacity:0}
+.gx-card.drop{animation:gdrop .8s cubic-bezier(.15,.7,.25,1) forwards}
+@keyframes gdrop{from{opacity:0;transform:translateY(-75vh) rotateY(-720deg) scale(.5)}60%{opacity:1}to{opacity:1;transform:none}}
+.gx-card.landed{opacity:1}
+.gx-card.open{opacity:1;transform:rotateY(180deg);transition:transform .85s cubic-bezier(.45,0,.2,1)}
+.gx-face{position:absolute;inset:0;border-radius:18px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:grid;place-items:center;text-align:center;overflow:hidden}
+.gx-back{background:repeating-linear-gradient(45deg,rgba(242,211,138,.12) 0 8px,transparent 8px 16px),linear-gradient(160deg,#3b2475,#170d33);
+  border:2px solid var(--gc);box-shadow:0 0 0 6px rgba(255,255,255,.05),0 0 40px -4px var(--gc)}
+.gx-card.landed .gx-back{animation:gglow 1.3s ease-in-out infinite alternate}
+@keyframes gglow{to{box-shadow:0 0 0 6px rgba(255,255,255,.08),0 0 70px 6px var(--gc)}}
+.gx-back .sigil{width:120px;height:120px;border:2px solid var(--gold);border-radius:50%;display:grid;place-items:center;font-family:"Shippori Mincho",serif;font-size:46px;color:var(--gold);box-shadow:inset 0 0 22px rgba(242,211,138,.35)}
+.gx-front{transform:rotateY(180deg);background:linear-gradient(170deg,#fffaf0,#f3e3bd);color:#3b2410;border:3px solid var(--gc);box-shadow:0 0 80px -6px var(--gc)}
+.gx-front::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);background-size:260% 100%;background-position:130% 0}
+.gx-card.open .gx-front::after{animation:gshine 2.6s .9s ease-in-out infinite}
+@keyframes gshine{0%{opacity:1;background-position:130% 0}45%,100%{opacity:0;background-position:-30% 0}}
+.gx-front .t{position:absolute;top:14px;left:0;right:0;font-size:11px;letter-spacing:.16em;color:#9a6a2a;font-weight:700}
+.gx-front .sub{font-size:12px;letter-spacing:.2em;color:#8a6a3a}
+.gx-front .rk{font-family:"Shippori Mincho",serif;font-weight:800;font-size:66px;line-height:1.1;letter-spacing:.06em;opacity:0}
+.gx-card.open .rk{animation:stamp .5s cubic-bezier(.2,.7,.2,1) .45s both}
+@keyframes stamp{from{opacity:0;transform:scale(1.9);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.gx-front .stars{margin-top:6px;font-size:20px;letter-spacing:.12em;color:#d79a2b;min-height:1.3em}
+.gx-front .stars i{font-style:normal;display:inline-block;opacity:0;text-shadow:0 0 8px rgba(255,190,80,.8)}
+.gx-card.open .stars i{animation:gstar .35s ease-out both;animation-delay:calc(1s + var(--i) * .17s)}
+@keyframes gstar{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+.gx-hint{position:absolute;left:0;right:0;bottom:calc(16% + env(safe-area-inset-bottom,0px));text-align:center;font-size:15px;letter-spacing:.3em;color:#fff;opacity:0;transition:opacity .4s;pointer-events:none}
+.gx-hint.on{opacity:1;animation:ghint 1.6s ease-in-out infinite}
+@keyframes ghint{50%{opacity:.35}}
+.gx-banner{position:absolute;left:0;right:0;top:calc(13% + env(safe-area-inset-top,0px));text-align:center;font-family:"Shippori Mincho",serif;font-size:20px;letter-spacing:.2em;color:#fff;
+  text-shadow:0 0 14px var(--gc),0 0 2px #000;opacity:0;transition:opacity .6s,letter-spacing 1s cubic-bezier(.2,.8,.2,1)}
+.gx-banner small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;letter-spacing:.24em;color:var(--sub);text-shadow:none;margin-top:4px}
+.gx-banner.on{opacity:1;letter-spacing:.32em}
+.gx-top{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;justify-content:space-between;z-index:2}
+.gx-top button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:99px;font:inherit;font-size:13px;padding:7px 14px;cursor:pointer}
+.gx-ok{position:absolute;left:50%;bottom:calc(9% + env(safe-area-inset-bottom,0px));width:min(320px,80vw);margin:0 0 0 calc(min(320px,80vw) / -2);opacity:0;pointer-events:none;transition:opacity .5s}
+.gx-ok.on{opacity:1;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){*,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -1000,6 +1125,7 @@ function showToast(){
   const el = document.createElement('div');
   el.className = 'toast'; el.textContent = toastQ[0];
   document.body.appendChild(el);
+  setTimeout(() => el.classList.add('out'), 2700);
   setTimeout(() => { el.remove(); toastQ.shift(); showToast(); }, 3000);
 }
 
@@ -1025,41 +1151,41 @@ function draw(){
   const card = $('card');
   card.classList.remove('flip');
   $('rays').classList.remove('on');
+  $('draw').disabled = true;
   $('cardFront').className = 'face front' + (sp ? ' ' + sp[0] : '');
   $('cardFront').style.setProperty('--sc', se ? se[2] : 'transparent');
   $('cardSp').textContent = sp ? sp[1] : se ? `${se[1]} ${se[0]}の札` : '';
   $('cardSp').className = 'sp' + (sp ? '' : ' season');
   $('rankText').textContent = r.rank;
   $('rankStar').textContent = STAR[r.honmei];
-  card.classList.add('shake');
-  $('draw').disabled = true;
-  setTimeout(() => {
-    card.classList.remove('shake');
-    card.classList.add('flip');
-    setTimeout(() => {
-      $('rays').classList.add('on');
-      if (navigator.vibrate) navigator.vibrate(r.rank === '大吉' || sp ? [40,30,70] : 45);
-      burst(sp && sp[0] === 'tensha' ? 48 : r.rank === '大吉' ? 34 : 18, sp && sp[0]);
-      ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
-      renderPersonal(b);
-      if (own){
-        $('recordPanel').classList.remove('hidden');
-        const after = BADGES.filter(x => x[3](drawStats())).map(x => x[1]);
-        const ssAfter = streakState(), msgs = [];
-        // 前回引いた日から今日までの間で、守りが使われた日
-        const lastBefore = readVisits().filter(d => d < TODAY).pop();
-        const saved = firstToday ? ssAfter.used.filter(d => !lastBefore || d > lastBefore) : [];
-        if (saved.length) msgs.push(`🧿 身代わり守りが、引き忘れた${saved.length}日分の連続を守りました`);
-        if (ssAfter.earned.length > ssBefore.earned.length) msgs.push(`🧿 ${GUARD_EVERY}日連続！身代わり守りを手に入れました`);
-        if (se && !zkBefore.has(`${se[0]}|${r.rank}`)) msgs.push(`${se[1]} 新しい札「${se[0]}の${r.rank}」を図鑑に登録しました`);
-        after.filter(n => !before.includes(n)).forEach(n => msgs.push(`称号を手に入れました：${n}`));
-        renderRecord(msgs);
-      }
-      $('draw').textContent = 'もう一度めくる';
-      $('draw').disabled = false;
-      drawing = false;
-    }, 700);
-  }, 1300);
+  const firstShow = $('personal').classList.contains('hidden');
+  // 演出が終わったら、画面の札を表にして結果を出す
+  const finish = () => {
+    card.classList.add('noanim'); card.classList.add('flip'); void card.offsetWidth; card.classList.remove('noanim');
+    $('rays').classList.add('on');
+    burst(sp && sp[0] === 'tensha' ? 30 : r.rank === '大吉' ? 22 : 12, sp && sp[0]);
+    ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
+    renderPersonal(b);
+    if (firstShow) replayPanels(['personal','hourPanel','weekPanel','boardPanel']);
+    if (own){
+      $('recordPanel').classList.remove('hidden');
+      const after = BADGES.filter(x => x[3](drawStats())).map(x => x[1]);
+      const ssAfter = streakState(), msgs = [];
+      // 前回引いた日から今日までの間で、守りが使われた日
+      const lastBefore = readVisits().filter(d => d < TODAY).pop();
+      const saved = firstToday ? ssAfter.used.filter(d => !lastBefore || d > lastBefore) : [];
+      if (saved.length) msgs.push(`🧿 身代わり守りが、引き忘れた${saved.length}日分の連続を守りました`);
+      if (ssAfter.earned.length > ssBefore.earned.length) msgs.push(`🧿 ${GUARD_EVERY}日連続！身代わり守りを手に入れました`);
+      if (se && !zkBefore.has(`${se[0]}|${r.rank}`)) msgs.push(`${se[1]} 新しい札「${se[0]}の${r.rank}」を図鑑に登録しました`);
+      after.filter(n => !before.includes(n)).forEach(n => msgs.push(`称号を手に入れました：${n}`));
+      renderRecord(msgs);
+    }
+    $('draw').textContent = 'もう一度めくる';
+    $('draw').disabled = false;
+    drawing = false;
+  };
+  if (RM.matches) { finish(); return; } // 動きを減らす設定では演出なしで結果を出す
+  gacha({ rank: r.rank, sp, se, star: STAR[r.honmei] }).then(finish, finish);
 }
 const RAINBOW = ['#ff9aa8','#ffe08a','#8fe3b5','#8ec5ff','#cdb3f5'];
 function burst(n, kind){
@@ -1073,6 +1199,194 @@ function burst(n, kind){
     st.appendChild(p);
     setTimeout(() => p.remove(), 1500);
   }
+}
+
+/* ===== ガチャ演出（全画面）=====
+   札の格で光の色が変わる：末吉・小吉＝青、中吉・吉＝紫、大吉＝金、天赦日・一粒万倍日＝虹（確定演出）
+   大吉はときどき「紫→金」に昇格する。結果は暦で決まっていて、演出で変わることはない */
+const GX_TIER = { '末吉':1, '小吉':2, '中吉':3, '吉':4, '大吉':5 };
+const GX_COL = { blue:'#8fc0ff', purple:'#c49bff', gold:'#ffd166', rainbow:'#ff8fc6' };
+const LS_SOUND = 'koyomi-sound';
+let gxAudio = null;
+function gxSnd(kind){
+  if (store.get(LS_SOUND) !== '1') return;
+  try {
+    gxAudio = gxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    const ac = gxAudio, t = ac.currentTime;
+    const tone = (f, at, dur, vol = .12, type = 'sine', f2) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t + at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + at + dur);
+      g.gain.setValueAtTime(0, t + at); g.gain.linearRampToValueAtTime(vol, t + at + .02); g.gain.exponentialRampToValueAtTime(.0001, t + at + dur);
+      o.connect(g).connect(ac.destination); o.start(t + at); o.stop(t + at + dur + .05);
+    };
+    if (kind === 'charge') tone(220, 0, 1.2, .06, 'sine', 880);
+    if (kind === 'beam') { tone(523, 0, .5, .1); tone(784, .08, .6, .08); }
+    if (kind === 'up') { [659, 880, 1175, 1568].forEach((f, i) => tone(f, i * .07, .5, .09, 'triangle')); }
+    if (kind === 'land') tone(110, 0, .35, .25, 'sine', 55);
+    if (kind === 'open') { [523, 659, 784, 1047].forEach(f => tone(f, 0, 1.4, .07, 'triangle')); }
+    if (kind === 'star') tone(1568, 0, .25, .06, 'sine');
+  } catch (e) {}
+}
+function gacha(o){
+  return new Promise(resolve => {
+    const tier = GX_TIER[o.rank] || 3;
+    const final = o.sp ? 'rainbow' : tier === 5 ? 'gold' : tier >= 3 ? 'purple' : 'blue';
+    // 昇格演出：大吉は約4割で紫から、特別な日は金から虹へ
+    const first = final === 'rainbow' ? 'gold' : final === 'gold' && Math.random() < .4 ? 'purple' : final;
+    const el = document.createElement('div');
+    el.className = 'gx'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', '札を引く');
+    el.innerHTML = `
+      <canvas></canvas>
+      <div class="gx-hue"><div class="gx-tint"></div><div class="gx-beam"></div><div class="gx-ring"></div><div class="gx-ring r2"></div></div>
+      <div class="gx-center"><div class="gx-rays"></div>
+        <div class="gx-card"><div class="gx-face gx-back"><div class="sigil">暦</div></div>
+          <div class="gx-face gx-front"><span class="t"></span><div><div class="sub">本日の運勢</div><div class="rk"></div><div class="sub">${o.star}</div>
+          <div class="stars">${'<i>★</i>'.repeat(tier)}</div></div></div></div></div>
+      <div class="gx-banner"></div>
+      <div class="gx-hint">タップしてめくる</div>
+      <div class="gx-flash"></div>
+      <div class="gx-top"><button class="gx-snd"></button><button class="gx-skip">スキップ</button></div>
+      <button class="btn gx-ok">結果を見る</button>`;
+    document.body.appendChild(el);
+    const q = c => el.querySelector(c);
+    const cardEl = q('.gx-card');
+    q('.rk').textContent = o.rank;
+    q('.t').textContent = o.sp ? o.sp[1] : o.se ? `${o.se[1]} ${o.se[0]}の札` : '';
+    q('.stars').querySelectorAll('i').forEach((x, i) => x.style.setProperty('--i', i));
+    const sndBtn = q('.gx-snd');
+    const sndLabel = () => sndBtn.textContent = store.get(LS_SOUND) === '1' ? '🔊 音あり' : '🔇 音なし';
+    sndLabel();
+    sndBtn.onclick = e => { e.stopPropagation(); store.set(LS_SOUND, store.get(LS_SOUND) === '1' ? '0' : '1'); sndLabel(); };
+    document.documentElement.style.overflow = 'hidden';
+
+    // --- 粒子（canvas） ---
+    const cv = q('canvas'), ctx = cv.getContext('2d');
+    let W = 0, H = 0, DPR = 1;
+    const size = () => { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); };
+    size(); addEventListener('resize', size);
+    const ps = [];
+    let orb = 0, orbTarget = 0, color = GX_COL.blue, hue = 0, alive = true, last = performance.now();
+    for (let i = 0; i < 70; i++) ps.push({ k:'bg', x:Math.random(), y:Math.random(), r:Math.random() * 1.3 + .3, ph:Math.random() * 6 });
+    const conv = n => { for (let i = 0; i < n; i++){ const a = Math.random() * 6.283, d = Math.max(W, H) * (.45 + Math.random() * .35); ps.push({ k:'conv', a, d, d0:d, t:0, dur:.7 + Math.random() * .5, r:1 + Math.random() * 1.8 }); } };
+    const spark = (n, sp = 1) => { for (let i = 0; i < n; i++){ const a = Math.random() * 6.283, v = (120 + Math.random() * 380) * sp; ps.push({ k:'spark', x:W / 2, y:H / 2, vx:Math.cos(a) * v, vy:Math.sin(a) * v, life:1, r:1.2 + Math.random() * 2.2 }); } };
+    const confetti = n => { for (let i = 0; i < n; i++) ps.push({ k:'conf', x:Math.random() * W, y:-20 - Math.random() * H * .5, vx:(Math.random() - .5) * 40, vy:60 + Math.random() * 90, rot:Math.random() * 6, vr:(Math.random() - .5) * 8, w:5 + Math.random() * 5, h:8 + Math.random() * 6, c:Math.random() }); };
+    const colOf = (c) => final === 'rainbow' && c !== undefined ? `hsl(${(c * 360 + hue) % 360},95%,72%)` : color;
+    const frame = now => {
+      if (!alive) return;
+      const dt = Math.min(.05, (now - last) / 1000); last = now; hue = (hue + dt * 200) % 360;
+      if (final === 'rainbow') el.style.setProperty('--ra', hue + 'deg');
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      orb += (orbTarget - orb) * Math.min(1, dt * 6);
+      if (orb > .5){
+        const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, orb);
+        g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.35, color); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(W / 2, H / 2, orb, 0, 6.283); ctx.fill();
+      }
+      for (let i = ps.length - 1; i >= 0; i--){
+        const p = ps[i];
+        if (p.k === 'bg'){ ctx.globalAlpha = .25 + .35 * Math.sin(now / 700 + p.ph) ** 2; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x * W, p.y * H, p.r, 0, 6.283); ctx.fill(); continue; }
+        if (p.k === 'conv'){
+          p.t += dt / p.dur; if (p.t >= 1){ ps.splice(i, 1); continue; }
+          const e = p.t * p.t * (3 - 2 * p.t); p.d = p.d0 * (1 - e); const a = p.a + e * 2.2;
+          ctx.globalAlpha = Math.min(1, p.t * 3); ctx.fillStyle = color;
+          ctx.beginPath(); ctx.arc(W / 2 + Math.cos(a) * p.d, H / 2 + Math.sin(a) * p.d, p.r, 0, 6.283); ctx.fill(); continue;
+        }
+        if (p.k === 'spark'){
+          p.vx *= 1 - dt * 2.2; p.vy = p.vy * (1 - dt * 2.2) + 60 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * .8;
+          if (p.life <= 0){ ps.splice(i, 1); continue; }
+          ctx.globalAlpha = p.life; ctx.fillStyle = colOf(p.r / 3.4);
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1 + p.life), 0, 6.283); ctx.fill(); continue;
+        }
+        if (p.k === 'conf'){
+          p.x += (p.vx + Math.sin(now / 400 + p.rot) * 30) * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+          if (p.y > H + 30){ ps.splice(i, 1); continue; }
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .9;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.rot * 1.7));
+          ctx.fillStyle = final === 'rainbow' ? `hsl(${(p.c * 360 + hue) % 360},90%,70%)` : (p.c < .5 ? color : '#fff6d8'); ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+          ctx.globalCompositeOperation = 'lighter';
+        }
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+
+    // --- 進行 ---
+    let skipped = false, stage = 'build', timers = [];
+    const later = (ms, f) => { timers.push(setTimeout(() => { if (!skipped) f(); }, ms)); };
+    const setCol = c => { color = GX_COL[c]; el.style.setProperty('--gc', color); el.classList.toggle('rainbow', c === 'rainbow'); };
+    const replay = (c, cls = 'go') => { const x = q(c); x.classList.remove('go', 'big'); void x.offsetWidth; x.classList.add(cls); };
+    const buzz = pt => { if (navigator.vibrate) navigator.vibrate(pt); };
+    const landed = () => { cardEl.classList.remove('drop'); cardEl.classList.add('landed'); stage = 'ready'; q('.gx-hint').classList.add('on'); };
+    const banner = () => {
+      if (o.sp){ q('.gx-banner').innerHTML = `${o.sp[0] === 'tensha' ? '天赦日' : '一粒万倍日'}<small>${o.sp[0] === 'tensha' ? '年に数回の最上の吉日' : '始めごとが実を結ぶ日'}</small>`; q('.gx-banner').classList.add('on'); }
+      else if (tier === 5){ q('.gx-banner').innerHTML = `大吉<small>今日いちばんの札</small>`; q('.gx-banner').classList.add('on'); }
+    };
+    const open = () => {
+      if (stage !== 'ready') return;
+      stage = 'open';
+      q('.gx-hint').classList.remove('on');
+      cardEl.classList.remove('landed'); cardEl.classList.add('open');
+      q('.gx-skip').style.visibility = 'hidden';
+      setTimeout(() => {
+        el.classList.add('opened'); replay('.gx-flash', tier === 5 || o.sp ? 'big' : 'go'); replay('.gx-ring');
+        spark(o.sp ? 120 : tier === 5 ? 90 : 45, 1.2); gxSnd('open'); buzz(tier >= 5 || o.sp ? [30, 40, 80] : 30);
+        if (tier === 5 || o.sp) confetti(o.sp ? 140 : 90);
+        for (let i = 0; i < tier; i++) setTimeout(() => gxSnd('star'), 1000 + i * 170 - 380);
+        banner();
+      }, 380);
+      setTimeout(() => { q('.gx-ok').classList.add('on'); stage = 'done'; }, 1300 + tier * 170);
+    };
+    const close = () => {
+      if (!alive) return;
+      el.classList.remove('on');
+      setTimeout(() => {
+        alive = false; timers.forEach(clearTimeout); removeEventListener('resize', size);
+        el.remove(); document.documentElement.style.overflow = ''; resolve();
+      }, 350);
+    };
+    // スキップ：途中を飛ばして、札がめくれた状態にする
+    q('.gx-skip').onclick = e => {
+      e.stopPropagation();
+      if (stage !== 'build' && stage !== 'ready') return;
+      skipped = true; timers.forEach(clearTimeout);
+      orbTarget = 0; setCol(final); el.classList.add('lit');
+      cardEl.style.animation = 'none'; landed(); cardEl.style.animation = '';
+      open();
+    };
+    el.addEventListener('click', e => {
+      if (e.target.closest('.gx-top')) return;
+      if (e.target.closest('.gx-ok') || stage === 'done') { close(); return; }
+      if (stage === 'ready') open();
+    });
+
+    // 1) 光が中心に集まる
+    setCol(first);
+    requestAnimationFrame(() => el.classList.add('on'));
+    later(250, () => { conv(90); orbTarget = 26; gxSnd('charge'); });
+    later(650, () => { conv(60); orbTarget = 42; });
+    // 2) 光の柱が立つ（色で札の格がわかる）
+    later(1350, () => {
+      orbTarget = 0; el.classList.add('lit'); replay('.gx-beam'); replay('.gx-ring'); replay('.gx-flash');
+      spark(40); gxSnd('beam'); buzz(25);
+    });
+    let t = 2200;
+    // 3) 昇格演出：ひびが入るように光って、上の色に変わる
+    if (first !== final){
+      later(2100, () => { replay('.gx-flash', 'big'); setCol(final); replay('.gx-ring'); setTimeout(() => replay('.r2'), 120); spark(90, 1.4); gxSnd('up'); buzz([20, 30, 60]); });
+      t = 2900;
+    }
+    // 4) 札が舞い降りる
+    later(t, () => {
+      cardEl.classList.add('drop');
+      cardEl.addEventListener('animationend', function onEnd(ev){
+        if (ev.target !== cardEl || skipped) return;
+        cardEl.removeEventListener('animationend', onEnd);
+        landed(); replay('.gx-ring'); spark(24, .7); gxSnd('land'); buzz(15);
+      });
+    });
+  });
 }
 
 /* ===== 便利ツール：西暦・和暦の変換 ===== */
@@ -1362,8 +1676,8 @@ function renderCal(){
     <div class="cal">${'日月火水木金土'.split('').map((w, i) => `<div class="wh ${i === 0 ? 'su' : i === 6 ? 'sa' : ''}">${w}</div>`).join('')}${cells.join('')}</div>
     <div class="cal-detail" id="calDetail">${calSel.startsWith(calMonth) ? describeDay(calSel) : '<span class="note">日付をタップすると、その日の暦が見られます。</span>'}</div>
     <p class="note">金色の枠は「開運日」の目安（天赦日、または一粒万倍日に大安・寅の日・己巳の日が重なる日）です。</p>`;
-  $('calPrev').onclick = () => { calMonth = prevM; renderCal(); };
-  $('calNext').onclick = () => { calMonth = nextM; renderCal(); };
+  $('calPrev').onclick = () => vt(() => { calMonth = prevM; renderCal(); }, 'calb');
+  $('calNext').onclick = () => vt(() => { calMonth = nextM; renderCal(); }, 'calf');
   $('calPanel').querySelectorAll('.cd[data-d]').forEach(el => el.onclick = () => { calSel = el.dataset.d; renderCal(); });
 }
 
@@ -1485,14 +1799,93 @@ $('backSelf').onclick = () => { tempBirth = null; showMain(); };
 // スマホの「戻る」で前の画面へ（ページから出ていかないように）
 window.addEventListener('popstate', e => {
   const st = e.state;
+  UA_VT = !!e.hasUAVisualTransition; // iPhoneのスワイプで戻るときは、ブラウザ側の動きにまかせる
   if (!st || st.v === 'main'){ tempBirth = st ? st.temp || null : null; if (birth || tempBirth) showMain(false); else showSetup(false, false); }
   else if (st.v === 'setup') showSetup(st.other, false);
+  UA_VT = false;
 });
 $('changeBtn').onclick = () => { tempBirth = null; showSetup(false); };
 
 $('today').textContent = wareki(TODAY);
 
 /* ===== タブ切り替え ===== */
+/* ===== アニメーション（滑らかな画面切替・順に浮かび上がる表示） ===== */
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+let VT_READY = false, UA_VT = false;
+// 画面の切り替えを View Transitions で包む。使えない端末・動きを減らす設定では、そのまま切り替える
+function vt(fn, kind = 'screen'){
+  if (!VT_READY || UA_VT || RM.matches || !document.startViewTransition || document.hidden){ fn(); return; }
+  const h = document.documentElement;
+  h.dataset.vt = kind;
+  h.classList.toggle('vt-cal', kind.startsWith('cal'));
+  let done = false;
+  const run = () => { done = true; fn(); };
+  try {
+    const t = document.startViewTransition(run);
+    t.finished.finally(() => { if (h.dataset.vt === kind){ delete h.dataset.vt; h.classList.remove('vt-cal'); } });
+  } catch (e){ if (!done) fn(); delete h.dataset.vt; h.classList.remove('vt-cal'); }
+}
+{ // 画面切替（生年月日の入力 ⇔ 札の画面）も滑らかに
+  const m = showMain, s = showSetup;
+  showMain = (...a) => vt(() => m(...a));
+  showSetup = (...a) => vt(() => s(...a));
+}
+// タブの「選択中」の印を動かす
+function movePill(){
+  const tabs = $('tabs');
+  let pill = tabs.querySelector('.pill');
+  if (!pill){ pill = document.createElement('span'); pill.className = 'pill'; tabs.prepend(pill); tabs.classList.add('has-pill'); }
+  const i = [...tabs.querySelectorAll('[data-go]')].findIndex(b => b.getAttribute('aria-selected') === 'true');
+  tabs.style.setProperty('--ti', Math.max(0, i));
+}
+// パネルの中身を少しずつずらして出す（.play は一度きり。毎分の描き直しでは動かさない）
+const KIDS = '.cell,.hr,.wd,.cdown>div,.ranks>div,.badge,.zk,.dir,.chip,.charm,.trend i';
+function play(el, delay = 0){
+  el.style.setProperty('--pd', delay + 'ms');
+  const kids = el.querySelectorAll(KIDS);
+  kids.forEach((k, i) => k.style.setProperty('--i', Math.min(i, 18)));
+  el.classList.remove('play'); void el.offsetWidth; el.classList.add('play');
+  clearTimeout(el._playT);
+  el._playT = setTimeout(() => el.classList.remove('play'), delay + 1900);
+  if (el.id === 'countPanel') countUp(el, delay);
+}
+function reveal(el, delay){ el.classList.add('in'); play(el, delay); }
+// 札を引き直したときなど、すでに表示済みのパネルをもう一度順に出す
+function replayPanels(ids){
+  let k = 0;
+  ids.forEach(id => { const el = $(id); if (el && el.classList.contains('in') && !el.classList.contains('hidden')) play(el, k++ * 110); });
+}
+// 「あと◯日」の数字を 0 から数え上げる
+function countUp(panel, delay){
+  if (RM.matches) return;
+  panel.querySelectorAll('.cdown b').forEach(b => {
+    const t = b.firstChild;
+    const m = t && t.nodeType === 3 && t.nodeValue.match(/^あと(\d+)$/);
+    if (!m) return;
+    const n = +m[1], t0 = performance.now() + delay + 150, dur = 800;
+    t.nodeValue = 'あと0';
+    const step = now => {
+      const p = Math.min(1, Math.max(0, (now - t0) / dur));
+      t.nodeValue = 'あと' + Math.round(n * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+// めくる瞬間の閃光
+function flashStage(){ const st = $('stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash'); }
+// 札の表面に光の筋を入れておく
+$('cardFront').insertAdjacentHTML('beforeend', '<i class="shine"></i>');
+// 画面に入ったパネルから順に浮かび上がらせる
+if ('IntersectionObserver' in window){
+  document.documentElement.classList.add('js-reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+      .forEach((e, k) => { io.unobserve(e.target); reveal(e.target, k * 110); });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+}
+
 let curTab = 'today';
 function setTab(name){
   curTab = name;
@@ -1507,8 +1900,19 @@ function setTab(name){
   if (name === 'today' && !readDraws()[TODAY]) $('recordPanel').classList.add('hidden');
   window.scrollTo({ top: 0 });
 }
-document.querySelectorAll('#tabs [data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
+document.querySelectorAll('#tabs [data-go]').forEach(b => b.onclick = () => {
+  const to = b.dataset.go;
+  if (to === curTab) return;
+  vt(() => {
+    setTab(to);
+    movePill();
+    // 開いたタブのパネルを上から順に浮かび上がらせる
+    let k = 0;
+    document.querySelectorAll(`.fade.in[data-tab="${to}"]`).forEach(el => { if (!el.classList.contains('hidden')) play(el, k++ * 90); });
+  }, 'tab');
+});
 setTab('today');
+movePill();
 renderKoyomi();
 renderCount();
 renderCal();
@@ -1525,6 +1929,7 @@ setInterval(() => {
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 history.replaceState({ v: birth ? 'main' : 'setup', other: false }, '');
 if (birth) showMain(false); else showSetup(false, false);
+requestAnimationFrame(() => requestAnimationFrame(() => { VT_READY = true; }));
 </script>
 </body>
 </html>
