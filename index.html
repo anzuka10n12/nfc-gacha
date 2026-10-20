@@ -70,7 +70,7 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .card.flip{transform:rotateY(180deg);animation:lift .95s cubic-bezier(.2,.8,.2,1)}
 @keyframes lift{45%{translate:0 -8px}}
 .card.shake{animation:cshake .09s linear infinite}
-@keyframes cshake{25%{transform:rotate(-2deg) translateY(-2px)}75%{transform:rotate(2deg)}}
+@keyframes cshake{0%,100%{transform:none}25%{transform:rotate(-1.5deg) translateY(-1px)}75%{transform:rotate(1.5deg)}}
 /* 引く直前：札の縁が少しずつ光をためる */
 .card.shake .back{animation:charge 1.3s ease-in forwards}
 @keyframes charge{to{box-shadow:0 0 0 6px rgba(242,211,138,.3),0 0 55px 8px rgba(255,214,107,.85)}}
@@ -1080,8 +1080,14 @@ function draw(){
   if (own){ recordVisit(); recordDraw(r.rank); }
   const sp = specialOf(INFO), se = seasonOf(TODAY);
   const card = $('card');
+  // もう一度めくるとき：表のままいきなり震えると札が跳ねるので、先に裏へゆっくり戻してから始める
+  const again = card.classList.contains('flip');
+  const firstShow = $('personal').classList.contains('hidden');
   card.classList.remove('flip');
   $('rays').classList.remove('on');
+  $('draw').disabled = true;
+  const backWait = again && !RM.matches ? 700 : 0;
+  setTimeout(() => {
   $('cardFront').className = 'face front' + (sp ? ' ' + sp[0] : '');
   $('cardFront').style.setProperty('--sc', se ? se[2] : 'transparent');
   $('cardSp').textContent = sp ? sp[1] : se ? `${se[1]} ${se[0]}の札` : '';
@@ -1089,18 +1095,18 @@ function draw(){
   $('rankText').textContent = r.rank;
   $('rankStar').textContent = STAR[r.honmei];
   card.classList.add('shake');
-  $('draw').disabled = true;
   setTimeout(() => {
     card.classList.remove('shake');
-    card.classList.add('flip');
-    flashStage();
+    // 震えを外した次のフレームでめくる（同時だと回転が省略されてパッと切り替わる）
+    void card.offsetWidth;
+    requestAnimationFrame(() => { card.classList.add('flip'); flashStage(); });
     setTimeout(() => {
       $('rays').classList.add('on');
       if (navigator.vibrate) navigator.vibrate(r.rank === '大吉' || sp ? [40,30,70] : 45);
       burst(sp && sp[0] === 'tensha' ? 48 : r.rank === '大吉' ? 34 : 18, sp && sp[0]);
       ['personal','hourPanel','weekPanel','boardPanel'].forEach(id => $(id).classList.remove('hidden'));
       renderPersonal(b);
-      replayPanels(['personal','hourPanel','weekPanel','boardPanel']);
+      if (firstShow) replayPanels(['personal','hourPanel','weekPanel','boardPanel']);
       if (own){
         $('recordPanel').classList.remove('hidden');
         const after = BADGES.filter(x => x[3](drawStats())).map(x => x[1]);
@@ -1118,7 +1124,8 @@ function draw(){
       $('draw').disabled = false;
       drawing = false;
     }, 700);
-  }, 1300);
+  }, again ? 800 : 1300);
+  }, backWait);
 }
 const RAINBOW = ['#ff9aa8','#ffe08a','#8fe3b5','#8ec5ff','#cdb3f5'];
 function burst(n, kind){
