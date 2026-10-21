@@ -539,6 +539,7 @@ const CHOKU_ACT = {
 // 方位（後天定位：その方位にもともといる星）
 const HOME = {1:'北',2:'南西',3:'東',4:'南東',5:'中央',6:'北西',7:'西',8:'北東',9:'南'};
 const DIR_HOME = {'北':1,'南西':2,'東':3,'南東':4,'中央':5,'北西':6,'西':7,'北東':8,'南':9};
+const PALACE_NAME = ['', '坎宮', '坤宮', '震宮', '巽宮', '中宮', '乾宮', '兌宮', '艮宮', '離宮'];
 const OPP = {'北':'南','南':'北','東':'西','西':'東','北東':'南西','南西':'北東','南東':'北西','北西':'南東'};
 const BRANCH_DIR = ['北','北東','北東','東','南東','南東','南','南西','南西','西','北西','北西'];
 // 本命星がいる宮の意味（その日の自分の居場所）
@@ -665,7 +666,9 @@ function personal(info, honmei, getsumei){
   score += info.rokuyo === '大安' ? .5 : info.rokuyo === '仏滅' ? -.5 : 0;
   score += CHOKU_SCORE[info.choku];
   const rank = score >= 5.5 ? '大吉' : score >= 4.5 ? '吉' : score >= 3.5 ? '中吉' : score >= 2.5 ? '小吉' : '末吉';
-  const luckyStar = good.length ? good[0].s : [1,2,3,4,5,6,7,8,9].find(s => s !== 5 && relation(s, honmei) === '生気') || honmei;
+  // ラッキー色：その日、本命星が入っている宮（方位）の色。宮は毎日1つずつ移るので、色も毎日変わる
+  // （以前は「吉方位にある星の色」だったが、相性の良い星は限られるため、同じ色ばかり出ていた）
+  const luckyStar = DIR_HOME[myDir];
   return { honmei, myDir, P, rank, score, good: good.slice(0, 2), bad, luckyStar, c };
 }
 
@@ -906,7 +909,7 @@ function renderPersonal(b){
       <dt>仕事</dt><dd>${r.P.work}</dd>
       <dt>人間関係</dt><dd>${r.P.love}</dd>
       <dt>今日の一手</dt><dd>${CHOKU_ACT[INFO.choku]}</dd>
-      <dt>ラッキー色</dt><dd><span class="swatch" style="background:${col[1]}"></span>${col[0]}（${STAR_S[r.luckyStar]}の色）</dd>
+      <dt>ラッキー色</dt><dd><span class="swatch" style="background:${col[1]}"></span>${col[0]}（今日の居場所「${PALACE_NAME[r.luckyStar]}」の色）</dd>
     </dl>
     <h2 style="margin-top:16px;font-size:15px">今日の吉方位</h2>
     <div class="dir-row">${r.good.length ? r.good.map(g => `<div class="dir"><b>${g.dir}</b><small>${STAR_S[g.s]}・${g.both ? '最大吉方' : '吉方'}</small></div>`).join('') : '<div class="dir"><b>なし</b><small>動くより留まる日</small></div>'}</div>
