@@ -659,13 +659,13 @@ function personal(info, honmei, getsumei){
     .sort((a, b) => (b.both - a.both) || (order[a.rel] - order[b.rel]));
   // 点数：自分のいる宮＋中宮星との相性＋その日の暦注
   const P = PALACE[myDir];
+  // ※中宮星との相性は加えない。自分の居場所が決まると中宮星も1つに決まるため、
+  //   相性の良い星が多い本命星（六白など）だけ大吉が出やすく、九紫などはほとんど出なくなっていた
   let score = P.score;
-  const rc = relation(c, honmei);
-  score += c === honmei ? 0 : rc === '生気' ? 1 : rc === '比和' ? .5 : rc === '剋' ? -.5 : 0;
   info.kichi.forEach(([n]) => { score += n === '天赦日' ? 1 : n === '一粒万倍日' ? .5 : n === '不成就日' ? -.5 : 0; });
   score += info.rokuyo === '大安' ? .5 : info.rokuyo === '仏滅' ? -.5 : 0;
   score += CHOKU_SCORE[info.choku];
-  const rank = score >= 5.5 ? '大吉' : score >= 4.5 ? '吉' : score >= 3.5 ? '中吉' : score >= 2.5 ? '小吉' : '末吉';
+  const rank = score >= 5.3 ? '大吉' : score >= 4.3 ? '吉' : score >= 3.3 ? '中吉' : score >= 2.5 ? '小吉' : '末吉';
   // ラッキー色：その日、本命星が入っている宮（方位）の色。宮は毎日1つずつ移るので、色も毎日変わる
   // （以前は「吉方位にある星の色」だったが、相性の良い星は限られるため、同じ色ばかり出ていた）
   const luckyStar = DIR_HOME[myDir];
@@ -1724,6 +1724,7 @@ function showMain(push = true){
   $('card').classList.remove('flip');
   $('rays').classList.remove('on');
   $('draw').textContent = tempBirth ? 'この人の札を引く' : '今日の札を引く';
+  $('changeBtn').textContent = birth ? '自分の生年月日を変える' : '生年月日を登録して札を引く';
 }
 function showSetup(forOther, push = true){
   if (push) history.pushState({ v: 'setup', other: !!forOther }, '');
@@ -1769,6 +1770,10 @@ $('saveBirth').onclick = () => {
 $('skipBirth').onclick = () => {
   if ($('setup').dataset.other || birth){ tempBirth = null; showMain(); return; }
   $('setup').classList.add('hidden');
+  // 暦だけ見るときも、あとから生年月日を登録できるようにボタンを残す
+  $('others').classList.remove('hidden');
+  $('backSelf').classList.add('hidden');
+  $('changeBtn').textContent = '生年月日を登録して札を引く';
 };
 $('draw').onclick = draw;
 $('otherBtn').onclick = () => showSetup(true);
