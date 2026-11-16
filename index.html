@@ -459,6 +459,7 @@ html[data-vt=calb]::view-transition-new(cal){animation:vtInL .36s cubic-bezier(.
         <div class="face front" id="cardFront"><span class="sp" id="cardSp"></span><div><div class="rank-sub" id="rankSub">本日の運勢</div><div class="rank" id="rankText">大吉</div><div class="rank-sub" id="rankStar"></div></div></div>
       </div>
     </div>
+    <p class="note" id="whoLine" style="text-align:center;margin:0 0 2px"></p>
     <button class="btn" id="draw">今日の札を引く</button>
     <p class="note" style="text-align:center">同じ日・同じ生まれなら、何度引いても同じ結果です（暦で決まるため）。</p>
   </section>
@@ -944,7 +945,7 @@ function renderPersonal(b){
   const ai = other ? aishoText(honmeiOf(birth), h) : null;
   $('personal').innerHTML = `
     <h2>${STAR[h]}の${tempBirth ? 'この人' : 'あなた'}</h2>
-    <p class="note" style="margin:-6px 0 8px">本命星 ${STAR_S[h]}・月命星 ${STAR_S[gm]}</p>
+    <p class="note" style="margin:-6px 0 8px">${birthText(b)} 生まれ（満${ageOn(b, TODAY)}歳）<br>本命星 ${STAR_S[h]}・月命星 ${STAR_S[gm]}</p>
     <p class="lead"><span class="big">${r.P.title}</span></p>
     <p class="lead">${r.P.msg}</p>
     <div class="charm"><small>今日の御守り言葉</small><b>${charm[0]}</b><span class="tip">${charm[1]}</span><span class="src">― ${charm[2]}</span></div>
@@ -1847,6 +1848,11 @@ async function shareCard(r, charm){
   toast('画像を保存しました');
 }
 
+// 生年月日の表示（西暦と和暦）
+function birthText(s){
+  const [y, m, d] = s.split('-').map(Number), e = eraOfDate(s);
+  return `${y}年${e ? `（${e[0]}${eraYearText(e[1])}年）` : ''}${m}月${d}日`;
+}
 function showMain(push = true){
   if (push) history.pushState({ v: 'main', temp: tempBirth }, '');
   $('backSelf').classList.toggle('hidden', !tempBirth);
@@ -1857,6 +1863,9 @@ function showMain(push = true){
   $('card').classList.remove('flip');
   $('rays').classList.remove('on');
   $('draw').textContent = tempBirth ? 'この人の札を引く' : '今日の札を引く';
+  // だれの生年月日で占うかを、引く前から見せる
+  const wb = tempBirth || birth;
+  $('whoLine').innerHTML = wb ? `${tempBirth ? 'この人' : 'あなた'}：<b style="color:var(--gold)">${birthText(wb)}</b> 生まれ（${STAR[honmeiOf(wb)]}）` : '';
   $('changeBtn').textContent = birth ? '自分の生年月日を変える' : '生年月日を登録して札を引く';
 }
 function showSetup(forOther, push = true){
