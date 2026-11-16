@@ -155,9 +155,8 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .streak{min-width:86px;text-align:center;border:1px solid var(--line);border-radius:14px;padding:8px 10px;background:rgba(242,211,138,.08)}
 .streak b{display:block;font-family:"Shippori Mincho",serif;font-size:22px;color:var(--gold);line-height:1.2}
 .streak small{display:block;font-size:10px;color:var(--sub)}
-.trend{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:58px;margin:10px 0 4px;padding:4px 2px 0}
+.trend{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:76px;margin:4px 0 4px;padding:4px 2px 0}
 .trend i{display:block;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#ffe6a6,#c99b45);opacity:.72;min-height:8px}
-.trend i.todaybar{opacity:1;box-shadow:0 0 12px rgba(242,211,138,.55)}
 .trend-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;font-size:9px;color:var(--sub);text-align:center;margin-bottom:10px}
 .charm{margin:14px 0 2px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(242,211,138,.07);text-align:center}
 .charm small{display:block;color:var(--sub);font-size:10px;letter-spacing:.14em}
@@ -254,6 +253,31 @@ label{display:block;font-size:13px;color:var(--sub);margin:8px 0 6px}
 .tabs button i{display:block;font-style:normal;font-size:18px}
 .tabs button[aria-selected="true"]{background:rgba(242,211,138,.16);color:var(--gold);font-weight:700}
 .offtab{display:none!important}
+
+/* 運勢の波（棒グラフ） */
+.trend-title{font-size:11px;color:var(--sub);margin:10px 0 0;letter-spacing:.06em}
+.tb{display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;text-align:center}
+.tb small{font-size:9px;color:var(--sub);line-height:1.5}
+.tb.bestbar small{color:var(--gold);font-weight:700}
+.tb.bestbar i{opacity:1;box-shadow:0 0 12px rgba(242,211,138,.7)}
+.tb.todaybar i{outline:2px solid #fff;outline-offset:1px}
+.trend-legend{display:flex;gap:12px;justify-content:center;font-size:10px;color:var(--sub);margin-bottom:10px}
+.trend-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;background:linear-gradient(180deg,#ffe6a6,#c99b45)}
+.trend-legend i.t{background:transparent;outline:2px solid #fff;outline-offset:-1px}
+/* 目的別の日選び */
+.pick-list{margin-top:10px;display:grid;gap:6px}
+.pk{display:grid;grid-template-columns:6.8em 1fr;gap:8px;align-items:center;text-align:left;width:100%;padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.pk.s3{border-color:rgba(242,211,138,.7);background:rgba(242,211,138,.13)}
+.pk b{display:block;font-size:14px}
+.pk .st{display:block;color:var(--gold);font-size:11px;letter-spacing:.1em}
+.pk .ok{color:var(--good)} .pk .ng{color:var(--bad)}
+.pick-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);margin:8px 0 0}
+.pick-opt input{width:18px;height:18px;margin:0}
+#pickPanel select{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);font:inherit;font-size:16px;padding:0 12px;color-scheme:dark}
+/* 設定・バックアップ */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.seg button{background:transparent;border:1px solid var(--line);color:var(--sub);border-radius:10px;font:inherit;padding:9px 0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:rgba(242,211,138,.16);color:var(--gold);font-weight:700}
 
 /* 明日の暦 */
 .tomorrow{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
@@ -455,6 +479,14 @@ html[data-vt=calb]::view-transition-new(cal){animation:vtInL .36s cubic-bezier(.
   <section class="panel fade" id="koyomi" data-tab="koyomi"></section>
   <!-- 吉日カレンダー -->
   <section class="panel fade" id="calPanel" data-tab="koyomi"></section>
+  <!-- 目的別の日選び -->
+  <section class="panel fade" id="pickPanel" data-tab="koyomi">
+    <h2>目的別の日選び</h2>
+    <select id="pickWhat" aria-label="目的"></select>
+    <label class="pick-opt"><input type="checkbox" id="pickHol">土日・祝日だけ</label>
+    <div class="pick-list" id="pickList"></div>
+    <p class="note">明日から90日間で、六曜・十二直・選日（天赦日・一粒万倍日・不成就日・三隣亡など）の昔からの決まりに照らして、合う日を上から並べています。日付を押すとカレンダーに移ります。重んじる暦注は地域や家によって違うため、目安としてお使いください。</p>
+  </section>
   <!-- 便利ツール -->
   <section class="panel fade" id="toolPanel" data-tab="tool">
     <h2>便利ツール</h2>
@@ -479,6 +511,16 @@ html[data-vt=calb]::view-transition-new(cal){animation:vtInL .36s cubic-bezier(.
       <summary>祝日一覧</summary>
       <div class="hol-nav"><button id="holPrev" aria-label="前の年">‹</button><b id="holYear"></b><button id="holNext" aria-label="次の年">›</button></div>
       <div class="hol-list" id="holList"></div>
+    </details>
+    <details class="tool" id="setTool">
+      <summary>設定・バックアップ</summary>
+      <label>文字の大きさ</label>
+      <div class="seg" id="fontSeg"><button data-z="1">標準</button><button data-z="1.15">大</button><button data-z="1.3">特大</button></div>
+      <label style="margin-top:14px">記録のバックアップ</label>
+      <button class="btn ghost" id="bkExport">記録をファイルに書き出す</button>
+      <button class="btn ghost" id="bkImport">ファイルから記録を読み込む</button>
+      <input type="file" id="bkFile" accept="application/json,.json" hidden>
+      <p class="note">生年月日・引いた札・図鑑・連続日数は、このスマホの中だけに保存されています。機種変更やブラウザのデータ削除の前に書き出しておくと、新しいスマホで読み込めます。読み込みは今ある記録に足し合わせます（消えません）。ファイルには生年月日が含まれます。</p>
     </details>
     <details class="tool" id="ageTool">
       <summary>年齢早見表</summary>
@@ -592,6 +634,8 @@ function kichi(x){
   if (br === '寅') out.push(['寅の日', 1]);
   if (x.g === 5) out.push(['己巳の日', 1]); else if (br === '巳') out.push(['巳の日', 1]);
   if (FUJOJU[x.lm].includes(x.ld)) out.push(['不成就日', 0]);
+  // 三隣亡（節月で決まる。寅巳申亥月は亥の日、卯午酉子月は寅の日、辰未戌丑月は午の日）
+  if (br === ['寅','午','亥'][x.sb % 3]) out.push(['三隣亡', 0]);
   return out;
 }
 
@@ -1015,14 +1059,16 @@ function renderWeek(b){
       <div><h2 style="margin-bottom:2px">最近の運勢</h2><p class="note" style="margin:0">過去6日＋今日。明日の運勢は明日のお楽しみです。</p></div>
       ${own ? `<div class="streak"><b>${ss.cur}日</b><small>連続で札を引いた日</small><small class="guard">${'🧿'.repeat(ss.guards) || '―'}　身代わり守り</small></div>` : ''}
     </div>
+    <p class="trend-title">運勢の波（棒が高いほど良い日）</p>
     <div class="trend">${rows.map(({r,offset}) => {
       const hgt = 18 + Math.round(((r.score - minSc) / span) * 36);
-      return `<i class="${offset === 0 ? 'todaybar' : ''}" style="height:${hgt}px" title="${r.rank}"></i>`;
+      return `<div class="tb ${r.score === bestScore ? 'bestbar' : ''} ${offset === 0 ? 'todaybar' : ''}"><small>${r.rank}</small><i style="height:${hgt}px"></i></div>`;
     }).join('')}</div>
     <div class="trend-labels">${rows.map(({s,offset}) => {
       const [,m,d] = s.split('-').map(Number);
       return `<span>${offset === 0 ? '今日' : `${m}/${d}`}</span>`;
     }).join('')}</div>
+    <div class="trend-legend"><span><i></i>光る棒＝いちばん良い日</span><span><i class="t"></i>白枠＝今日</span></div>
     <div class="week">${rows.map(({ s, x, r, offset }) => {
       const [, m, d] = s.split('-').map(Number);
       const tags = [x.rokuyo].concat(x.kichi.filter(k => k[1]).map(k => k[0]));
@@ -1658,6 +1704,93 @@ function renderCal(){
   $('calPanel').querySelectorAll('.cd[data-d]').forEach(el => el.onclick = () => { calSel = el.dataset.d; renderCal(); });
 }
 
+/* ===== 目的別の日選び =====
+   点数は昔からの暦注の決まりを足し引きしたもの。roku＝六曜、good/bad＝十二直、k＝選日 */
+const PURPOSES = [
+  { name:'結婚・入籍', roku:{大安:2,友引:1.5,先勝:.5,赤口:-1,仏滅:-2}, good:'建満平定成開', bad:'破危閉', k:{天赦日:3,一粒万倍日:1.5,不成就日:-3} },
+  { name:'引越し', roku:{大安:2,友引:1,先勝:.5,赤口:-1,仏滅:-2}, good:'満平成開', bad:'破危閉', k:{天赦日:3,一粒万倍日:1,不成就日:-3,三隣亡:-1} },
+  { name:'開業・開店', roku:{大安:2,友引:1,先勝:1,仏滅:-2}, good:'建満定成開', bad:'破閉', k:{天赦日:3,一粒万倍日:2,寅の日:1,不成就日:-3} },
+  { name:'契約・申込み', roku:{大安:2,友引:.5,先勝:.5,仏滅:-1.5}, good:'満定成', bad:'破危', k:{天赦日:3,一粒万倍日:1,不成就日:-3} },
+  { name:'財布の新調・宝くじ', roku:{大安:1}, good:'満成開納', bad:'破', k:{天赦日:3,一粒万倍日:2,寅の日:2,己巳の日:2.5,巳の日:1.5,不成就日:-3} },
+  { name:'納車', roku:{大安:2,友引:1,先勝:.5,赤口:-1.5,仏滅:-2}, good:'満定成開', bad:'破危', k:{天赦日:3,一粒万倍日:1,不成就日:-3} },
+  { name:'建築・地鎮祭', roku:{大安:2,友引:1,先勝:1,仏滅:-2}, good:'建満平定成開', bad:'破', k:{天赦日:3,一粒万倍日:1,不成就日:-3,三隣亡:-5} }
+];
+function pickScore(x, p){
+  let sc = 0; const ok = [], ng = [];
+  const add = (v, label) => { if (!v) return; sc += v; (v > 0 ? ok : ng).push(label); };
+  add(p.roku[x.rokuyo] || 0, x.rokuyo);
+  add(p.good.includes(x.choku) ? 1 : p.bad.includes(x.choku) ? -1.5 : 0, `十二直「${x.choku}」`);
+  x.kichi.forEach(([n]) => add(p.k[n] || 0, n));
+  return { sc, ok, ng };
+}
+function renderPick(){
+  const p = PURPOSES[+$('pickWhat').value || 0], holOnly = $('pickHol').checked;
+  const rows = [];
+  for (let i = 1; i <= 90; i++){
+    const s = addDays(TODAY, i), x = dayInfo(s);
+    if (!x) break;
+    const wd = new Date(toUTC(s)).getUTCDay();
+    if (holOnly && !(wd === 0 || wd === 6 || holidayOf(s))) continue;
+    rows.push({ s, wd, ...pickScore(x, p) });
+  }
+  const top = rows.filter(r => r.sc >= 2).sort((a, b) => b.sc - a.sc || (a.s < b.s ? -1 : 1)).slice(0, 8);
+  $('pickList').innerHTML = top.length ? top.map(r => {
+    const [, m, d] = r.s.split('-').map(Number), st = r.sc >= 5 ? 3 : r.sc >= 3.5 ? 2 : 1;
+    return `<button class="pk s${st}" data-d="${r.s}"><div><b>${m}/${d}（${'日月火水木金土'[r.wd]}）</b><span class="st">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></div>
+      <div><span class="ok">${r.ok.join('・')}</span>${r.ng.length ? `<br><span class="ng">気になる点：${r.ng.join('・')}</span>` : ''}${holidayOf(r.s) ? `<br><small style="color:var(--sub)">${holidayOf(r.s)[0]}</small>` : ''}</div></button>`;
+  }).join('') : '<p class="note">この条件に合う日は、90日以内に見つかりませんでした。</p>';
+  $('pickList').querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
+    calSel = b.dataset.d; calMonth = calSel.slice(0, 7); renderCal();
+    $('calPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+$('pickWhat').innerHTML = PURPOSES.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+$('pickWhat').addEventListener('change', renderPick);
+$('pickHol').addEventListener('change', renderPick);
+
+/* ===== 設定：文字の大きさ ===== */
+const LS_FONT = 'koyomi.font';
+function applyFont(z){
+  const v = ['1', '1.15', '1.3'].includes(String(z)) ? String(z) : '1';
+  document.querySelector('main').style.zoom = v === '1' ? '' : v;
+  document.querySelectorAll('#fontSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.z === v ? 'true' : 'false'));
+}
+document.querySelectorAll('#fontSeg button').forEach(b => b.onclick = () => { store.set(LS_FONT, b.dataset.z); applyFont(b.dataset.z); if (typeof movePill === 'function') movePill(); });
+applyFont(store.get(LS_FONT));
+
+/* ===== 設定：記録のバックアップ（ファイルに書き出し・読み込み。どこにも送信しない） ===== */
+const isDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(toUTC(v));
+$('bkExport').onclick = () => {
+  const data = { app: 'nfc-koyomi', v: 1, exported: TODAY, birth: store.get(LS_BIRTH), visits: readVisits(), draws: readDraws(), zukan: [...readZukan()] };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  a.download = `koyomi-backup-${TODAY}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`記録を書き出しました（札 ${Object.keys(data.draws).length}日分）`);
+};
+$('bkImport').onclick = () => $('bkFile').click();
+$('bkFile').onchange = async () => {
+  const f = $('bkFile').files[0];
+  $('bkFile').value = '';
+  if (!f) return;
+  let d;
+  try{ d = JSON.parse(await f.text()); }catch(e){ toast('読み込めませんでした（ファイルの形式が違います）'); return; }
+  if (!d || d.app !== 'nfc-koyomi'){ toast('この占いのバックアップファイルではありません'); return; }
+  // 形の合うものだけ取り込み、今ある記録に足し合わせる（同じ日は今の記録を優先）
+  const visits = (Array.isArray(d.visits) ? d.visits : []).filter(v => isDate(v) && v <= TODAY);
+  const draws = Object.fromEntries(Object.entries(d.draws && typeof d.draws === 'object' ? d.draws : {}).filter(([k, v]) => isDate(k) && k <= TODAY && RANKS.includes(v)));
+  const zukan = (Array.isArray(d.zukan) ? d.zukan : []).filter(k => typeof k === 'string' && SEASONS.some(s => RANKS.some(r => k === `${s[0]}|${r}`)));
+  const n = Object.keys(draws).length;
+  if (!confirm(`札 ${n}日分・図鑑 ${zukan.length}枚の記録を読み込みます。今ある記録に足し合わせます。よろしいですか？`)) return;
+  store.set(LS_VISITS, JSON.stringify([...new Set(readVisits().concat(visits))].sort().slice(-400)));
+  const merged = { ...draws, ...readDraws() };
+  store.set(LS_DRAWS, JSON.stringify(Object.fromEntries(Object.keys(merged).sort().slice(-400).map(k => [k, merged[k]]))));
+  store.set(LS_ZUKAN, JSON.stringify([...new Set([...readZukan(), ...zukan])]));
+  if (!store.get(LS_BIRTH) && isDate(d.birth) && d.birth >= '1900-01-01' && d.birth <= TODAY) store.set(LS_BIRTH, d.birth);
+  location.reload();
+};
+
 /* ===== シェア画像（その場で描いて、共有 or 保存。どこにも送信しない） ===== */
 async function shareCard(r, charm){
   const W = 1080, H = 1350, cv = document.createElement('canvas');
@@ -1898,6 +2031,7 @@ movePill();
 renderKoyomi();
 renderCount();
 renderCal();
+renderPick();
 // 開いたまま日付が変わったら読み直す（ホーム画面アプリやタブを開きっぱなしのとき）
 function checkDate(){ if (jstToday() !== TODAY) location.reload(); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDate(); });
